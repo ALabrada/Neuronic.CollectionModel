@@ -17,6 +17,7 @@ namespace Neuronic.CollectionModel
         {
             if (items == null) throw new ArgumentNullException(nameof(items));
             Items = items;
+            CollectionChangedEventManager.AddHandler(Items, ItemsOnCollectionChanged);
         }
 
         public CollectionSelector(ObservableCollection<T> items)
@@ -81,7 +82,7 @@ namespace Neuronic.CollectionModel
             SelectedItemChanging?.Invoke(this, EventArgs.Empty);
         }
 
-        protected virtual void ItemsOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs args)
+        private void ItemsOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs args)
         {
             var newStartingIndex = args.NewStartingIndex;
             var oldStartingIndex = args.OldStartingIndex;

@@ -18,12 +18,12 @@ namespace Neuronic.CollectionModel
 
         protected ObservableCollection<T> ItemsCore { get; } 
 
-        public void Add(T item)
+        public virtual void Add(T item)
         {
             ItemsCore.Add(item);
         }
 
-        public void AddAndSelect(T item)
+        public virtual void AddAndSelect(T item)
         {
             ItemsCore.Add(item);
             SelectedIndex = ItemsCore.Count - 1;
@@ -34,12 +34,12 @@ namespace Neuronic.CollectionModel
             return ItemsCore.IndexOf(item);
         }
 
-        public void Insert(int index, T item)
+        public virtual void Insert(int index, T item)
         {
             ItemsCore.Insert(index, item);
         }
 
-        public void RemoveAt(int index)
+        public virtual void RemoveAt(int index)
         {
             ItemsCore.RemoveAt(index);
         }
@@ -50,13 +50,13 @@ namespace Neuronic.CollectionModel
             set { ItemsCore[index] = value; }
         }
 
-        public void InsertAndSelect(int index, T item)
+        public virtual void InsertAndSelect(int index, T item)
         {
             ItemsCore.Insert(index, item);
             SelectedIndex = index;
         }
 
-        public bool Replace(T prevItem, T newItem)
+        public virtual bool Replace(T prevItem, T newItem)
         {
             var index = ItemsCore.IndexOf(prevItem);
             if (index < 0)
@@ -65,7 +65,7 @@ namespace Neuronic.CollectionModel
             return true;
         }
 
-        public bool ReplaceAndSelect(T prevItem, T newItem)
+        public virtual bool ReplaceAndSelect(T prevItem, T newItem)
         {
             var index = ItemsCore.IndexOf(prevItem);
             if (index < 0)
@@ -82,7 +82,7 @@ namespace Neuronic.CollectionModel
             ItemsCore.CopyTo(array, arrayIndex);
         }
 
-        public bool Remove(T item)
+        public virtual bool Remove(T item)
         {
             var index = ItemsCore.IndexOf(item);
             if (index < 0)
@@ -91,10 +91,16 @@ namespace Neuronic.CollectionModel
             return true;
         }
 
+        public virtual void RemoveSelected()
+        {
+            if (SelectedIndex >= 0 && SelectedIndex < ItemsCore.Count)
+                ItemsCore.RemoveAt(SelectedIndex);
+        }
+
         int ICollection<T>.Count => ItemsCore.Count;
         bool ICollection<T>.IsReadOnly => false;
 
-        public void Clear()
+        public virtual void Clear()
         {
             ItemsCore.Clear();
         }
