@@ -43,7 +43,10 @@
   <ItemGroup>
     <Compile Include="CollectionExtensions.cs" />
     <Compile Include="CollectionProxy.cs" />
+    <Compile Include="CollectionSelector.cs" />
+    <Compile Include="EditableCollectionSelector.cs" />
     <Compile Include="FilteredReadOnlyObservableCollection.cs" />
+    <Compile Include="ICollectionSelector.cs" />
     <Compile Include="IReadOnlyObservableCollection.cs" />
     <Compile Include="IReadOnlyObservableList.cs" />
     <Compile Include="ListProxy.cs" />
