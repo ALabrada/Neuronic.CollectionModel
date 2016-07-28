@@ -46,6 +46,7 @@
     <Compile Include="CollectionSelector.cs" />
     <Compile Include="EditableCollectionSelector.cs" />
     <Compile Include="FilteredReadOnlyObservableCollection.cs" />
+    <Compile Include="FilteredReadOnlyObservableList.cs" />
     <Compile Include="ICollectionSelector.cs" />
     <Compile Include="IReadOnlyObservableCollection.cs" />
     <Compile Include="IReadOnlyObservableList.cs" />
