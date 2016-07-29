@@ -1,44 +1,30 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Linq;
 
 namespace Neuronic.CollectionModel
 {
-    public class FilteredReadOnlyObservableList<T> : IReadOnlyObservableList<T>, IList<T>
+    public class FilteredReadOnlyObservableList<T> :
+        FilteredReadOnlyObservableCollectionBase<T, IndexedItemContainer<T>>, IReadOnlyObservableList<T>, IList<T>
     {
-        private readonly Predicate<T> _filter;
-        private readonly IReadOnlyObservableCollection<T> _source;
-        private readonly string[] _triggers;
-
         public FilteredReadOnlyObservableList(IReadOnlyObservableCollection<T> source, Predicate<T> filter,
-            params string[] triggers)
+            params string[] triggers) : base(source, filter, triggers)
         {
-            _source = source;
-            _filter = filter;
-            _triggers = triggers;
-            GlobalItems = new GlobalItemCollection();
-            LocalItems = new ObservableCollection<T>();
+            UpdateIndexes(0, Items.Count);
+            LocalItems =
+                new ObservableCollection<T>(from container in Items where container.IsIncluded select container.Item);
 
-            CollectionChangedEventManager.AddHandler(_source, SourceOnCollectionChanged);
-            GlobalItems.CollectionChanged += GlobalItemsOnCollectionChanged;
+
+            Items.CollectionChanged += ItemsOnCollectionChanged;
             LocalItems.CollectionChanged += (sender, args) => OnCollectionChanged(args);
             ((INotifyPropertyChanged) LocalItems).PropertyChanged += (sender, args) => OnPropertyChanged(args);
         }
 
-        protected ObservableCollection<ItemContainer> GlobalItems { get; }
         protected ObservableCollection<T> LocalItems { get; }
-        bool ICollection<T>.IsReadOnly => true;
-
-        T IList<T>.this[int index]
-        {
-            get { return this[index]; }
-
-            set { throw new InvalidOperationException(); }
-        }
 
         public int IndexOf(T item)
         {
@@ -55,238 +41,142 @@ namespace Neuronic.CollectionModel
             throw new InvalidOperationException();
         }
 
-        void ICollection<T>.Add(T item)
-        {
-            throw new InvalidOperationException();
-        }
-
-        void ICollection<T>.Clear()
-        {
-            throw new InvalidOperationException();
-        }
-
-        public bool Contains(T item)
-        {
-            return LocalItems.Contains(item);
-        }
-
-        void ICollection<T>.CopyTo(T[] array, int arrayIndex)
-        {
-            LocalItems.CopyTo(array, arrayIndex);
-        }
-
-        bool ICollection<T>.Remove(T item)
-        {
-            throw new InvalidOperationException();
-        }
-
-        public event NotifyCollectionChangedEventHandler CollectionChanged;
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        public IEnumerator<T> GetEnumerator()
+        public override IEnumerator<T> GetEnumerator()
         {
             return LocalItems.GetEnumerator();
         }
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-
-        public int Count => LocalItems.Count;
+        public override int Count => LocalItems.Count;
         public T this[int index] => LocalItems[index];
 
-        private void SourceOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        T IList<T>.this[int index]
         {
-            GlobalItems.UpdateCollection(_source, e, o =>
-            {
-                var container = new ItemContainer((T) o, _filter);
-                container.IsIncludedChanged += ContainerOnIsIncludedChanged;
-                container.AttachTriggers(_triggers);
-                return container;
-            }, container =>
-            {
-                container.DetachTriggers(_triggers);
-                container.IsIncludedChanged -= ContainerOnIsIncludedChanged;
-            });
+            get { return this[index]; }
+
+            set { throw new InvalidOperationException(); }
         }
 
-        private void GlobalItemsOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        protected override IndexedItemContainer<T> CreateContainer(T item)
         {
-            ItemContainer newContainer, oldContainer;
-            switch (e.Action)
-            {
-                case NotifyCollectionChangedAction.Add:
-                    Debug.Assert(e.NewItems.Count == 1);
-                    newContainer = (ItemContainer) e.NewItems[0];
-                    if (newContainer.IsIncluded)
-                        LocalItems.Insert(newContainer.LocalIndex, newContainer.Item);
-                    break;
-                case NotifyCollectionChangedAction.Remove:
-                    Debug.Assert(e.OldItems.Count == 1);
-                    oldContainer = (ItemContainer) e.OldItems[0];
-                    if (oldContainer.IsIncluded)
-                        LocalItems.RemoveAt(oldContainer.LocalIndex);
-                    break;
-                case NotifyCollectionChangedAction.Move:
-                    //Debug.Assert(e.NewItems.Count == 1);
-                    //newContainer = (ItemContainer)e.NewItems[0];
-                    //if (newContainer.IsIncluded)
-                    //    LocalItems.Move();
-                    //break;
-                    throw new NotSupportedException();
-                case NotifyCollectionChangedAction.Replace:
-                    Debug.Assert(e.OldItems.Count == 1 && e.NewItems.Count == 1);
-                    newContainer = (ItemContainer) e.NewItems[0];
-                    oldContainer = (ItemContainer) e.OldItems[0];
-                    Debug.Assert(newContainer.LocalIndex == oldContainer.LocalIndex);
-                    if (newContainer.IsIncluded && oldContainer.IsIncluded)
-                        LocalItems[newContainer.LocalIndex] = newContainer.Item;
-                    else if (newContainer.IsIncluded)
-                        LocalItems.Insert(newContainer.LocalIndex, newContainer.Item);
-                    else if (oldContainer.IsIncluded)
-                        LocalItems.RemoveAt(oldContainer.LocalIndex);
-                    break;
-                case NotifyCollectionChangedAction.Reset:
-                    LocalItems.Clear();
-                    Debug.Assert(GlobalItems.Count == 0);
-                    break;
-            }
+            var container = new IndexedItemContainer<T>(item, Filter);
+            container.IsIncludedChanged += ContainerOnIsIncludedChanged;
+            container.AttachTriggers(Triggers);
+            return container;
+        }
+
+        protected override void DestroyContainer(IndexedItemContainer<T> container)
+        {
+            container.DetachTriggers(Triggers);
+            container.IsIncludedChanged -= ContainerOnIsIncludedChanged;
         }
 
         private void ContainerOnIsIncludedChanged(object sender, EventArgs eventArgs)
         {
-            var container = (ItemContainer) sender;
+            var container = (IndexedItemContainer<T>)sender;
             if (container.IsIncluded)
             {
-                for (var i = container.GlobalIndex; i < GlobalItems.Count; i++)
-                    GlobalItems[i].LocalIndex++;
+                UpdateIndexes(container.GlobalIndex, Items.Count);
                 LocalItems.Insert(container.LocalIndex, container.Item);
             }
             else
             {
-                for (var i = container.GlobalIndex; i < GlobalItems.Count; i++)
-                    GlobalItems[i].LocalIndex--;
-                LocalItems.RemoveAt(container.LocalIndex);
+                var localIndex = container.LocalIndex;
+                UpdateIndexes(container.GlobalIndex, Items.Count);
+                LocalItems.RemoveAt(localIndex);
             }
         }
 
-        protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
+        private void ItemsOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            CollectionChanged?.Invoke(this, e);
+            IndexedItemContainer<T> newContainer, oldContainer;
+            switch (e.Action)
+            {
+                case NotifyCollectionChangedAction.Add:
+                    Debug.Assert(e.NewItems.Count == 1);
+                    newContainer = (IndexedItemContainer<T>) e.NewItems[0];
+                    OnContainerAddedToItems(newContainer, e.NewStartingIndex);
+                    break;
+                case NotifyCollectionChangedAction.Remove:
+                    Debug.Assert(e.OldItems.Count == 1);
+                    oldContainer = (IndexedItemContainer<T>) e.OldItems[0];
+                    OnContainerRemovedFromItems(oldContainer, e.OldStartingIndex);
+                    break;
+                case NotifyCollectionChangedAction.Move:
+                    Debug.Assert(e.NewItems.Count == 1);
+                    newContainer = (IndexedItemContainer<T>) e.NewItems[0];
+                    OnContainerMovedInItems(newContainer, e.OldStartingIndex, e.NewStartingIndex);
+                    break;
+                case NotifyCollectionChangedAction.Replace:
+                    Debug.Assert(e.OldItems.Count == 1 && e.NewItems.Count == 1);
+                    newContainer = (IndexedItemContainer<T>) e.NewItems[0];
+                    oldContainer = (IndexedItemContainer<T>) e.OldItems[0];
+                    Debug.Assert(e.OldStartingIndex == e.NewStartingIndex);
+                    OnContainerReplacedInItems(newContainer, oldContainer, e.NewStartingIndex);
+                    break;
+                case NotifyCollectionChangedAction.Reset:
+                    LocalItems.Clear();
+                    Debug.Assert(Items.Count == 0);
+                    break;
+            }
         }
 
-        protected virtual void OnPropertyChanged(PropertyChangedEventArgs e)
+        private void OnContainerReplacedInItems(IndexedItemContainer<T> newItem, IndexedItemContainer<T> oldItem, int index)
         {
-            PropertyChanged?.Invoke(this, e);
+            if (newItem.IsIncluded && !oldItem.IsIncluded)
+            {
+                UpdateIndexes(index, Items.Count);
+                LocalItems.Insert(newItem.LocalIndex, newItem.Item);
+            }
+            else if (oldItem.IsIncluded && !newItem.IsIncluded)
+            {
+                UpdateIndexes(index, Items.Count);
+                LocalItems.RemoveAt(oldItem.LocalIndex);
+            }
+            else
+            {
+                newItem.GlobalIndex = oldItem.GlobalIndex;
+                newItem.LocalIndex = oldItem.LocalIndex;
+                LocalItems[newItem.LocalIndex] = newItem.Item;
+            }
+            oldItem.GlobalIndex = int.MinValue;
+            oldItem.LocalIndex = int.MinValue;
         }
 
-        protected class ItemContainer
+        private void OnContainerMovedInItems(IndexedItemContainer<T> item, int oldIndex, int newIndex)
         {
-            private readonly Predicate<T> _filter;
+            var oldLocalIndex = item.LocalIndex;
+            if (oldIndex > newIndex)
+                UpdateIndexes(newIndex, oldIndex);
+            else
+                UpdateIndexes(oldIndex, newIndex + 1);
+            var newLocalIndex = item.LocalIndex;
 
-            public ItemContainer(T item, Predicate<T> filter)
-            {
-                _filter = filter;
-                Item = item;
-                IsIncluded = _filter(Item);
-            }
-
-            public T Item { get; }
-            public bool IsIncluded { get; private set; }
-            public int LocalIndex { get; set; }
-            public int GlobalIndex { get; set; }
-
-            public void AttachTriggers(string[] triggers)
-            {
-                var notify = Item as INotifyPropertyChanged;
-                if (notify == null) return;
-                foreach (var name in triggers)
-                    PropertyChangedEventManager.AddHandler(notify, ItemOnTriggerPropertyChanged, name);
-            }
-
-            public void DetachTriggers(string[] triggers)
-            {
-                var notify = Item as INotifyPropertyChanged;
-                if (notify == null) return;
-                foreach (var name in triggers)
-                    PropertyChangedEventManager.RemoveHandler(notify, ItemOnTriggerPropertyChanged, name);
-            }
-
-            private void ItemOnTriggerPropertyChanged(object sender, PropertyChangedEventArgs args)
-            {
-                var wasIncluded = IsIncluded;
-                IsIncluded = _filter(Item);
-                if (IsIncluded != wasIncluded)
-                    IsIncludedChanged?.Invoke(this, EventArgs.Empty);
-            }
-
-            public event EventHandler IsIncludedChanged;
+            if (item.IsIncluded)
+                LocalItems.Move(oldLocalIndex, newLocalIndex);
         }
 
-        protected class GlobalItemCollection : ObservableCollection<ItemContainer>
+        private void OnContainerRemovedFromItems(IndexedItemContainer<T> item, int index)
         {
-            protected override void InsertItem(int index, ItemContainer item)
+            UpdateIndexes(index, Items.Count);
+            if (item.IsIncluded)
+                LocalItems.RemoveAt(item.LocalIndex);
+            item.LocalIndex = item.GlobalIndex = int.MinValue;
+        }
+
+        private void OnContainerAddedToItems(IndexedItemContainer<T> item, int index)
+        {
+            UpdateIndexes(index, Items.Count);
+            if (item.IsIncluded)
+                LocalItems.Insert(item.LocalIndex, item.Item);
+        }
+
+        private void UpdateIndexes(int start, int end)
+        {
+            var lastLocal = start == 0 ? -1 : Items[start - 1].LocalIndex;
+            for (var i = start; i < end; i++)
             {
-                item.GlobalIndex = index;
-                item.LocalIndex = index == 0 ? -1 : Items[index - 1].LocalIndex;
-                if (item.IsIncluded)
-                    item.LocalIndex++;
-
-                UpdateIndexes(index, Count, 1, item.IsIncluded ? 1 : 0);
-
-                base.InsertItem(index, item);
-            }
-
-            protected override void MoveItem(int oldIndex, int newIndex)
-            {
-                //if (oldIndex > newIndex)
-                //    UpdateIndexes(newIndex, oldIndex, 1, Items[oldIndex].IsIncluded ? 1 : 0);
-                //else if (oldIndex < newIndex)
-                //    UpdateIndexes(oldIndex + 1, newIndex, -1, Items[oldIndex].IsIncluded ? -1 : 0);
-
-                //Items[oldIndex].GlobalIndex = newIndex;
-                //Items[oldIndex].LocalIndex = newIndex == 0 ? -1 : Items[newIndex - 1].LocalIndex;
-                //if (Items[oldIndex].IsIncluded)
-                //    Items[oldIndex].LocalIndex++;
-
-                //base.MoveItem(oldIndex, newIndex);
-                var item = Items[oldIndex];
-                RemoveItem(oldIndex);
-                InsertItem(newIndex, item);
-            }
-
-            protected override void RemoveItem(int index)
-            {
-                UpdateIndexes(index + 1, Count, -1, Items[index].IsIncluded ? -1 : 0);
-
-                Items[index].GlobalIndex = int.MinValue;
-
-                base.RemoveItem(index);
-            }
-
-            protected override void SetItem(int index, ItemContainer item)
-            {
-                item.GlobalIndex = index;
-                item.LocalIndex = index == 0 ? -1 : Items[index - 1].LocalIndex;
-                if (item.IsIncluded)
-                    item.LocalIndex++;
-
-                if (item.LocalIndex != Items[index].LocalIndex)
-                    UpdateIndexes(index + 1, Count, 0, item.LocalIndex - Items[index].LocalIndex);
-
-                Items[index].GlobalIndex = int.MinValue;
-
-                base.SetItem(index, item);
-            }
-
-            private void UpdateIndexes(int start, int end, int globalDelta, int localDelta)
-            {
-                for (var i = start; i < end; i++)
-                {
-                    Items[i].GlobalIndex += globalDelta;
-                    Items[i].LocalIndex += localDelta;
-                }
+                Items[i].GlobalIndex = i;
+                lastLocal = Items[i].LocalIndex = Items[i].IsIncluded ? lastLocal + 1 : lastLocal; // The index it occupies or the one it should.
             }
         }
     }

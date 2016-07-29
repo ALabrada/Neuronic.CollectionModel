@@ -46,10 +46,13 @@
     <Compile Include="CollectionSelector.cs" />
     <Compile Include="EditableCollectionSelector.cs" />
     <Compile Include="FilteredReadOnlyObservableCollection.cs" />
+    <Compile Include="FilteredReadOnlyObservableCollectionBase.cs" />
     <Compile Include="FilteredReadOnlyObservableList.cs" />
     <Compile Include="ICollectionSelector.cs" />
+    <Compile Include="IndexedItemContainer.cs" />
     <Compile Include="IReadOnlyObservableCollection.cs" />
     <Compile Include="IReadOnlyObservableList.cs" />
+    <Compile Include="ItemContainer.cs" />
     <Compile Include="ListProxy.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReadOnlyObservableList.cs" />
