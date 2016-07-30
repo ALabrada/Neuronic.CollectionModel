@@ -4,32 +4,31 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
-using System.Runtime.CompilerServices;
 
 namespace Neuronic.CollectionModel
 {
     /// <summary>
-    ///     Utility class that allows to use a <see cref="ICollectionView" /> as a
-    ///     <see cref="IReadOnlyObservableCollection{T}" />.
+    ///     Base class for switchable collection sources.
     /// </summary>
-    /// <typeparam name="T">The type of the collection's items.</typeparam>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
     /// <seealso cref="Neuronic.CollectionModel.IReadOnlyObservableCollection{T}" />
     /// <seealso cref="System.Collections.Generic.ICollection{T}" />
-    public class ViewReadOnlyObservableCollection<T> : IReadOnlyObservableCollection<T>, ICollection<T>
+    public abstract class SwitchableCollectionSourceBase<T> : IReadOnlyObservableCollection<T>, ICollection<T>
     {
-        private readonly ICollectionView _view;
-        private int _count;
+        /// <summary>
+        ///     The name of the <see cref="Count" /> property.
+        /// </summary>
+        protected const string CountPropertyName = "Count";
 
         /// <summary>
-        ///     Initializes a new instance of the <see cref="ViewReadOnlyObservableCollection{T}" /> class.
+        ///     Gets source collection.
         /// </summary>
-        /// <param name="view">The view.</param>
-        public ViewReadOnlyObservableCollection(ICollectionView view)
-        {
-            _view = view;
-            Count = view.Cast<T>().Count();
-            CollectionChangedEventManager.AddHandler(_view, ViewOnCollectionChanged);
-        }
+        /// <value>
+        ///     The source collection.
+        /// </value>
+        protected abstract IReadOnlyObservableCollection<object> SourceOverride { get; }
+
+        bool ICollection<T>.IsReadOnly => true;
 
         void ICollection<T>.Add(T item)
         {
@@ -49,7 +48,10 @@ namespace Neuronic.CollectionModel
         ///     true if <paramref name="item" /> is found in the <see cref="T:System.Collections.Generic.ICollection`1" />;
         ///     otherwise, false.
         /// </returns>
-        public bool Contains(T item) => _view.Contains(item);
+        public bool Contains(T item)
+        {
+            return SourceOverride?.Contains(item) ?? false;
+        }
 
         /// <summary>
         ///     Copies the elements of the <see cref="T:System.Collections.Generic.ICollection`1" /> to an
@@ -71,7 +73,10 @@ namespace Neuronic.CollectionModel
             throw new InvalidOperationException();
         }
 
-        bool ICollection<T>.IsReadOnly => true;
+        /// <summary>
+        ///     Gets the number of elements contained in the <see cref="T:System.Collections.Generic.ICollection`1" />.
+        /// </summary>
+        public int Count => SourceOverride?.Count ?? 0;
 
         /// <summary>
         ///     Returns an enumerator that iterates through the collection.
@@ -81,26 +86,12 @@ namespace Neuronic.CollectionModel
         /// </returns>
         public IEnumerator<T> GetEnumerator()
         {
-            return _view.Cast<T>().GetEnumerator();
+            return (SourceOverride?.Cast<T>() ?? Enumerable.Empty<T>()).GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return _view.GetEnumerator();
-        }
-
-        /// <summary>
-        ///     Gets the number of elements contained in the <see cref="T:System.Collections.Generic.ICollection`1" />.
-        /// </summary>
-        public int Count
-        {
-            get { return _count; }
-            private set
-            {
-                if (_count == value) return;
-                _count = value;
-                OnPropertyChanged();
-            }
+            return GetEnumerator();
         }
 
         /// <summary>
@@ -113,20 +104,6 @@ namespace Neuronic.CollectionModel
         /// </summary>
         public event PropertyChangedEventHandler PropertyChanged;
 
-        private void ViewOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            switch (e.Action)
-            {
-                case NotifyCollectionChangedAction.Reset:
-                    Count = _view.Cast<T>().Count();
-                    break;
-                default:
-                    Count += e.NewItems.Count - e.OldItems.Count;
-                    break;
-            }
-            OnCollectionChanged(e);
-        }
-
         /// <summary>
         ///     Raises the <see cref="E:CollectionChanged" /> event.
         /// </summary>
@@ -137,12 +114,12 @@ namespace Neuronic.CollectionModel
         }
 
         /// <summary>
-        ///     Raises the <see cref="PropertyChanged" /> event.
+        ///     Raises the <see cref="E:PropertyChanged" /> event.
         /// </summary>
-        /// <param name="propertyName">Name of the property.</param>
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        /// <param name="e">The <see cref="PropertyChangedEventArgs" /> instance containing the event data.</param>
+        protected virtual void OnPropertyChanged(PropertyChangedEventArgs e)
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            PropertyChanged?.Invoke(this, e);
         }
     }
 }

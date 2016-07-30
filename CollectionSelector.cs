@@ -8,11 +8,25 @@ using System.Runtime.CompilerServices;
 
 namespace Neuronic.CollectionModel
 {
+    /// <summary>
+    ///     List selection mechanism.
+    /// </summary>
+    /// <remarks>
+    ///     This class can handle changes in the collection of items, but not through the selector instance itself.
+    ///     To modify the selector's collection, use the source collection instead, the one used in class constructors.
+    /// </remarks>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <seealso cref="Neuronic.CollectionModel.ICollectionSelector{T}" />
     public class CollectionSelector<T> : ICollectionSelector<T>
     {
         private int _selectedIndex = -1;
         private T _selectedItem;
 
+        /// <summary>
+        ///     Initializes a new instance of the <see cref="CollectionSelector{T}" /> class.
+        /// </summary>
+        /// <param name="items">The source items.</param>
+        /// <exception cref="System.ArgumentNullException">Thrown when <paramref name="items" /> is <strong>null</strong>.</exception>
         public CollectionSelector(IReadOnlyObservableList<T> items)
         {
             if (items == null) throw new ArgumentNullException(nameof(items));
@@ -20,22 +34,27 @@ namespace Neuronic.CollectionModel
             CollectionChangedEventManager.AddHandler(Items, ItemsOnCollectionChanged);
         }
 
+        /// <summary>
+        ///     Initializes a new instance of the <see cref="CollectionSelector{T}" /> class.
+        /// </summary>
+        /// <param name="items">The source items. This instance is the only way to modify the selector's collection.</param>
+        /// <exception cref="System.ArgumentNullException">Thrown when <paramref name="items" /> is <strong>null</strong>.</exception>
         public CollectionSelector(ObservableCollection<T> items)
             : this(items == null ? null : new ReadOnlyObservableList<T>(items))
         {
-
         }
 
         /// <summary>
-        /// Sets and gets the SelectedItem property.
-        /// Changes to that property's value raise the PropertyChanged event. 
+        ///     Gets the selected item.
+        ///     Changes to this value rise the <see cref="E:System.ComponentModel.INotifyPropertyChanged.PropertyChanged" /> and
+        ///     <see cref="E:Neuronic.CollectionModel.ICollectionSelector`1.SelectedItemChanged" /> events.
         /// </summary>
+        /// <value>
+        ///     The selected item.
+        /// </value>
         public T SelectedItem
         {
-            get
-            {
-                return _selectedItem;
-            }
+            get { return _selectedItem; }
             private set
             {
                 if (EqualityComparer<T>.Default.Equals(_selectedItem, value))
@@ -47,12 +66,21 @@ namespace Neuronic.CollectionModel
             }
         }
 
+        /// <summary>
+        ///     Gets the items.
+        /// </summary>
+        /// <value>
+        ///     The selector's collection of items.
+        /// </value>
         public IReadOnlyObservableList<T> Items { get; }
 
         /// <summary>
-        ///     Sets and gets the SelectedIndex property.
-        ///     Changes to that property's value raise the PropertyChanged event.
+        ///     Gets or sets the index of the selected item.
+        ///     Changes to this value rise the <see cref="E:System.ComponentModel.INotifyPropertyChanged.PropertyChanged" /> event.
         /// </summary>
+        /// <value>
+        ///     The index of the selected item.
+        /// </value>
         public int SelectedIndex
         {
             get { return _selectedIndex; }
@@ -65,6 +93,19 @@ namespace Neuronic.CollectionModel
             }
         }
 
+        /// <summary>
+        ///     Occurs when the selected item changes.
+        /// </summary>
+        public event EventHandler SelectedItemChanged;
+
+        /// <summary>
+        ///     Occurs when a property value changes.
+        /// </summary>
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        /// <summary>
+        ///     Updates the selected item.
+        /// </summary>
         protected void UpdateSelectedItem()
         {
             SelectedItem = SelectedIndex < 0 || SelectedIndex >= Items.Count
@@ -72,11 +113,17 @@ namespace Neuronic.CollectionModel
                 : Items[SelectedIndex];
         }
 
+        /// <summary>
+        ///     Called when the selected item changes.
+        /// </summary>
         protected virtual void OnSelectedItemChanged()
         {
             SelectedItemChanged?.Invoke(this, EventArgs.Empty);
         }
 
+        /// <summary>
+        ///     Called before the selected item chanes.
+        /// </summary>
         protected virtual void OnSelectedItemChanging()
         {
             SelectedItemChanging?.Invoke(this, EventArgs.Empty);
@@ -108,11 +155,21 @@ namespace Neuronic.CollectionModel
             }
         }
 
+        /// <summary>
+        ///     Called when the source collection is reseted.
+        /// </summary>
         protected virtual void OnCollectionReset()
         {
             SelectedIndex = Items.Count == 0 ? -1 : 0;
         }
 
+        /// <summary>
+        ///     Called when items are moved in the source collection.
+        /// </summary>
+        /// <param name="oldStartingIndex">Old index of the starting.</param>
+        /// <param name="oldItems">The old items.</param>
+        /// <param name="newStartingIndex">New index of the starting.</param>
+        /// <param name="newItems">The new items.</param>
         protected virtual void OnItemsMoved(int oldStartingIndex, IList oldItems, int newStartingIndex, IList newItems)
         {
             if (SelectedIndex >= oldStartingIndex &&
@@ -120,7 +177,15 @@ namespace Neuronic.CollectionModel
                 SelectedIndex = newStartingIndex + (SelectedIndex - oldStartingIndex);
         }
 
-        protected virtual void OnItemsReplaced(int oldStartingIndex, IList oldItems, int newStartingIndex, IList newItems)
+        /// <summary>
+        ///     Called when items are replaced in the source collection.
+        /// </summary>
+        /// <param name="oldStartingIndex">Old index of the starting.</param>
+        /// <param name="oldItems">The old items.</param>
+        /// <param name="newStartingIndex">New index of the starting.</param>
+        /// <param name="newItems">The new items.</param>
+        protected virtual void OnItemsReplaced(int oldStartingIndex, IList oldItems, int newStartingIndex,
+            IList newItems)
         {
             if (SelectedIndex >= oldStartingIndex &&
                 SelectedIndex < oldStartingIndex + oldItems.Count)
@@ -129,6 +194,11 @@ namespace Neuronic.CollectionModel
                 SelectedIndex += newItems.Count - oldItems.Count;
         }
 
+        /// <summary>
+        ///     Called when items are removed from the source collection.
+        /// </summary>
+        /// <param name="oldStartingIndex">Old index of the starting.</param>
+        /// <param name="oldItems">The old items.</param>
         protected virtual void OnItemsRemoved(int oldStartingIndex, IList oldItems)
         {
             if (SelectedIndex >= oldStartingIndex &&
@@ -138,15 +208,27 @@ namespace Neuronic.CollectionModel
                 SelectedIndex -= oldItems.Count;
         }
 
+        /// <summary>
+        ///     Called when items are added to the source collection.
+        /// </summary>
+        /// <param name="newStartingIndex">New index of the starting.</param>
+        /// <param name="newItems">The new items.</param>
         protected virtual void OnItemsAdded(int newStartingIndex, IList newItems)
         {
             if (newStartingIndex <= SelectedIndex)
                 SelectedIndex += newItems.Count;
         }
 
-        public event EventHandler SelectedItemChanged;
+        /// <summary>
+        ///     Occurs before the selected item changes.
+        /// </summary>
         public event EventHandler SelectedItemChanging;
 
+        /// <summary>
+        ///     Selects the specified item.
+        /// </summary>
+        /// <param name="item">The item to select.</param>
+        /// <returns>Whether the item is included in the collection.</returns>
         public bool Select(T item)
         {
             var list = Items as IList;
@@ -157,8 +239,10 @@ namespace Neuronic.CollectionModel
             return true;
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
-
+        /// <summary>
+        ///     Raises the <see cref="PropertyChanged" /> event.
+        /// </summary>
+        /// <param name="propertyName">Name of the property.</param>
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));

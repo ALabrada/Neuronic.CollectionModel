@@ -1,18 +1,36 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
-using System.Linq;
 
 namespace Neuronic.CollectionModel
 {
-    public class ListProxy<T> : IReadOnlyObservableList<T>, IList<T>
+    /// <summary>
+    /// An utility list that can be used to switch sources transparently.
+    /// </summary>
+    /// <typeparam name="T">The type of the collection elements.</typeparam>
+    /// <seealso cref="Neuronic.CollectionModel.SwitchableCollectionSourceBase{T}" />
+    /// <seealso cref="Neuronic.CollectionModel.IReadOnlyObservableList{T}" />
+    /// <seealso cref="System.Collections.Generic.IList{T}" />
+    public class SwitchableListSource<T> : SwitchableCollectionSourceBase<T>, IReadOnlyObservableList<T>, IList<T>
     {
-        private const string CountPropertyName = "Count";
         private const string IndexerName = "Item[]";
         private IReadOnlyObservableList<object> _source;
 
+        /// <summary>
+        /// Gets source collection.
+        /// </summary>
+        /// <value>
+        /// The source collection.
+        /// </value>
+        protected override IReadOnlyObservableCollection<object> SourceOverride => _source;
+
+        /// <summary>
+        /// Gets or sets the source collection.
+        /// </summary>
+        /// <value>
+        /// The source collection.
+        /// </value>
         public IReadOnlyObservableList<object> Source
         {
             get { return _source; }
@@ -46,20 +64,6 @@ namespace Neuronic.CollectionModel
             }
         }
 
-        public IEnumerator<T> GetEnumerator()
-        {
-            return (Source?.Cast<T>() ?? Enumerable.Empty<T>()).GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-
-        public int Count => Source?.Count ?? 0;
-
-        bool ICollection<T>.IsReadOnly => true;
-
         T IList<T>.this[int index]
         {
             get { return this[index]; }
@@ -69,6 +73,14 @@ namespace Neuronic.CollectionModel
             }
         }
 
+        /// <summary>
+        /// Gets the <see cref="T"/> at the specified index.
+        /// </summary>
+        /// <value>
+        /// The <see cref="T"/>.
+        /// </value>
+        /// <param name="index">The index.</param>
+        /// <returns>The item at <paramref name="index"/>.</returns>
         public T this[int index]
         {
             get
@@ -79,9 +91,6 @@ namespace Neuronic.CollectionModel
             }
         }
 
-        public event NotifyCollectionChangedEventHandler CollectionChanged;
-        public event PropertyChangedEventHandler PropertyChanged;
-
         private void SourceOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             OnCollectionChanged(e);
@@ -90,16 +99,6 @@ namespace Neuronic.CollectionModel
         private void SourceOnPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             OnPropertyChanged(e);
-        }
-
-        protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
-        {
-            CollectionChanged?.Invoke(this, e);
-        }
-
-        protected virtual void OnPropertyChanged(PropertyChangedEventArgs e)
-        {
-            PropertyChanged?.Invoke(this, e);
         }
 
         int IList<T>.IndexOf(T item)
@@ -113,31 +112,6 @@ namespace Neuronic.CollectionModel
         }
 
         void IList<T>.RemoveAt(int index)
-        {
-            throw new InvalidOperationException();
-        }
-
-        void ICollection<T>.Add(T item)
-        {
-            throw new InvalidOperationException();
-        }
-
-        void ICollection<T>.Clear()
-        {
-            throw new InvalidOperationException();
-        }
-
-        public bool Contains(T item)
-        {
-            return Source?.Contains(item) ?? false;
-        }
-
-        public void CopyTo(T[] array, int arrayIndex)
-        {
-            this.CopyTo(array, arrayIndex, array.Length);
-        }
-
-        bool ICollection<T>.Remove(T item)
         {
             throw new InvalidOperationException();
         }

@@ -8,27 +8,54 @@ using System.Linq;
 
 namespace Neuronic.CollectionModel
 {
+    /// <summary>
+    ///     Filtered read-only list.
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <seealso cref="Neuronic.CollectionModel.IReadOnlyObservableList{T}" />
+    /// <seealso cref="System.Collections.Generic.IList{T}" />
     public class FilteredReadOnlyObservableList<T> :
         FilteredReadOnlyObservableCollectionBase<T, IndexedItemContainer<T>>, IReadOnlyObservableList<T>, IList<T>
     {
+        /// <summary>
+        ///     Initializes a new instance of the <see cref="FilteredReadOnlyObservableList{T}" /> class.
+        /// </summary>
+        /// <param name="source">The source collection.</param>
+        /// <param name="filter">The filter predicate.</param>
+        /// <param name="triggers">
+        ///     The names of the item's properties that can cause <paramref name="filter" /> to change its
+        ///     value.
+        /// </param>
         public FilteredReadOnlyObservableList(IReadOnlyObservableCollection<T> source, Predicate<T> filter,
             params string[] triggers) : base(source, filter, triggers)
         {
             UpdateIndexes(0, Items.Count);
-            LocalItems =
+            FilteredItems =
                 new ObservableCollection<T>(from container in Items where container.IsIncluded select container.Item);
 
-
             Items.CollectionChanged += ItemsOnCollectionChanged;
-            LocalItems.CollectionChanged += (sender, args) => OnCollectionChanged(args);
-            ((INotifyPropertyChanged) LocalItems).PropertyChanged += (sender, args) => OnPropertyChanged(args);
+            FilteredItems.CollectionChanged += (sender, args) => OnCollectionChanged(args);
+            ((INotifyPropertyChanged) FilteredItems).PropertyChanged += (sender, args) => OnPropertyChanged(args);
         }
 
-        protected ObservableCollection<T> LocalItems { get; }
+        /// <summary>
+        ///     Gets the filtered items.
+        /// </summary>
+        /// <value>
+        ///     The filtered items.
+        /// </value>
+        protected ObservableCollection<T> FilteredItems { get; }
 
+        /// <summary>
+        ///     Determines the index of a specific item in the <see cref="T:System.Collections.Generic.IList`1" />.
+        /// </summary>
+        /// <param name="item">The object to locate in the <see cref="T:System.Collections.Generic.IList`1" />.</param>
+        /// <returns>
+        ///     The index of <paramref name="item" /> if found in the list; otherwise, -1.
+        /// </returns>
         public int IndexOf(T item)
         {
-            return LocalItems.IndexOf(item);
+            return FilteredItems.IndexOf(item);
         }
 
         void IList<T>.Insert(int index, T item)
@@ -41,14 +68,6 @@ namespace Neuronic.CollectionModel
             throw new InvalidOperationException();
         }
 
-        public override IEnumerator<T> GetEnumerator()
-        {
-            return LocalItems.GetEnumerator();
-        }
-
-        public override int Count => LocalItems.Count;
-        public T this[int index] => LocalItems[index];
-
         T IList<T>.this[int index]
         {
             get { return this[index]; }
@@ -56,6 +75,39 @@ namespace Neuronic.CollectionModel
             set { throw new InvalidOperationException(); }
         }
 
+        /// <summary>
+        ///     Returns an enumerator that iterates through the collection.
+        /// </summary>
+        /// <returns>
+        ///     An enumerator that can be used to iterate through the collection.
+        /// </returns>
+        public override IEnumerator<T> GetEnumerator()
+        {
+            return FilteredItems.GetEnumerator();
+        }
+
+        /// <summary>
+        ///     Gets the number of elements contained in the <see cref="T:System.Collections.Generic.ICollection`1" />.
+        /// </summary>
+        public override int Count => FilteredItems.Count;
+
+        /// <summary>
+        ///     Gets the <see cref="T" /> at the specified index.
+        /// </summary>
+        /// <value>
+        ///     The <see cref="T" />.
+        /// </value>
+        /// <param name="index">The index.</param>
+        /// <returns></returns>
+        public T this[int index] => FilteredItems[index];
+
+        /// <summary>
+        ///     Creates a container for an item that is included in the source collection.
+        /// </summary>
+        /// <param name="item">The item.</param>
+        /// <returns>
+        ///     Container for <paramref name="item" />.
+        /// </returns>
         protected override IndexedItemContainer<T> CreateContainer(T item)
         {
             var container = new IndexedItemContainer<T>(item, Filter);
@@ -64,6 +116,10 @@ namespace Neuronic.CollectionModel
             return container;
         }
 
+        /// <summary>
+        ///     Destroys a container when it's item is removed from the source collection.
+        /// </summary>
+        /// <param name="container">The container.</param>
         protected override void DestroyContainer(IndexedItemContainer<T> container)
         {
             container.DetachTriggers(Triggers);
@@ -72,17 +128,17 @@ namespace Neuronic.CollectionModel
 
         private void ContainerOnIsIncludedChanged(object sender, EventArgs eventArgs)
         {
-            var container = (IndexedItemContainer<T>)sender;
+            var container = (IndexedItemContainer<T>) sender;
             if (container.IsIncluded)
             {
                 UpdateIndexes(container.GlobalIndex, Items.Count);
-                LocalItems.Insert(container.LocalIndex, container.Item);
+                FilteredItems.Insert(container.LocalIndex, container.Item);
             }
             else
             {
                 var localIndex = container.LocalIndex;
                 UpdateIndexes(container.GlobalIndex, Items.Count);
-                LocalItems.RemoveAt(localIndex);
+                FilteredItems.RemoveAt(localIndex);
             }
         }
 
@@ -114,29 +170,30 @@ namespace Neuronic.CollectionModel
                     OnContainerReplacedInItems(newContainer, oldContainer, e.NewStartingIndex);
                     break;
                 case NotifyCollectionChangedAction.Reset:
-                    LocalItems.Clear();
+                    FilteredItems.Clear();
                     Debug.Assert(Items.Count == 0);
                     break;
             }
         }
 
-        private void OnContainerReplacedInItems(IndexedItemContainer<T> newItem, IndexedItemContainer<T> oldItem, int index)
+        private void OnContainerReplacedInItems(IndexedItemContainer<T> newItem, IndexedItemContainer<T> oldItem,
+            int index)
         {
             if (newItem.IsIncluded && !oldItem.IsIncluded)
             {
                 UpdateIndexes(index, Items.Count);
-                LocalItems.Insert(newItem.LocalIndex, newItem.Item);
+                FilteredItems.Insert(newItem.LocalIndex, newItem.Item);
             }
             else if (oldItem.IsIncluded && !newItem.IsIncluded)
             {
                 UpdateIndexes(index, Items.Count);
-                LocalItems.RemoveAt(oldItem.LocalIndex);
+                FilteredItems.RemoveAt(oldItem.LocalIndex);
             }
             else
             {
                 newItem.GlobalIndex = oldItem.GlobalIndex;
                 newItem.LocalIndex = oldItem.LocalIndex;
-                LocalItems[newItem.LocalIndex] = newItem.Item;
+                FilteredItems[newItem.LocalIndex] = newItem.Item;
             }
             oldItem.GlobalIndex = int.MinValue;
             oldItem.LocalIndex = int.MinValue;
@@ -152,14 +209,14 @@ namespace Neuronic.CollectionModel
             var newLocalIndex = item.LocalIndex;
 
             if (item.IsIncluded)
-                LocalItems.Move(oldLocalIndex, newLocalIndex);
+                FilteredItems.Move(oldLocalIndex, newLocalIndex);
         }
 
         private void OnContainerRemovedFromItems(IndexedItemContainer<T> item, int index)
         {
             UpdateIndexes(index, Items.Count);
             if (item.IsIncluded)
-                LocalItems.RemoveAt(item.LocalIndex);
+                FilteredItems.RemoveAt(item.LocalIndex);
             item.LocalIndex = item.GlobalIndex = int.MinValue;
         }
 
@@ -167,7 +224,7 @@ namespace Neuronic.CollectionModel
         {
             UpdateIndexes(index, Items.Count);
             if (item.IsIncluded)
-                LocalItems.Insert(item.LocalIndex, item.Item);
+                FilteredItems.Insert(item.LocalIndex, item.Item);
         }
 
         private void UpdateIndexes(int start, int end)
@@ -176,7 +233,8 @@ namespace Neuronic.CollectionModel
             for (var i = start; i < end; i++)
             {
                 Items[i].GlobalIndex = i;
-                lastLocal = Items[i].LocalIndex = Items[i].IsIncluded ? lastLocal + 1 : lastLocal; // The index it occupies or the one it should.
+                lastLocal = Items[i].LocalIndex = Items[i].IsIncluded ? lastLocal + 1 : lastLocal;
+                    // The index it occupies or the one it should.
             }
         }
     }

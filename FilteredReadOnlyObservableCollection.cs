@@ -7,10 +7,28 @@ using System.Linq;
 
 namespace Neuronic.CollectionModel
 {
+    /// <summary>
+    ///     Filtered read-only collection.
+    /// </summary>
+    /// <remarks>
+    ///     This class is faster and lighter than <see cref="FilteredReadOnlyObservableList{T}" /> but does not provide
+    ///     index information in the <see cref="INotifyCollectionChanged.CollectionChanged" /> event, so use it carefully.
+    ///     Other than that, both classes provide the same functionalities.
+    /// </remarks>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
     public class FilteredReadOnlyObservableCollection<T> : FilteredReadOnlyObservableCollectionBase<T, ItemContainer<T>>
     {
         private int _count;
 
+        /// <summary>
+        ///     Initializes a new instance of the <see cref="FilteredReadOnlyObservableCollection{T}" /> class.
+        /// </summary>
+        /// <param name="source">The source collection.</param>
+        /// <param name="filter">The filter predicate.</param>
+        /// <param name="triggers">
+        ///     The names of the item's properties that can cause <paramref name="filter" /> to change its
+        ///     value.
+        /// </param>
         public FilteredReadOnlyObservableCollection(IReadOnlyObservableCollection<T> source, Predicate<T> filter,
             params string[] triggers) : base(source, filter, triggers)
         {
@@ -18,6 +36,9 @@ namespace Neuronic.CollectionModel
             _count = Items.Count(c => c.IsIncluded);
         }
 
+        /// <summary>
+        ///     Gets the number of elements contained in the <see cref="T:System.Collections.Generic.ICollection`1" />.
+        /// </summary>
         public override int Count => _count;
 
         private void ItemsOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
@@ -75,6 +96,12 @@ namespace Neuronic.CollectionModel
                 OnCollectionChanged(newArgs);
         }
 
+        /// <summary>
+        ///     Returns an enumerator that iterates through the collection.
+        /// </summary>
+        /// <returns>
+        ///     An enumerator that can be used to iterate through the collection.
+        /// </returns>
         public override IEnumerator<T> GetEnumerator()
         {
             return (from container in Items where container.IsIncluded select container.Item).GetEnumerator();
@@ -87,6 +114,13 @@ namespace Neuronic.CollectionModel
             OnPropertyChanged(new PropertyChangedEventArgs(nameof(Count)));
         }
 
+        /// <summary>
+        ///     Creates a container for an item that is included in the source collection.
+        /// </summary>
+        /// <param name="item">The item.</param>
+        /// <returns>
+        ///     Container for <paramref name="item" />.
+        /// </returns>
         protected override ItemContainer<T> CreateContainer(T item)
         {
             var container = new ItemContainer<T>(item, Filter);
@@ -95,6 +129,10 @@ namespace Neuronic.CollectionModel
             return container;
         }
 
+        /// <summary>
+        ///     Destroys a container when it's item is removed from the source collection.
+        /// </summary>
+        /// <param name="container">The container.</param>
         protected override void DestroyContainer(ItemContainer<T> container)
         {
             container.DetachTriggers(Triggers);
