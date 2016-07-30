@@ -58,6 +58,7 @@
     <Compile Include="SwitchableListSource.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReadOnlyObservableList.cs" />
+    <Compile Include="TransformingReadOnlyObservableList.cs" />
     <Compile Include="ViewReadOnlyObservableCollection.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
