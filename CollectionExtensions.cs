@@ -60,26 +60,7 @@ namespace Neuronic.CollectionModel
                     }
                     break;
                 case NotifyCollectionChangedAction.Replace:
-                    if (e.NewItems.Count == e.OldItems.Count)
-                    {
-                        for (var i = 0; i < e.NewItems.Count; i++)
-                        {
-                            var item = list[e.OldStartingIndex + i];
-                            list[e.OldStartingIndex + i] = @select(e.NewItems[i]);
-                            onRemove?.Invoke(item);
-                        }
-                    }
-                    else
-                    {
-                        for (var i = 0; i < e.OldItems.Count; i++)
-                        {
-                            var item = list[e.OldStartingIndex];
-                            list.RemoveAt(e.OldStartingIndex);
-                            onRemove?.Invoke(item);
-                        }
-                        for (var i = 0; i < e.NewItems.Count; i++)
-                            list.Insert(e.OldStartingIndex + i, @select(e.NewItems[i]));
-                    }
+                    ReplaceItems(list, e.OldItems, e.NewItems, e.OldStartingIndex, select, onRemove);
                     break;
                 case NotifyCollectionChangedAction.Reset:
                     if (onRemove != null)
@@ -89,6 +70,50 @@ namespace Neuronic.CollectionModel
                     foreach (var item in source)
                         list.Add(@select(item));
                     break;
+            }
+        }
+
+        /// <summary>
+        ///     Replaces the specified items in the specified list.
+        /// </summary>
+        /// <typeparam name="T">Type of the collection elements</typeparam>
+        /// <param name="list">The list to update.</param>
+        /// <param name="oldItems">The replaced items.</param>
+        /// <param name="newItems">The new items.</param>
+        /// <param name="index">The starting index.</param>
+        /// <param name="select">
+        ///     A function that can be used to create new items for <paramref name="list" />
+        ///     based on the items in <paramref name="oldItems" /> and <paramref name="newItems" />. By default, the same items are
+        ///     used.
+        /// </param>
+        /// <param name="onRemove">
+        ///     A callback procedure that can be used to free resources when items
+        ///     are removed from <paramref name="list" />.
+        /// </param>
+        public static void ReplaceItems<T>(this IList<T> list, IEnumerable oldItems, IEnumerable newItems, int index,
+            Func<object, T> select = null, Action<T> onRemove = null)
+        {
+            select = select ?? (o => (T) o);
+            bool thereIsOldItems, thereIsNewItems;
+            IEnumerator oldItemsEnumerator = oldItems.GetEnumerator(), newItemsEnumerator = newItems.GetEnumerator();
+            while ((thereIsNewItems = newItemsEnumerator.MoveNext()) &
+                   (thereIsOldItems = oldItemsEnumerator.MoveNext()))
+            {
+                var oldItem = list[index];
+                list[index++] = select(newItemsEnumerator.Current);
+                onRemove?.Invoke(oldItem);
+            }
+            while (thereIsNewItems)
+            {
+                list.Insert(index++, select(newItemsEnumerator.Current));
+                thereIsNewItems = newItemsEnumerator.MoveNext();
+            }
+            while (thereIsOldItems)
+            {
+                var oldItem = list[index];
+                list.RemoveAt(index);
+                onRemove?.Invoke(oldItem);
+                thereIsOldItems = oldItemsEnumerator.MoveNext();
             }
         }
 

@@ -42,7 +42,11 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CollectionContainer.cs" />
     <Compile Include="CollectionExtensions.cs" />
+    <Compile Include="CompositeReadOnlyObservableCollectionSource.cs" />
+    <Compile Include="CompositeReadOnlyObservableCollectionSourceBase.cs" />
+    <Compile Include="CompositeReadOnlyObservableListSource.cs" />
     <Compile Include="SwitchableCollectionSource.cs" />
     <Compile Include="CollectionSelector.cs" />
     <Compile Include="EditableCollectionSelector.cs" />
