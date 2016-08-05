@@ -47,6 +47,9 @@
     <Compile Include="CompositeReadOnlyObservableCollectionSource.cs" />
     <Compile Include="CompositeReadOnlyObservableCollectionSourceBase.cs" />
     <Compile Include="CompositeReadOnlyObservableListSource.cs" />
+    <Compile Include="ISelectableItem.cs" />
+    <Compile Include="SelectableCollectionSelector.cs" />
+    <Compile Include="SelectionChangedEventManager.cs" />
     <Compile Include="SwitchableCollectionSource.cs" />
     <Compile Include="CollectionSelector.cs" />
     <Compile Include="EditableCollectionSelector.cs" />

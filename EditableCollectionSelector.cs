@@ -1,6 +1,8 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 
 namespace Neuronic.CollectionModel
 {
@@ -13,8 +15,10 @@ namespace Neuronic.CollectionModel
     /// <typeparam name="T">The type of the collection items.</typeparam>
     /// <seealso cref="Neuronic.CollectionModel.CollectionSelector{T}" />
     /// <seealso cref="System.Collections.Generic.IList{T}" />
-    public class EditableCollectionSelector<T> : CollectionSelector<T>, IList<T>
+    public class EditableCollectionSelector<T> : ICollectionSelector<T>, IList<T>
     {
+        private readonly ICollectionSelector<T> _internalSelector;
+
         /// <summary>
         ///     Initializes a new instance of the <see cref="EditableCollectionSelector{T}" /> class.
         /// </summary>
@@ -28,9 +32,21 @@ namespace Neuronic.CollectionModel
         ///     Initializes a new instance of the <see cref="EditableCollectionSelector{T}" /> class.
         /// </summary>
         /// <param name="items">The source items.</param>
-        public EditableCollectionSelector(ObservableCollection<T> items) : base(items)
+        public EditableCollectionSelector(ObservableCollection<T> items) : this(items, new CollectionSelector<T>(items))
+        {
+        }
+
+        /// <summary>
+        ///     Initializes a new instance of the <see cref="EditableCollectionSelector{T}" /> class.
+        /// </summary>
+        /// <param name="items">The items.</param>
+        /// <param name="internalSelector">The internal selector.</param>
+        protected EditableCollectionSelector(ObservableCollection<T> items, ICollectionSelector<T> internalSelector)
         {
             ItemsCore = items;
+            _internalSelector = internalSelector;
+            _internalSelector.SelectedItemChanged += (sender, args) => OnSelectedItemChanged();
+            _internalSelector.PropertyChanged += (sender, args) => OnPropertyChanged(args);
         }
 
         /// <summary>
@@ -40,6 +56,49 @@ namespace Neuronic.CollectionModel
         ///     The selector's items.
         /// </value>
         protected ObservableCollection<T> ItemsCore { get; }
+
+        /// <summary>
+        ///     Occurs when a property value changes.
+        /// </summary>
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        /// <summary>
+        ///     Gets or sets the index of the selected item.
+        ///     Changes to this value should rise the <see cref="E:System.ComponentModel.INotifyPropertyChanged.PropertyChanged" />
+        ///     event.
+        /// </summary>
+        /// <value>
+        ///     The index of the selected item.
+        /// </value>
+        public int SelectedIndex
+        {
+            get { return _internalSelector.SelectedIndex; }
+            set { _internalSelector.SelectedIndex = value; }
+        }
+
+        /// <summary>
+        ///     Gets the selected item.
+        ///     Changes to this value should rise the <see cref="E:System.ComponentModel.INotifyPropertyChanged.PropertyChanged" />
+        ///     and
+        ///     <see cref="E:Neuronic.CollectionModel.ICollectionSelector`1.SelectedItemChanged" /> events.
+        /// </summary>
+        /// <value>
+        ///     The selected item.
+        /// </value>
+        public T SelectedItem => _internalSelector.SelectedItem;
+
+        /// <summary>
+        ///     Gets the items.
+        /// </summary>
+        /// <value>
+        ///     The item list.
+        /// </value>
+        public IReadOnlyObservableList<T> Items => _internalSelector.Items;
+
+        /// <summary>
+        ///     Occurs when the selected item changes.
+        /// </summary>
+        public event EventHandler SelectedItemChanged;
 
         /// <summary>
         ///     Adds an item to the <see cref="T:System.Collections.Generic.ICollection`1" />.
@@ -230,6 +289,23 @@ namespace Neuronic.CollectionModel
             ItemsCore[index] = newItem;
             SelectedIndex = index;
             return true;
+        }
+
+        /// <summary>
+        ///     Raises the <see cref="E:PropertyChanged" /> event.
+        /// </summary>
+        /// <param name="e">The <see cref="PropertyChangedEventArgs" /> instance containing the event data.</param>
+        protected virtual void OnPropertyChanged(PropertyChangedEventArgs e)
+        {
+            PropertyChanged?.Invoke(this, e);
+        }
+
+        /// <summary>
+        ///     Raises the <see cref="OnSelectedItemChanged" /> event.
+        /// </summary>
+        protected virtual void OnSelectedItemChanged()
+        {
+            SelectedItemChanged?.Invoke(this, EventArgs.Empty);
         }
     }
 }
