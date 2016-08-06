@@ -107,6 +107,16 @@ namespace Neuronic.CollectionModel
         public event EventHandler SelectedItemChanged;
 
         /// <summary>
+        ///     Selects the specified item.
+        /// </summary>
+        /// <param name="item">The item to select.</param>
+        /// <returns>Whether the item is included in the collection.</returns>
+        public bool Select(T item)
+        {
+            return this.TrySelect(item);
+        }
+
+        /// <summary>
         ///     Adds an item to the <see cref="T:System.Collections.Generic.ICollection`1" />.
         /// </summary>
         /// <param name="item">The object to add to the <see cref="T:System.Collections.Generic.ICollection`1" />.</param>

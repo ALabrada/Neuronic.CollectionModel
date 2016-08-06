@@ -231,12 +231,7 @@ namespace Neuronic.CollectionModel
         /// <returns>Whether the item is included in the collection.</returns>
         public bool Select(T item)
         {
-            var list = Items as IList;
-            var index = list?.IndexOf(item) ?? Items.IndexOf(item);
-            if (index < 0)
-                return false;
-            SelectedIndex = index;
-            return true;
+            return this.TrySelect(item);
         }
 
         /// <summary>

@@ -212,5 +212,22 @@ namespace Neuronic.CollectionModel
             for (var i = start; i < last && enumerator.MoveNext(); i++)
                 array[i] = enumerator.Current;
         }
+
+        /// <summary>
+        /// Tries to select the specified item in the selector.
+        /// </summary>
+        /// <typeparam name="T">Type of the selector's elements.</typeparam>
+        /// <param name="selector">The selector.</param>
+        /// <param name="item">The item to select.</param>
+        /// <returns>true, if the item was found; otherwise, false.</returns>
+        public static bool TrySelect<T>(this ICollectionSelector<T> selector, T item)
+        {
+            var list = selector.Items as IList;
+            var index = list?.IndexOf(item) ?? selector.Items.IndexOf(item);
+            if (index < 0)
+                return false;
+            selector.SelectedIndex = index;
+            return true;
+        }
     }
 }
