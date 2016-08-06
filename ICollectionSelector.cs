@@ -38,6 +38,11 @@ namespace Neuronic.CollectionModel
         IReadOnlyObservableList<T> Items { get; }
 
         /// <summary>
+        ///     Occurs before the selected item changes.
+        /// </summary>
+        event EventHandler SelectedItemChanging;
+
+        /// <summary>
         ///     Occurs when the selected item changes.
         /// </summary>
         event EventHandler SelectedItemChanged;

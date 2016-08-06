@@ -46,6 +46,7 @@ namespace Neuronic.CollectionModel
             ItemsCore = items;
             _internalSelector = internalSelector;
             _internalSelector.SelectedItemChanged += (sender, args) => OnSelectedItemChanged();
+            _internalSelector.SelectedItemChanging += (sender, args) => OnSelectedItemChanging();
             _internalSelector.PropertyChanged += (sender, args) => OnPropertyChanged(args);
         }
 
@@ -94,6 +95,11 @@ namespace Neuronic.CollectionModel
         ///     The item list.
         /// </value>
         public IReadOnlyObservableList<T> Items => _internalSelector.Items;
+
+        /// <summary>
+        /// Occurs before the selected item changes.
+        /// </summary>
+        public event EventHandler SelectedItemChanging;
 
         /// <summary>
         ///     Occurs when the selected item changes.
@@ -306,6 +312,14 @@ namespace Neuronic.CollectionModel
         protected virtual void OnSelectedItemChanged()
         {
             SelectedItemChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        /// <summary>
+        /// Raises the <see cref="SelectedItemChanging"/> event.
+        /// </summary>
+        protected virtual void OnSelectedItemChanging()
+        {
+            SelectedItemChanging?.Invoke(this, EventArgs.Empty);
         }
     }
 }
