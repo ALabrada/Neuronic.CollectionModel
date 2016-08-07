@@ -6,15 +6,15 @@ namespace Neuronic.CollectionModel
     ///     Stores an item and it's meta-data in a filtered collection, including its indexes.
     /// </summary>
     /// <typeparam name="T">The type of the item.</typeparam>
-    /// <seealso cref="Neuronic.CollectionModel.ItemContainer{T}" />
-    public class IndexedItemContainer<T> : ItemContainer<T>
+    /// <seealso cref="FilterItemContainer{TItem}" />
+    public class IndexedFilterItemContainer<T> : FilterItemContainer<T>
     {
         /// <summary>
-        ///     Initializes a new instance of the <see cref="IndexedItemContainer{T}" /> class.
+        ///     Initializes a new instance of the <see cref="IndexedFilterItemContainer{T}" /> class.
         /// </summary>
         /// <param name="item">The item.</param>
         /// <param name="filter">The filter.</param>
-        public IndexedItemContainer(T item, Predicate<T> filter) : base(item, filter)
+        public IndexedFilterItemContainer(T item, Predicate<T> filter) : base(item, filter)
         {
         }
 

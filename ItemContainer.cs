@@ -1,26 +1,20 @@
-using System;
 using System.ComponentModel;
 
 namespace Neuronic.CollectionModel
 {
     /// <summary>
-    ///     Stores an item and it's meta-data in a filtered collection.
+    /// Abstraction of an item and it's meta-data in some collection.
     /// </summary>
     /// <typeparam name="TItem">The type of the item.</typeparam>
-    public class ItemContainer<TItem>
+    public abstract class ItemContainer<TItem>
     {
-        private readonly Predicate<TItem> _filter;
-
         /// <summary>
-        ///     Initializes a new instance of the <see cref="ItemContainer{TItem}" /> class.
+        /// Initializes a new instance of the <see cref="ItemContainer{TItem}"/> class.
         /// </summary>
         /// <param name="item">The item.</param>
-        /// <param name="filter">The filter.</param>
-        public ItemContainer(TItem item, Predicate<TItem> filter)
+        protected ItemContainer(TItem item)
         {
-            _filter = filter;
             Item = item;
-            IsIncluded = _filter(Item);
         }
 
         /// <summary>
@@ -32,14 +26,6 @@ namespace Neuronic.CollectionModel
         public TItem Item { get; }
 
         /// <summary>
-        ///     Gets a value indicating whether this instance is included.
-        /// </summary>
-        /// <value>
-        ///     <c>true</c> if this instance is included in the filtered collection; otherwise, <c>false</c>.
-        /// </value>
-        public bool IsIncluded { get; private set; }
-
-        /// <summary>
         ///     Attaches the event handlers that listen to changes in the trigger properties.
         /// </summary>
         /// <param name="triggers">The triggers.</param>
@@ -48,7 +34,7 @@ namespace Neuronic.CollectionModel
             var notify = Item as INotifyPropertyChanged;
             if (notify == null) return;
             foreach (var name in triggers)
-                PropertyChangedEventManager.AddHandler(notify, ItemOnTriggerPropertyChanged, name);
+                PropertyChangedEventManager.AddHandler(notify, OnTriggerPropertyChanged, name);
         }
 
         /// <summary>
@@ -60,20 +46,14 @@ namespace Neuronic.CollectionModel
             var notify = Item as INotifyPropertyChanged;
             if (notify == null) return;
             foreach (var name in triggers)
-                PropertyChangedEventManager.RemoveHandler(notify, ItemOnTriggerPropertyChanged, name);
-        }
-
-        private void ItemOnTriggerPropertyChanged(object sender, PropertyChangedEventArgs args)
-        {
-            var wasIncluded = IsIncluded;
-            IsIncluded = _filter(Item);
-            if (IsIncluded != wasIncluded)
-                IsIncludedChanged?.Invoke(this, EventArgs.Empty);
+                PropertyChangedEventManager.RemoveHandler(notify, OnTriggerPropertyChanged, name);
         }
 
         /// <summary>
-        ///     Occurs when the <see cref="IsIncluded" /> property value changes.
+        /// Called when the value of any of the trigger property changes for this item.
         /// </summary>
-        public event EventHandler IsIncludedChanged;
+        /// <param name="sender">The sender.</param>
+        /// <param name="args">The <see cref="PropertyChangedEventArgs"/> instance containing the event data.</param>
+        protected abstract void OnTriggerPropertyChanged(object sender, PropertyChangedEventArgs args);
     }
 }

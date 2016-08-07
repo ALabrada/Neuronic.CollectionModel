@@ -16,7 +16,7 @@ namespace Neuronic.CollectionModel
     /// <seealso cref="Neuronic.CollectionModel.IReadOnlyObservableCollection{TItem}" />
     /// <seealso cref="System.Collections.Generic.ICollection{TItem}" />
     public abstract class FilteredReadOnlyObservableCollectionBase<TItem, TContainer> :
-        IReadOnlyObservableCollection<TItem>, ICollection<TItem> where TContainer : ItemContainer<TItem>
+        IReadOnlyObservableCollection<TItem>, ICollection<TItem> where TContainer : FilterItemContainer<TItem>
     {
         /// <summary>
         ///     The filter.

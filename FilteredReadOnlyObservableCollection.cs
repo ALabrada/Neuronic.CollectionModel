@@ -16,7 +16,7 @@ namespace Neuronic.CollectionModel
     ///     Other than that, both classes provide the same functionalities.
     /// </remarks>
     /// <typeparam name="T">The type of the collection items.</typeparam>
-    public class FilteredReadOnlyObservableCollection<T> : FilteredReadOnlyObservableCollectionBase<T, ItemContainer<T>>
+    public class FilteredReadOnlyObservableCollection<T> : FilteredReadOnlyObservableCollectionBase<T, FilterItemContainer<T>>
     {
         private int _count;
 
@@ -44,12 +44,12 @@ namespace Neuronic.CollectionModel
         private void ItemsOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             NotifyCollectionChangedEventArgs newArgs = null;
-            ItemContainer<T> newContainer, oldContainer;
+            FilterItemContainer<T> newContainer, oldContainer;
             switch (e.Action)
             {
                 case NotifyCollectionChangedAction.Add:
                     Debug.Assert(e.NewItems.Count == 1);
-                    newContainer = (ItemContainer<T>) e.NewItems[0];
+                    newContainer = (FilterItemContainer<T>) e.NewItems[0];
                     if (newContainer.IsIncluded)
                     {
                         SetCount(Count + 1);
@@ -59,7 +59,7 @@ namespace Neuronic.CollectionModel
                     break;
                 case NotifyCollectionChangedAction.Remove:
                     Debug.Assert(e.OldItems.Count == 1);
-                    oldContainer = (ItemContainer<T>) e.OldItems[0];
+                    oldContainer = (FilterItemContainer<T>) e.OldItems[0];
                     if (oldContainer.IsIncluded)
                     {
                         SetCount(Count - 1);
@@ -69,8 +69,8 @@ namespace Neuronic.CollectionModel
                     break;
                 case NotifyCollectionChangedAction.Replace:
                     Debug.Assert(e.OldItems.Count == 1 && e.NewItems.Count == 1);
-                    newContainer = (ItemContainer<T>) e.NewItems[0];
-                    oldContainer = (ItemContainer<T>) e.OldItems[0];
+                    newContainer = (FilterItemContainer<T>) e.NewItems[0];
+                    oldContainer = (FilterItemContainer<T>) e.OldItems[0];
                     if (newContainer.IsIncluded && oldContainer.IsIncluded)
                         newArgs = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace,
                             newContainer.Item, oldContainer.Item);
@@ -121,9 +121,9 @@ namespace Neuronic.CollectionModel
         /// <returns>
         ///     Container for <paramref name="item" />.
         /// </returns>
-        protected override ItemContainer<T> CreateContainer(T item)
+        protected override FilterItemContainer<T> CreateContainer(T item)
         {
-            var container = new ItemContainer<T>(item, Filter);
+            var container = new FilterItemContainer<T>(item, Filter);
             container.IsIncludedChanged += ContainerOnIsIncludedChanged;
             container.AttachTriggers(Triggers);
             return container;
@@ -133,7 +133,7 @@ namespace Neuronic.CollectionModel
         ///     Destroys a container when it's item is removed from the source collection.
         /// </summary>
         /// <param name="container">The container.</param>
-        protected override void DestroyContainer(ItemContainer<T> container)
+        protected override void DestroyContainer(FilterItemContainer<T> container)
         {
             container.DetachTriggers(Triggers);
             container.IsIncludedChanged -= ContainerOnIsIncludedChanged;
@@ -141,7 +141,7 @@ namespace Neuronic.CollectionModel
 
         private void ContainerOnIsIncludedChanged(object sender, EventArgs e)
         {
-            var container = (ItemContainer<T>) sender;
+            var container = (FilterItemContainer<T>) sender;
             NotifyCollectionChangedAction action;
             if (container.IsIncluded)
             {

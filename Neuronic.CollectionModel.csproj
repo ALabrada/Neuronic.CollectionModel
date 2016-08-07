@@ -48,8 +48,10 @@
     <Compile Include="CompositeReadOnlyObservableCollectionSourceBase.cs" />
     <Compile Include="CompositeReadOnlyObservableListSource.cs" />
     <Compile Include="ISelectableItem.cs" />
+    <Compile Include="ItemContainer.cs" />
     <Compile Include="SelectableCollectionSelector.cs" />
     <Compile Include="SelectionChangedEventManager.cs" />
+    <Compile Include="SortedReadOnlyObservableList.cs" />
     <Compile Include="SwitchableCollectionSource.cs" />
     <Compile Include="CollectionSelector.cs" />
     <Compile Include="EditableCollectionSelector.cs" />
@@ -57,10 +59,10 @@
     <Compile Include="FilteredReadOnlyObservableCollectionBase.cs" />
     <Compile Include="FilteredReadOnlyObservableList.cs" />
     <Compile Include="ICollectionSelector.cs" />
-    <Compile Include="IndexedItemContainer.cs" />
+    <Compile Include="IndexedFilterItemContainer.cs" />
     <Compile Include="IReadOnlyObservableCollection.cs" />
     <Compile Include="IReadOnlyObservableList.cs" />
-    <Compile Include="ItemContainer.cs" />
+    <Compile Include="FilterItemContainer.cs" />
     <Compile Include="SwitchableCollectionSourceBase.cs" />
     <Compile Include="SwitchableListSource.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
