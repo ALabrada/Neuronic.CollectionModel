@@ -51,7 +51,7 @@ namespace Neuronic.CollectionModel
         /// </summary>
         /// <param name="item">The object to locate in the <see cref="T:System.Collections.Generic.IList`1" />.</param>
         /// <returns>
-        ///     The index of <paramref name="item" /> if found in the list; otherwise, -1.
+        ///     The index of <paramref name="item" /> if found in the list; otherwise, 0.
         /// </returns>
         public int IndexOf(T item)
         {
@@ -182,18 +182,19 @@ namespace Neuronic.CollectionModel
             if (newItem.IsIncluded && !oldItem.IsIncluded)
             {
                 UpdateIndexes(index, Items.Count);
-                FilteredItems.Insert(newItem.LocalIndex, newItem.Item);
+                FilteredItems.Insert(newItem.LocalIndex - 1, newItem.Item);
             }
             else if (oldItem.IsIncluded && !newItem.IsIncluded)
             {
                 UpdateIndexes(index, Items.Count);
-                FilteredItems.RemoveAt(oldItem.LocalIndex);
+                FilteredItems.RemoveAt(oldItem.LocalIndex - 1);
             }
             else
             {
                 newItem.GlobalIndex = oldItem.GlobalIndex;
                 newItem.LocalIndex = oldItem.LocalIndex;
-                FilteredItems[newItem.LocalIndex] = newItem.Item;
+                if (newItem.IsIncluded)
+                    FilteredItems[newItem.LocalIndex - 1] = newItem.Item;
             }
             oldItem.GlobalIndex = int.MinValue;
             oldItem.LocalIndex = int.MinValue;
@@ -201,12 +202,12 @@ namespace Neuronic.CollectionModel
 
         private void OnContainerMovedInItems(IndexedFilterItemContainer<T> item, int oldIndex, int newIndex)
         {
-            var oldLocalIndex = item.LocalIndex;
+            var oldLocalIndex = item.LocalIndex - 1;
             if (oldIndex > newIndex)
-                UpdateIndexes(newIndex, oldIndex);
+                UpdateIndexes(newIndex, oldIndex + 1);
             else
                 UpdateIndexes(oldIndex, newIndex + 1);
-            var newLocalIndex = item.LocalIndex;
+            var newLocalIndex = item.LocalIndex - 1;
 
             if (item.IsIncluded)
                 FilteredItems.Move(oldLocalIndex, newLocalIndex);
@@ -216,7 +217,7 @@ namespace Neuronic.CollectionModel
         {
             UpdateIndexes(index, Items.Count);
             if (item.IsIncluded)
-                FilteredItems.RemoveAt(item.LocalIndex);
+                FilteredItems.RemoveAt(item.LocalIndex - 1);
             item.LocalIndex = item.GlobalIndex = int.MinValue;
         }
 
@@ -224,17 +225,17 @@ namespace Neuronic.CollectionModel
         {
             UpdateIndexes(index, Items.Count);
             if (item.IsIncluded)
-                FilteredItems.Insert(item.LocalIndex, item.Item);
+                FilteredItems.Insert(item.LocalIndex - 1, item.Item);
         }
 
         private void UpdateIndexes(int start, int end)
         {
-            var lastLocal = start == 0 ? -1 : Items[start - 1].LocalIndex;
+            var nextLocal = start == 0 ? 0 : Items[start - 1].LocalIndex;
             for (var i = start; i < end; i++)
             {
                 Items[i].GlobalIndex = i;
-                lastLocal = Items[i].LocalIndex = Items[i].IsIncluded ? lastLocal + 1 : lastLocal;
-                    // The index it occupies or the one it should.
+                nextLocal = Items[i].LocalIndex = Items[i].IsIncluded ? nextLocal + 1 : nextLocal;
+                    // The index that should occupy next item.
             }
         }
     }
