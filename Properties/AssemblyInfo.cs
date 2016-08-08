@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Neuronic.CollectionModel")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("Neuronic Collection Model")]
+[assembly: AssemblyDescription("Collection utilities")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("Neuronic S.A.")]
 [assembly: AssemblyProduct("Neuronic.CollectionModel")]
-[assembly: AssemblyCopyright("Copyright ©  2016")]
+[assembly: AssemblyCopyright("Copyright © Neuronic 2016")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
