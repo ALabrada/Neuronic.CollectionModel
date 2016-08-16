@@ -53,6 +53,41 @@ namespace Neuronic.CollectionModel
         /// </value>
         public IReadOnlyObservableCollection<T> View => _view;
 
+        protected override void ClearItems()
+        {
+            base.ClearItems();
+            OnViewChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+        }
+
+        protected override void InsertItem(int index, CollectionContainer<T> item)
+        {
+            base.InsertItem(index, item);
+            OnViewChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, item.Collection.ToList(), item.Offset));
+        }
+
+        protected override void RemoveItem(int index)
+        {
+            var vIndex = Items[index].Offset;
+            var items = Items[index].Collection.ToList();
+            base.RemoveItem(index);
+            OnViewChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, items, vIndex));
+        }
+
+        protected override void MoveItem(int oldIndex, int newIndex)
+        {
+            var vIndex = Items[oldIndex].Offset;
+            var items = Items[oldIndex].Collection.ToList();
+            base.MoveItem(oldIndex, newIndex);
+            OnViewChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Move, items, Items[newIndex].Offset, vIndex));
+        }
+
+        protected override void SetItem(int index, CollectionContainer<T> item)
+        {
+            var items = Items[index].Collection.ToList();
+            base.SetItem(index, item);
+            OnViewChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, item.Collection.ToList(), items, Items[index].Offset));
+        }
+
         /// <summary>
         /// Handles changes in the composite view.
         /// </summary>

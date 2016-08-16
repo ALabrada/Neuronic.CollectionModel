@@ -48,8 +48,12 @@ namespace Neuronic.CollectionModel
                         list.Insert(e.NewStartingIndex + i, @select(e.NewItems[i]));
                     break;
                 case NotifyCollectionChangedAction.Move:
-                    for (var i = 0; i < e.OldItems.Count; i++)
-                        list.Move(e.OldStartingIndex + i, e.NewStartingIndex + i);
+                    if (e.NewStartingIndex < e.OldStartingIndex)
+                        for (var i = 0; i < e.OldItems.Count; i++)
+                            list.Move(e.OldStartingIndex + i, e.NewStartingIndex + i);
+                    else
+                        for (int i = 0; i < e.OldItems.Count; i++)
+                            list.Move(e.OldStartingIndex, e.NewStartingIndex + e.OldItems.Count - 1);
                     break;
                 case NotifyCollectionChangedAction.Remove:
                     for (var i = 0; i < e.OldItems.Count; i++)

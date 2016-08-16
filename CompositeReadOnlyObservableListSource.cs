@@ -89,8 +89,12 @@ namespace Neuronic.CollectionModel
             base.MoveItem(oldIndex, newIndex);
 
             var newOffset = Items[newIndex].Offset;
-            for (int i = 0; i < movedItem.Collection.Count; i++)
-                _viewItems.Move(oldOffset, newOffset++);
+            if (newOffset < oldOffset)
+                for (int i = 0; i < movedItem.Collection.Count; i++)
+                    _viewItems.Move(oldOffset++, newOffset++);
+            else
+                for (int i = 0; i < movedItem.Collection.Count; i++)
+                    _viewItems.Move(oldOffset, newOffset + movedItem.Collection.Count - 1);
         }
 
         /// <summary>
@@ -100,11 +104,12 @@ namespace Neuronic.CollectionModel
         protected override void RemoveItem(int index)
         {
             var oldItem = Items[index];
+            var offset = oldItem.Offset;
 
             base.RemoveItem(index);
 
             for (int i = 0; i < oldItem.Collection.Count; i++)
-                _viewItems.RemoveAt(oldItem.Offset);
+                _viewItems.RemoveAt(offset);
         }
 
         /// <summary>
