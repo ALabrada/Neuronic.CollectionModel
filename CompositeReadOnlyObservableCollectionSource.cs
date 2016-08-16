@@ -51,7 +51,7 @@ namespace Neuronic.CollectionModel
         /// <value>
         /// The view.
         /// </value>
-        public IReadOnlyObservableCollection<T> View { get; }
+        public IReadOnlyObservableCollection<T> View => _view;
 
         /// <summary>
         /// Handles changes in the composite view.
@@ -59,7 +59,7 @@ namespace Neuronic.CollectionModel
         /// <param name="newArgs">The <see cref="T:System.Collections.Specialized.NotifyCollectionChangedEventArgs" /> instance containing the event data.</param>
         protected override void OnViewChanged(NotifyCollectionChangedEventArgs newArgs)
         {
-            _view.Count += newArgs.NewItems.Count - newArgs.OldItems.Count;
+            _view.Count += (newArgs.NewItems?.Count ?? 0) - (newArgs.OldItems?.Count ?? 0);
             _view.OnCollectionChanged(newArgs);
         }
 
@@ -71,6 +71,7 @@ namespace Neuronic.CollectionModel
             public ViewCollection(IEnumerable<T> items)
             {
                 _items = items;
+                _count = _items.Count();
             }
 
             public IEnumerator<T> GetEnumerator()

@@ -24,6 +24,7 @@ namespace Neuronic.CollectionModel
         /// <param name="list">The list from which the elements are copied.</param>
         protected CompositeReadOnlyObservableCollectionSourceBase(List<CollectionContainer<T>> list) : base(list)
         {
+            Initialize();
         }
 
         /// <summary>
@@ -32,6 +33,14 @@ namespace Neuronic.CollectionModel
         /// <param name="collection">The collection from which the elements are copied.</param>
         protected CompositeReadOnlyObservableCollectionSourceBase(IEnumerable<CollectionContainer<T>> collection) : base(collection)
         {
+            Initialize();
+        }
+
+        private void Initialize()
+        {
+            foreach (var v in Items)
+                v.CollectionChanged += ItemOnCollectionChanged;
+            UpdateRange(0, Count);
         }
 
         /// <summary>
@@ -60,6 +69,7 @@ namespace Neuronic.CollectionModel
 
             base.InsertItem(index, item);
             UpdateRange(index, Count);
+            item.CollectionChanged += ItemOnCollectionChanged;
         }
 
         /// <summary>

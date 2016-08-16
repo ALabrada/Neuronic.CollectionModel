@@ -29,9 +29,9 @@ namespace Neuronic.CollectionModel
         /// </value>
         public IReadOnlyObservableCollection<T> Collection { get; }
 
-        internal int Index { get; set; }
+        internal int Index { get; set; } = -1;
 
-        internal int Offset { get; set; }
+        internal int Offset { get; set; } = -1;
 
         /// <summary>
         /// Occurs when the container's collection changes.

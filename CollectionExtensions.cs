@@ -90,7 +90,7 @@ namespace Neuronic.CollectionModel
         ///     A callback procedure that can be used to free resources when items
         ///     are removed from <paramref name="list" />.
         /// </param>
-        public static void ReplaceItems<T>(this IList<T> list, IEnumerable oldItems, IEnumerable newItems, int index,
+        internal static void ReplaceItems<T>(this IList<T> list, IEnumerable oldItems, IEnumerable newItems, int index,
             Func<object, T> select = null, Action<T> onRemove = null)
         {
             select = select ?? (o => (T) o);
