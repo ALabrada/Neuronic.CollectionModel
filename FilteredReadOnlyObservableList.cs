@@ -132,13 +132,13 @@ namespace Neuronic.CollectionModel
             if (container.IsIncluded)
             {
                 UpdateIndexes(container.GlobalIndex, Items.Count);
-                FilteredItems.Insert(container.LocalIndex, container.Item);
+                FilteredItems.Insert(container.LocalIndex - 1, container.Item);
             }
             else
             {
                 var localIndex = container.LocalIndex;
                 UpdateIndexes(container.GlobalIndex, Items.Count);
-                FilteredItems.RemoveAt(localIndex);
+                FilteredItems.RemoveAt(localIndex - 1);
             }
         }
 
