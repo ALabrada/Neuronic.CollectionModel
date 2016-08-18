@@ -157,7 +157,7 @@ namespace Neuronic.CollectionModel
                 _triggers = triggers;
                 _sortedItems = new List<Container>(Count);
                 _sortedItems.AddRange(Items);
-                _sortedItems.Sort();
+                _sortedItems.Sort(_comparer);
             }
 
             public IEnumerable<T> Sorted()
