@@ -26,8 +26,12 @@ namespace Neuronic.CollectionModel
         ///     The names of the item's properties that can cause <paramref name="filter" /> to change its
         ///     value.
         /// </param>
-        public FilteredReadOnlyObservableList(IReadOnlyObservableCollection<T> source, Predicate<T> filter,
-            params string[] triggers) : base(source, filter, triggers)
+        public FilteredReadOnlyObservableList(IEnumerable<T> source, Predicate<T> filter,
+            params string[] triggers)
+            : base(
+                source as IReadOnlyObservableCollection<T> ??
+                new ReadOnlyObservableList<T>(source as ObservableCollection<T> ?? new ObservableCollection<T>(source)),
+                filter, triggers)
         {
             UpdateIndexes(0, Items.Count);
             FilteredItems =
@@ -176,7 +180,8 @@ namespace Neuronic.CollectionModel
             }
         }
 
-        private void OnContainerReplacedInItems(IndexedFilterItemContainer<T> newItem, IndexedFilterItemContainer<T> oldItem,
+        private void OnContainerReplacedInItems(IndexedFilterItemContainer<T> newItem,
+            IndexedFilterItemContainer<T> oldItem,
             int index)
         {
             if (newItem.IsIncluded && !oldItem.IsIncluded)
@@ -235,7 +240,7 @@ namespace Neuronic.CollectionModel
             {
                 Items[i].GlobalIndex = i;
                 nextLocal = Items[i].LocalIndex = Items[i].IsIncluded ? nextLocal + 1 : nextLocal;
-                    // The index that should occupy next item.
+                // The index that should occupy next item.
             }
         }
     }

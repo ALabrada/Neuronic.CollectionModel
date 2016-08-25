@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 
 namespace Neuronic.CollectionModel
@@ -18,7 +19,21 @@ namespace Neuronic.CollectionModel
         {
             if (collection == null) throw new ArgumentNullException(nameof(collection));
             Collection = collection;
-            CollectionChangedEventManager.AddHandler(Collection, (sender, args) => OnCollectionChanged(args));
+            CollectionChangedEventManager.AddHandler(collection, (sender, args) => OnCollectionChanged(args));
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CollectionContainer{T}"/> class.
+        /// </summary>
+        /// <param name="collection">The collection.</param>
+        /// <exception cref="System.ArgumentNullException"></exception>
+        public CollectionContainer(IReadOnlyCollection<T> collection)
+        {
+            if (collection == null) throw new ArgumentNullException(nameof(collection));
+            Collection = collection;
+            var notify = collection as INotifyCollectionChanged;
+            if (notify != null)
+                CollectionChangedEventManager.AddHandler(notify, (sender, args) => OnCollectionChanged(args));
         }
 
         /// <summary>
@@ -27,7 +42,7 @@ namespace Neuronic.CollectionModel
         /// <value>
         /// The collection.
         /// </value>
-        public IReadOnlyObservableCollection<T> Collection { get; }
+        public IReadOnlyCollection<T> Collection { get; }
 
         internal int Index { get; set; } = -1;
 
