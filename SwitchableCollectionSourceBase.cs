@@ -26,7 +26,7 @@ namespace Neuronic.CollectionModel
         /// <value>
         ///     The source collection.
         /// </value>
-        protected abstract IReadOnlyObservableCollection<object> SourceOverride { get; }
+        protected abstract IReadOnlyCollection<T> SourceOverride { get; }
 
         bool ICollection<T>.IsReadOnly => true;
 

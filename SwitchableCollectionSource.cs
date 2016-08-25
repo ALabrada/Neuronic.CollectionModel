@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 
@@ -11,7 +12,7 @@ namespace Neuronic.CollectionModel
     /// <seealso cref="System.Collections.Generic.ICollection{T}" />
     public class SwitchableCollectionSource<T> : SwitchableCollectionSourceBase<T>
     {
-        private IReadOnlyObservableCollection<object> _source;
+        private IReadOnlyCollection<T> _source;
 
         /// <summary>
         ///     Gets source collection.
@@ -19,7 +20,7 @@ namespace Neuronic.CollectionModel
         /// <value>
         ///     The source collection.
         /// </value>
-        protected override IReadOnlyObservableCollection<object> SourceOverride => _source;
+        protected override IReadOnlyCollection<T> SourceOverride => _source;
 
         /// <summary>
         ///     Gets or sets the source collection.
@@ -27,7 +28,7 @@ namespace Neuronic.CollectionModel
         /// <value>
         ///     The source collection.
         /// </value>
-        public IReadOnlyObservableCollection<object> Source
+        public IReadOnlyCollection<T> Source
         {
             get { return _source; }
             set
@@ -39,8 +40,12 @@ namespace Neuronic.CollectionModel
                 var oldSource = _source;
                 if (oldSource != null)
                 {
-                    PropertyChangedEventManager.RemoveHandler(oldSource, SourceOnPropertyChanged, CountPropertyName);
-                    CollectionChangedEventManager.RemoveHandler(oldSource, SourceOnCollectionChanged);
+                    var notifyProperties = oldSource as INotifyPropertyChanged;
+                    if (notifyProperties != null)
+                        PropertyChangedEventManager.RemoveHandler(notifyProperties, SourceOnPropertyChanged, CountPropertyName);
+                    var notifyCollection = oldSource as INotifyCollectionChanged;
+                    if (notifyCollection != null)
+                        CollectionChangedEventManager.RemoveHandler(notifyCollection, SourceOnCollectionChanged);
                 }
                 // Update source
                 _source = value;
@@ -48,8 +53,12 @@ namespace Neuronic.CollectionModel
                 var newSource = _source;
                 if (newSource != null)
                 {
-                    PropertyChangedEventManager.AddHandler(newSource, SourceOnPropertyChanged, CountPropertyName);
-                    CollectionChangedEventManager.AddHandler(newSource, SourceOnCollectionChanged);
+                    var notifyProperties = newSource as INotifyPropertyChanged;
+                    if (notifyProperties != null)
+                        PropertyChangedEventManager.AddHandler(notifyProperties, SourceOnPropertyChanged, CountPropertyName);
+                    var notifyCollection = newSource as INotifyCollectionChanged;
+                    if (notifyCollection != null)
+                        CollectionChangedEventManager.AddHandler(notifyCollection, SourceOnCollectionChanged);
                 }
                 // Signal to update instance properties.
                 OnPropertyChanged(new PropertyChangedEventArgs(CountPropertyName));

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.Linq;
 
 namespace Neuronic.CollectionModel
 {
@@ -232,6 +233,30 @@ namespace Neuronic.CollectionModel
                 return false;
             selector.SelectedIndex = index;
             return true;
+        }
+
+        /// <summary>
+        /// Simulates contra-variance by casting the list's items.
+        /// </summary>
+        /// <typeparam name="TSource">The source type.</typeparam>
+        /// <typeparam name="TTarget">The target type.</typeparam>
+        /// <param name="items">The items.</param>
+        /// <returns></returns>
+        public static IReadOnlyObservableList<TTarget> Cast<TSource, TTarget>(this IReadOnlyObservableList<TSource> items) where TTarget : TSource
+        {
+            return items == null ? null : new CastingReadOnlyObservableList<TSource, TTarget>(items);
+        }
+
+        /// <summary>
+        /// Simulates contra-variance by casting the list's items.
+        /// </summary>
+        /// <typeparam name="TSource">The source type.</typeparam>
+        /// <typeparam name="TTarget">The target type.</typeparam>
+        /// <param name="items">The items.</param>
+        /// <returns></returns>
+        public static IReadOnlyObservableCollection<TTarget> Cast<TSource, TTarget>(this IReadOnlyObservableCollection<TSource> items) where TTarget : TSource
+        {
+            return items == null ? null : new CastingReadOnlyObservableCollection<TSource, TTarget>(items);
         }
     }
 }
