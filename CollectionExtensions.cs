@@ -41,32 +41,69 @@ namespace Neuronic.CollectionModel
             NotifyCollectionChangedEventArgs e,
             Func<object, T> select = null, Action<T> onRemove = null)
         {
-            select = select ?? (o => (T) o);
+            select = select ?? (o => (T)o);
+            // apply the change to the snapshot
             switch (e.Action)
             {
                 case NotifyCollectionChangedAction.Add:
-                    for (var i = 0; i < e.NewItems.Count; i++)
-                        list.Insert(e.NewStartingIndex + i, @select(e.NewItems[i]));
-                    break;
-                case NotifyCollectionChangedAction.Move:
-                    if (e.NewStartingIndex < e.OldStartingIndex)
-                        for (var i = 0; i < e.OldItems.Count; i++)
-                            list.Move(e.OldStartingIndex + i, e.NewStartingIndex + i);
+                    if (e.NewStartingIndex < 0 || list.Count <= e.NewStartingIndex)
+                        foreach (var item in e.NewItems)
+                            list.Add(@select(item));
                     else
-                        for (int i = 0; i < e.OldItems.Count; i++)
-                            list.Move(e.OldStartingIndex, e.NewStartingIndex + e.OldItems.Count - 1);
+                        for (int i = e.NewItems.Count - 1; i >= 0; --i) // insert
+                            list.Insert(e.NewStartingIndex, @select(e.NewItems[i]));
                     break;
+
                 case NotifyCollectionChangedAction.Remove:
-                    for (var i = 0; i < e.OldItems.Count; i++)
+                    if (e.OldStartingIndex < 0)
+                        throw new InvalidOperationException("The index cannot be a negative value.");
+
+                    for (int i = e.OldItems.Count - 1, index = e.OldStartingIndex + i; i >= 0; --i, --index)
                     {
-                        var item = list[e.OldStartingIndex];
-                        list.RemoveAt(e.OldStartingIndex);
+                        var item = list[index];
+                        list.RemoveAt(index);
                         onRemove?.Invoke(item);
                     }
                     break;
+
                 case NotifyCollectionChangedAction.Replace:
-                    ReplaceItems(list, e.OldItems, e.NewItems, e.OldStartingIndex, select, onRemove);
+                    for (int i = e.NewItems.Count - 1, index = e.NewStartingIndex + i; i >= 0; --i, --index)
+                    {
+                        var item = list[index];
+                        list[index] = @select(e.NewItems[i]);
+                        onRemove?.Invoke(item);
+                    }
                     break;
+
+                case NotifyCollectionChangedAction.Move:
+                    if (e.NewStartingIndex < 0)
+                        throw new InvalidOperationException("The index cannot be a negative value.");
+
+                    if (e.OldStartingIndex < e.NewStartingIndex)
+                    {
+                        for (int i = e.OldItems.Count - 1,
+                                oldIndex = e.OldStartingIndex + i,
+                                newIndex = e.NewStartingIndex + i;
+                            i >= 0;
+                            --i, --oldIndex, --newIndex)
+                        {
+                            list.Move(oldIndex, newIndex);
+                        }
+                    }
+                    else
+                    {
+                        for (int i = 0,
+                                oldIndex = e.OldStartingIndex + i,
+                                newIndex = e.NewStartingIndex + i;
+                            i < e.OldItems.Count;
+                            ++i, ++oldIndex, ++newIndex)
+                        {
+                            list.Move(oldIndex, newIndex);
+                        }
+                    }
+
+                    break;
+
                 case NotifyCollectionChangedAction.Reset:
                     if (onRemove != null)
                         foreach (var item in list)
