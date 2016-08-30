@@ -157,6 +157,7 @@ namespace Neuronic.CollectionModel
                 _triggers = triggers;
                 _sortedItems = new List<Container>(Count);
                 _sortedItems.AddRange(Items);
+                UpdateItems(0, Count);
                 _sortedItems.Sort(_comparer);
             }
 
@@ -292,6 +293,7 @@ namespace Neuronic.CollectionModel
             }
         }
 
+        [DebuggerDisplay("[{SourceIndex}] {Item}")]
         private class Container : ItemContainer<T>
         {
             public Container(T item) : base(item)
