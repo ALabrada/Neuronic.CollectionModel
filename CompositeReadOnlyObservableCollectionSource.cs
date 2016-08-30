@@ -24,7 +24,7 @@ namespace Neuronic.CollectionModel
         /// </summary>
         public CompositeReadOnlyObservableCollectionSource()
         {
-            _view = new ViewCollection(Items.SelectMany(c => c.Collection));
+            _view = new ViewCollection(this, Items.SelectMany(c => c.Collection));
         }
 
         /// <summary>
@@ -33,7 +33,7 @@ namespace Neuronic.CollectionModel
         /// <param name="list">The list from which the elements are copied.</param>
         public CompositeReadOnlyObservableCollectionSource(List<CollectionContainer<T>> list) : base(list)
         {
-            _view = new ViewCollection(Items.SelectMany(c => c.Collection));
+            _view = new ViewCollection(this, Items.SelectMany(c => c.Collection));
         }
 
         /// <summary>
@@ -42,7 +42,7 @@ namespace Neuronic.CollectionModel
         /// <param name="collection">The collection from which the elements are copied.</param>
         public CompositeReadOnlyObservableCollectionSource(IEnumerable<CollectionContainer<T>> collection) : base(collection)
         {
-            _view = new ViewCollection(Items.SelectMany(c => c.Collection));
+            _view = new ViewCollection(this, Items.SelectMany(c => c.Collection));
         }
 
         /// <summary>
@@ -53,18 +53,30 @@ namespace Neuronic.CollectionModel
         /// </value>
         public IReadOnlyObservableCollection<T> View => _view;
 
+        /// <summary>
+        /// Removes all items from the collection.
+        /// </summary>
         protected override void ClearItems()
         {
             base.ClearItems();
             OnViewChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
         }
 
+        /// <summary>
+        /// Inserts an item into the collection at the specified index.
+        /// </summary>
+        /// <param name="index">The zero-based index at which <paramref name="item" /> should be inserted.</param>
+        /// <param name="item">The object to insert.</param>
         protected override void InsertItem(int index, CollectionContainer<T> item)
         {
             base.InsertItem(index, item);
             OnViewChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, item.Collection.ToList(), item.Offset));
         }
 
+        /// <summary>
+        /// Removes the item at the specified index of the collection.
+        /// </summary>
+        /// <param name="index">The zero-based index of the element to remove.</param>
         protected override void RemoveItem(int index)
         {
             var vIndex = Items[index].Offset;
@@ -73,6 +85,11 @@ namespace Neuronic.CollectionModel
             OnViewChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, items, vIndex));
         }
 
+        /// <summary>
+        /// Moves the item at the specified index to a new location in the collection.
+        /// </summary>
+        /// <param name="oldIndex">The zero-based index specifying the location of the item to be moved.</param>
+        /// <param name="newIndex">The zero-based index specifying the new location of the item.</param>
         protected override void MoveItem(int oldIndex, int newIndex)
         {
             var vIndex = Items[oldIndex].Offset;
@@ -81,6 +98,11 @@ namespace Neuronic.CollectionModel
             OnViewChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Move, items, Items[newIndex].Offset, vIndex));
         }
 
+        /// <summary>
+        /// Replaces the element at the specified index.
+        /// </summary>
+        /// <param name="index">The zero-based index of the element to replace.</param>
+        /// <param name="item">The new value for the element at the specified index.</param>
         protected override void SetItem(int index, CollectionContainer<T> item)
         {
             var items = Items[index].Collection.ToList();
@@ -100,11 +122,13 @@ namespace Neuronic.CollectionModel
 
         class ViewCollection : IReadOnlyObservableCollection<T>
         {
+            private readonly CompositeReadOnlyObservableCollectionSource<T> _parent;
             private readonly IEnumerable<T> _items; 
             private int _count;
 
-            public ViewCollection(IEnumerable<T> items)
+            public ViewCollection(CompositeReadOnlyObservableCollectionSource<T> parent, IEnumerable<T> items)
             {
+                _parent = parent;
                 _items = items;
                 _count = _items.Count();
             }

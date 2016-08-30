@@ -19,7 +19,7 @@ namespace Neuronic.CollectionModel
         public CompositeReadOnlyObservableListSource()
         {
             _viewItems = new ObservableCollection<T>();
-            View = new ReadOnlyObservableList<T>(_viewItems);
+            View = new ViewCollection(this, _viewItems);
         }
 
         /// <summary>
@@ -29,7 +29,7 @@ namespace Neuronic.CollectionModel
         public CompositeReadOnlyObservableListSource(List<CollectionContainer<T>> list) : base(list)
         {
             _viewItems = new ObservableCollection<T>();
-            View = new ReadOnlyObservableList<T>(_viewItems);
+            View = new ViewCollection(this, _viewItems);
             InitializeViewItems(Items);
         }
 
@@ -40,7 +40,7 @@ namespace Neuronic.CollectionModel
         public CompositeReadOnlyObservableListSource(IEnumerable<CollectionContainer<T>> collection) : base(collection)
         {
             _viewItems = new ObservableCollection<T>();
-            View = new ReadOnlyObservableList<T>(_viewItems);
+            View = new ViewCollection(this, _viewItems);
             InitializeViewItems(Items);
         }
 
@@ -148,6 +148,16 @@ namespace Neuronic.CollectionModel
         protected override void OnViewChanged(NotifyCollectionChangedEventArgs newArgs)
         {
             _viewItems.UpdateCollection(Items.SelectMany(c => c.Collection), newArgs);
+        }
+
+        class ViewCollection : ReadOnlyObservableList<T>
+        {
+            private readonly CompositeReadOnlyObservableListSource<T> _parent;
+
+            public ViewCollection(CompositeReadOnlyObservableListSource<T> parent, ObservableCollection<T> list) : base(list)
+            {
+                _parent = parent;
+            }
         }
     }
 }
