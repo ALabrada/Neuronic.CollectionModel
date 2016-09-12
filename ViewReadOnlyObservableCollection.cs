@@ -121,7 +121,7 @@ namespace Neuronic.CollectionModel
                     Count = _view.Cast<T>().Count();
                     break;
                 default:
-                    Count += e.NewItems.Count - e.OldItems.Count;
+                    Count += (e.NewItems?.Count ?? 0) - (e.OldItems?.Count ?? 0);
                     break;
             }
             OnCollectionChanged(e);
