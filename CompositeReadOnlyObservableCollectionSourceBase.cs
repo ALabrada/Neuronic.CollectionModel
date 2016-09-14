@@ -147,7 +147,7 @@ namespace Neuronic.CollectionModel
                     newArgs = new NotifyCollectionChangedEventArgs(e.Action, e.OldItems, newStartingIndex, oldStartingIndex);
                     break;
                 case NotifyCollectionChangedAction.Replace:
-                    newArgs = new NotifyCollectionChangedEventArgs(e.Action, e.NewItems, e.OldItems, e.OldStartingIndex);
+                    newArgs = new NotifyCollectionChangedEventArgs(e.Action, e.NewItems, e.OldItems, oldStartingIndex);
                     break;
                 default:
                     newArgs = new NotifyCollectionChangedEventArgs(e.Action);
