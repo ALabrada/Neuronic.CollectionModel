@@ -238,6 +238,7 @@ namespace Neuronic.CollectionModel
                 base.SetItem(index, oldItem);
                 oldItem.SourceIndex = -1;
 
+                newItem.SourceIndex = index;
                 var newSortedIndex = _sortedItems.BinarySearch(newItem, _comparer);
                 Debug.Assert(newSortedIndex < 0);
                 newSortedIndex = ~newSortedIndex;
@@ -246,10 +247,16 @@ namespace Neuronic.CollectionModel
                 newItem.AttachTriggers(_triggers);
                 newItem.TriggerPropertyChanged += ItemOnTriggerPropertyChanged;
 
-                OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove,
-                    oldItem.Item, oldSortedIndex));
-                OnSortedCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add,
-                    newItem.Item, newSortedIndex));
+                if (oldSortedIndex == newSortedIndex)
+                    OnSortedCollectionChanged(new NotifyCollectionChangedEventArgs(
+                        NotifyCollectionChangedAction.Replace, newItem.Item, oldItem.Item, oldSortedIndex));
+                else
+                {
+                    OnSortedCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove,
+                        oldItem.Item, oldSortedIndex));
+                    OnSortedCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add,
+                        newItem.Item, newSortedIndex));
+                }
             }
 
             protected override void ClearItems()
