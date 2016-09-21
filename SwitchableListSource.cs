@@ -103,12 +103,14 @@ namespace Neuronic.CollectionModel
 
         private void SourceOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            OnCollectionChanged(e);
+            if (Equals(sender, Source))
+                OnCollectionChanged(e);
         }
 
         private void SourceOnPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            OnPropertyChanged(e);
+            if (Equals(sender, Source))
+                OnPropertyChanged(e);
         }
 
         int IList<T>.IndexOf(T item)
