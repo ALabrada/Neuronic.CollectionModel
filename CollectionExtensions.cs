@@ -3,7 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Linq;
+using System.Windows;
 
 namespace Neuronic.CollectionModel
 {
@@ -41,7 +43,7 @@ namespace Neuronic.CollectionModel
             NotifyCollectionChangedEventArgs e,
             Func<object, T> select = null, Action<T> onRemove = null)
         {
-            select = select ?? (o => (T)o);
+            select = select ?? (o => (T) o);
             // apply the change to the snapshot
             switch (e.Action)
             {
@@ -50,7 +52,7 @@ namespace Neuronic.CollectionModel
                         foreach (var item in e.NewItems)
                             list.Add(@select(item));
                     else
-                        for (int i = e.NewItems.Count - 1; i >= 0; --i) // insert
+                        for (var i = e.NewItems.Count - 1; i >= 0; --i) // insert
                             list.Insert(e.NewStartingIndex, @select(e.NewItems[i]));
                     break;
 
@@ -82,8 +84,8 @@ namespace Neuronic.CollectionModel
                     if (e.OldStartingIndex < e.NewStartingIndex)
                     {
                         for (int i = e.OldItems.Count - 1,
-                                oldIndex = e.OldStartingIndex + i,
-                                newIndex = e.NewStartingIndex + i;
+                            oldIndex = e.OldStartingIndex + i,
+                            newIndex = e.NewStartingIndex + i;
                             i >= 0;
                             --i, --oldIndex, --newIndex)
                         {
@@ -93,8 +95,8 @@ namespace Neuronic.CollectionModel
                     else
                     {
                         for (int i = 0,
-                                oldIndex = e.OldStartingIndex + i,
-                                newIndex = e.NewStartingIndex + i;
+                            oldIndex = e.OldStartingIndex + i,
+                            newIndex = e.NewStartingIndex + i;
                             i < e.OldItems.Count;
                             ++i, ++oldIndex, ++newIndex)
                         {
@@ -160,21 +162,6 @@ namespace Neuronic.CollectionModel
         }
 
         /// <summary>
-        ///     Creates a new item sequence by chaining two sequences of the same type.
-        /// </summary>
-        /// <typeparam name="T">The type of the sequences.</typeparam>
-        /// <param name="items">The first sequence: <strong>(a1, a2, ..., an)</strong>.</param>
-        /// <param name="others">The second sequence: <strong>(b1, b2, ..., bm)</strong>.</param>
-        /// <returns>The sequence <strong>(a1, a2, ..., an, b1, b2, ..., bm)</strong>.</returns>
-        public static IEnumerable<T> Chain<T>(this IEnumerable<T> items, IEnumerable<T> others)
-        {
-            foreach (var item in items)
-                yield return item;
-            foreach (var item in others)
-                yield return item;
-        }
-
-        /// <summary>
         ///     Creates a new item sequence by appending a sequence after a single-item sequence.
         /// </summary>
         /// <typeparam name="T">The type of the sequence items.</typeparam>
@@ -197,7 +184,7 @@ namespace Neuronic.CollectionModel
         /// <returns>The sequence <strong>(a1, a2, ..., an, b1, b2, ..., bm)</strong>.</returns>
         public static IEnumerable<T> Append<T>(this IEnumerable<T> items, params T[] others)
         {
-            return Chain(items, others);
+            return items.Concat(others);
         }
 
         /// <summary>
@@ -256,7 +243,7 @@ namespace Neuronic.CollectionModel
         }
 
         /// <summary>
-        /// Tries to select the specified item in the selector.
+        ///     Tries to select the specified item in the selector.
         /// </summary>
         /// <typeparam name="T">Type of the selector's elements.</typeparam>
         /// <param name="selector">The selector.</param>
@@ -273,27 +260,234 @@ namespace Neuronic.CollectionModel
         }
 
         /// <summary>
-        /// Simulates contra-variance by casting the list's items.
+        ///     Simulates contra-variance by casting the list's items.
         /// </summary>
         /// <typeparam name="TSource">The source type.</typeparam>
         /// <typeparam name="TTarget">The target type.</typeparam>
         /// <param name="items">The items.</param>
         /// <returns></returns>
-        public static IReadOnlyObservableList<TTarget> Cast<TSource, TTarget>(this IReadOnlyObservableList<TSource> items) where TTarget : TSource
+        public static IReadOnlyObservableList<TTarget> ListCast<TSource, TTarget>(
+            this IReadOnlyObservableList<TSource> items) where TTarget : TSource
         {
             return items == null ? null : new CastingReadOnlyObservableList<TSource, TTarget>(items);
         }
 
         /// <summary>
-        /// Simulates contra-variance by casting the list's items.
+        ///     Simulates contra-variance by casting the list's items.
         /// </summary>
         /// <typeparam name="TSource">The source type.</typeparam>
         /// <typeparam name="TTarget">The target type.</typeparam>
         /// <param name="items">The items.</param>
         /// <returns></returns>
-        public static IReadOnlyObservableCollection<TTarget> Cast<TSource, TTarget>(this IReadOnlyObservableCollection<TSource> items) where TTarget : TSource
+        public static IReadOnlyObservableCollection<TTarget> CollectionCast<TSource, TTarget>(
+            this IReadOnlyObservableCollection<TSource> items) where TTarget : TSource
         {
             return items == null ? null : new CastingReadOnlyObservableCollection<TSource, TTarget>(items);
+        }
+
+        /// <summary>
+        ///     Creates a sorted view of an observable collection.
+        /// </summary>
+        /// <typeparam name="T">The type of the collection items.</typeparam>
+        /// <param name="collection">The source collection.</param>
+        /// <param name="comparison">The comparison function.</param>
+        /// <param name="triggers">The name of the properties of <typeparamref name="T" /> that the collection's order depends on.</param>
+        /// <returns>Sorted observable list.</returns>
+        public static IReadOnlyObservableList<T> ListOrderBy<T>(this IReadOnlyObservableCollection<T> collection,
+            Comparison<T> comparison, params string[] triggers)
+        {
+            return new SortedReadOnlyObservableList<T>(collection, comparison, triggers);
+        }
+
+        /// <summary>
+        ///     Creates an observable view of a collection by applying a transformation to each item in the corresponding order.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the source collection.</typeparam>
+        /// <typeparam name="TTarget">The type of the target view.</typeparam>
+        /// <param name="collection">The source collection.</param>
+        /// <param name="selector">The transforming function.</param>
+        /// <param name="onRemove">The optional callback used to destroy the created <typeparamref name="TTarget" /> instances.</param>
+        /// <returns></returns>
+        public static IReadOnlyObservableList<TTarget> ListSelect<TSource, TTarget>(
+            this IReadOnlyObservableCollection<TSource> collection, Func<TSource, TTarget> selector,
+            Action<TTarget> onRemove = null)
+        {
+            return new TransformingReadOnlyObservableList<TSource, TTarget>(collection, selector, onRemove);
+        }
+
+        /// <summary>
+        /// Projects each element of a sequence to a <see cref="IReadOnlyCollection"/> and flattens the resulting collections into one list.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the source collection items.</typeparam>
+        /// <typeparam name="TTarget">The type of the target collection items.</typeparam>
+        /// <param name="items">The source collection.</param>
+        /// <param name="selector">A transform function to apply to each element.</param>
+        /// <returns>
+        /// The observable list obtained by applying <paramref name="selector"/> to each element of
+        /// <paramref name="items"/> and then concatenating the results. 
+        /// </returns>
+        public static IReadOnlyObservableList<TTarget> ListSelectMany<TSource, TTarget>(
+            this IEnumerable<TSource> items, Func<TSource, IReadOnlyCollection<TTarget>> selector)
+        {
+            var collection = items as IReadOnlyObservableCollection<TSource>;
+            var composite = new CompositeReadOnlyObservableListSource<TTarget>(from item in items
+                select new CollectionContainer<TTarget>(selector(item)));
+            if (collection == null)
+                return composite.View;
+            return new ListUpdater<TSource, TTarget>(collection, selector, composite);
+        }
+
+        /// <summary>
+        /// Projects each element of a sequence to a <see cref="IReadOnlyCollection"/> and flattens the resulting collections into one collection.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the source collection items.</typeparam>
+        /// <typeparam name="TTarget">The type of the target collection items.</typeparam>
+        /// <param name="items">The source collection.</param>
+        /// <param name="selector">A transform function to apply to each element.</param>
+        /// <returns>
+        /// The observable collection obtained by applying <paramref name="selector"/> to each element of
+        /// <paramref name="items"/> and then concatenating the results.
+        /// </returns>
+        public static IReadOnlyObservableCollection<TTarget> CollectionSelectMany<TSource, TTarget>(
+            this IEnumerable<TSource> items, Func<TSource, IReadOnlyCollection<TTarget>> selector)
+        {
+            var collection = items as IReadOnlyObservableCollection<TSource>;
+            var composite = new CompositeReadOnlyObservableCollectionSource<TTarget>(from item in items
+                select new CollectionContainer<TTarget>(selector(item)));
+            if (collection == null)
+                return composite.View;
+            return new CollectionUpdater<TSource, TTarget>(collection, selector, composite);
+        }
+
+        /// <summary>
+        /// Creates an observable view by filtering a sequence of values based on a predicate.
+        /// </summary>
+        /// <typeparam name="T">The type of the sequence items.</typeparam>
+        /// <param name="items">The source collection.</param>
+        /// <param name="predicate">The predicate.</param>
+        /// <param name="triggers">The name of the properties of <typeparamref name="T"/> that can 
+        /// influence in <paramref name="predicate"/>.</param>
+        /// <returns>An observable list that always contains the elements from <paramref name="items"/>
+        /// that satisfy <paramref name="predicate"/>.</returns>
+        public static IReadOnlyObservableList<T> ListWhere<T>(this IEnumerable<T> items, Predicate<T> predicate,
+            params string[] triggers)
+        {
+            return new FilteredReadOnlyObservableList<T>(items, predicate, triggers);
+        } 
+
+        private abstract class CollectionUpdaterBase<TSource, TTarget> : IWeakEventListener,
+            IReadOnlyObservableCollection<TTarget>
+        {
+            private readonly CompositeReadOnlyObservableCollectionSourceBase<TTarget> _composite;
+            private readonly Func<TSource, IReadOnlyCollection<TTarget>> _selector;
+            private readonly IReadOnlyObservableCollection<TSource> _source;
+
+            protected CollectionUpdaterBase(IReadOnlyObservableCollection<TSource> source,
+                Func<TSource, IReadOnlyCollection<TTarget>> selector,
+                CompositeReadOnlyObservableCollectionSourceBase<TTarget> composite)
+            {
+                _source = source;
+                _composite = composite;
+                _selector = selector;
+
+                CollectionChangedEventManager.AddListener(source, this);
+                PropertyChangedEventManager.AddListener(source, this, string.Empty);
+            }
+
+            public IEnumerator<TTarget> GetEnumerator() => GetView().GetEnumerator();
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return GetEnumerator();
+            }
+
+            public int Count => GetView().Count;
+            public event NotifyCollectionChangedEventHandler CollectionChanged;
+            public event PropertyChangedEventHandler PropertyChanged;
+
+            public bool ReceiveWeakEvent(Type managerType, object sender, EventArgs e)
+            {
+                if (managerType == typeof (PropertyChangedEventManager))
+                {
+                    OnPropertyChanged((PropertyChangedEventArgs) e);
+                    return true;
+                }
+
+                if (managerType != typeof (CollectionChangedEventManager))
+                    return false;
+
+                UpdateCollection(_composite, _source, (NotifyCollectionChangedEventArgs) e,
+                    o => new CollectionContainer<TTarget>(_selector((TSource) o)));
+
+                return true;
+            }
+
+            protected abstract IReadOnlyObservableCollection<TTarget> GetView();
+
+            protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
+            {
+                CollectionChanged?.Invoke(this, e);
+            }
+
+            protected virtual void OnPropertyChanged(PropertyChangedEventArgs e)
+            {
+                PropertyChanged?.Invoke(this, e);
+            }
+        }
+
+        private class CollectionUpdater<TSource, TTarget> : CollectionUpdaterBase<TSource, TTarget>
+        {
+            private readonly CompositeReadOnlyObservableCollectionSource<TTarget> _composite;
+
+            public CollectionUpdater(IReadOnlyObservableCollection<TSource> source,
+                Func<TSource, IReadOnlyCollection<TTarget>> selector,
+                CompositeReadOnlyObservableCollectionSource<TTarget> composite) : base(source, selector, composite)
+            {
+                _composite = composite;
+            }
+
+            public CollectionUpdater(IReadOnlyObservableCollection<TSource> source,
+                Func<TSource, IReadOnlyCollection<TTarget>> selector)
+                : this(
+                    source, selector,
+                    new CompositeReadOnlyObservableCollectionSource<TTarget>(from item in source
+                        select new CollectionContainer<TTarget>(selector(item))))
+            {
+            }
+
+            protected override IReadOnlyObservableCollection<TTarget> GetView()
+            {
+                return _composite.View;
+            }
+        }
+
+        private class ListUpdater<TSource, TTarget> : CollectionUpdaterBase<TSource, TTarget>,
+            IReadOnlyObservableList<TTarget>
+        {
+            private readonly CompositeReadOnlyObservableListSource<TTarget> _composite;
+
+            public ListUpdater(IReadOnlyObservableCollection<TSource> source,
+                Func<TSource, IReadOnlyCollection<TTarget>> selector,
+                CompositeReadOnlyObservableListSource<TTarget> composite) : base(source, selector, composite)
+            {
+                _composite = composite;
+            }
+
+            public ListUpdater(IReadOnlyObservableCollection<TSource> source,
+                Func<TSource, IReadOnlyCollection<TTarget>> selector)
+                : this(
+                    source, selector,
+                    new CompositeReadOnlyObservableListSource<TTarget>(from item in source
+                        select new CollectionContainer<TTarget>(selector(item))))
+            {
+            }
+
+            public TTarget this[int index] => _composite.View[index];
+
+            protected override IReadOnlyObservableCollection<TTarget> GetView()
+            {
+                return _composite.View;
+            }
         }
     }
 }

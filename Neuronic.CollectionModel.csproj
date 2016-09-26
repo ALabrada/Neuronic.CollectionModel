@@ -51,6 +51,7 @@
     <Compile Include="CompositeReadOnlyObservableListSource.cs" />
     <Compile Include="ISelectableItem.cs" />
     <Compile Include="ItemContainer.cs" />
+    <Compile Include="Properties\Annotations.cs" />
     <Compile Include="SelectableCollectionSelector.cs" />
     <Compile Include="SelectionChangedEventManager.cs" />
     <Compile Include="SortedReadOnlyObservableList.cs" />
