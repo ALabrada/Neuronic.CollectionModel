@@ -34,7 +34,7 @@
     <SignAssembly>true</SignAssembly>
   </PropertyGroup>
   <PropertyGroup>
-    <AssemblyOriginatorKeyFile>Signature.pfx</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>Signature.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -81,7 +81,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Neuronic.CollectionModel.nuspec" />
-    <None Include="Signature.pfx" />
+    <None Include="Signature.snk" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
