@@ -221,7 +221,7 @@ namespace Neuronic.CollectionModel
                 UpdateItems(index, Count);
                 item.SourceIndex = -1;
 
-                OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, item.Item,
+                OnSortedCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, item.Item,
                     oldSortedIndex));
             }
 
@@ -235,7 +235,7 @@ namespace Neuronic.CollectionModel
                 Debug.Assert(oldSortedIndex >= 0);
                 _sortedItems.RemoveAt(oldSortedIndex);
 
-                base.SetItem(index, oldItem);
+                base.SetItem(index, newItem);
                 oldItem.SourceIndex = -1;
 
                 newItem.SourceIndex = index;
