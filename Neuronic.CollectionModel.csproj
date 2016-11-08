@@ -55,6 +55,7 @@
     <Compile Include="CompositeReadOnlyObservableCollectionSource.cs" />
     <Compile Include="CompositeReadOnlyObservableCollectionSourceBase.cs" />
     <Compile Include="CompositeReadOnlyObservableListSource.cs" />
+    <Compile Include="GroupingReadOnlyObservableListSource.cs" />
     <Compile Include="ISelectableItem.cs" />
     <Compile Include="ItemContainer.cs" />
     <Compile Include="Properties\Annotations.cs" />
