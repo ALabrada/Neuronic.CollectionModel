@@ -30,7 +30,7 @@ namespace Neuronic.CollectionModel
         ///     The names of the source item's properties that can alter the value of
         ///     <paramref name="keySelector" />.
         /// </param>
-        public GroupingReadOnlyObservableListSource(IReadOnlyObservableCollection<TSource> source,
+        public GroupingReadOnlyObservableListSource(IEnumerable<TSource> source,
             Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer, params string[] triggers)
             : this(
                 source, keySelector, comparer, triggers,
@@ -52,7 +52,7 @@ namespace Neuronic.CollectionModel
         ///     The names of the source item's properties that can alter the value of
         ///     <paramref name="keySelector" />.
         /// </param>
-        public GroupingReadOnlyObservableListSource(IReadOnlyObservableCollection<TSource> source,
+        public GroupingReadOnlyObservableListSource(IEnumerable<TSource> source,
             IEnumerable<ReadOnlyObservableGroup<TSource, TKey>> explicitGroups,
             Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer, params string[] triggers)
             : this(
@@ -61,7 +61,7 @@ namespace Neuronic.CollectionModel
         {
         }
 
-        private GroupingReadOnlyObservableListSource(IReadOnlyObservableCollection<TSource> source,
+        private GroupingReadOnlyObservableListSource(IEnumerable<TSource> source,
             Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer, string[] triggers,
             ObservableCollection<ReadOnlyObservableGroup<TSource, TKey>> groups) : base(groups)
         {
@@ -74,7 +74,9 @@ namespace Neuronic.CollectionModel
                 : ((a, b) => comparer.Equals(a, b));
             var initialContainers = source.Select(i => new GroupedItemContainer<TSource, TKey>(i, _keySelector));
             _containers = new ContainerList(initialContainers, equals, triggers, groups);
-            CollectionChangedEventManager.AddHandler(source, OnSourceChanged);
+            var notify = source as INotifyCollectionChanged;
+            if (notify != null)
+                CollectionChangedEventManager.AddHandler(notify, OnSourceChanged);
         }
 
         /// <summary>

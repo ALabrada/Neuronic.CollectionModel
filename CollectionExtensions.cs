@@ -48,12 +48,12 @@ namespace Neuronic.CollectionModel
             switch (e.Action)
             {
                 case NotifyCollectionChangedAction.Add:
-                    if (e.NewStartingIndex < 0 || list.Count <= e.NewStartingIndex)
+                    if ((e.NewStartingIndex < 0) || (list.Count <= e.NewStartingIndex))
                         foreach (var item in e.NewItems)
-                            list.Add(@select(item));
+                            list.Add(select(item));
                     else
                         for (var i = e.NewItems.Count - 1; i >= 0; --i) // insert
-                            list.Insert(e.NewStartingIndex, @select(e.NewItems[i]));
+                            list.Insert(e.NewStartingIndex, select(e.NewItems[i]));
                     break;
 
                 case NotifyCollectionChangedAction.Remove:
@@ -72,7 +72,7 @@ namespace Neuronic.CollectionModel
                     for (int i = e.NewItems.Count - 1, index = e.NewStartingIndex + i; i >= 0; --i, --index)
                     {
                         var item = list[index];
-                        list[index] = @select(e.NewItems[i]);
+                        list[index] = select(e.NewItems[i]);
                         onRemove?.Invoke(item);
                     }
                     break;
@@ -82,27 +82,19 @@ namespace Neuronic.CollectionModel
                         throw new InvalidOperationException("The index cannot be a negative value.");
 
                     if (e.OldStartingIndex < e.NewStartingIndex)
-                    {
                         for (int i = e.OldItems.Count - 1,
-                            oldIndex = e.OldStartingIndex + i,
-                            newIndex = e.NewStartingIndex + i;
+                                oldIndex = e.OldStartingIndex + i,
+                                newIndex = e.NewStartingIndex + i;
                             i >= 0;
                             --i, --oldIndex, --newIndex)
-                        {
                             list.Move(oldIndex, newIndex);
-                        }
-                    }
                     else
-                    {
                         for (int i = 0,
-                            oldIndex = e.OldStartingIndex + i,
-                            newIndex = e.NewStartingIndex + i;
+                                oldIndex = e.OldStartingIndex + i,
+                                newIndex = e.NewStartingIndex + i;
                             i < e.OldItems.Count;
                             ++i, ++oldIndex, ++newIndex)
-                        {
                             list.Move(oldIndex, newIndex);
-                        }
-                    }
 
                     break;
 
@@ -112,7 +104,7 @@ namespace Neuronic.CollectionModel
                             onRemove(item);
                     list.Clear();
                     foreach (var item in source)
-                        list.Add(@select(item));
+                        list.Add(select(item));
                     break;
             }
         }
@@ -238,7 +230,7 @@ namespace Neuronic.CollectionModel
         {
             var enumerator = items.GetEnumerator();
             var last = Math.Min(start + count, array.Length);
-            for (var i = start; i < last && enumerator.MoveNext(); i++)
+            for (var i = start; (i < last) && enumerator.MoveNext(); i++)
                 array[i] = enumerator.Current;
         }
 
@@ -316,15 +308,16 @@ namespace Neuronic.CollectionModel
         }
 
         /// <summary>
-        /// Projects each element of a sequence to a <see cref="IReadOnlyCollection"/> and flattens the resulting collections into one list.
+        ///     Projects each element of a sequence to a <see cref="IReadOnlyCollection" /> and flattens the resulting collections
+        ///     into one list.
         /// </summary>
         /// <typeparam name="TSource">The type of the source collection items.</typeparam>
         /// <typeparam name="TTarget">The type of the target collection items.</typeparam>
         /// <param name="items">The source collection.</param>
         /// <param name="selector">A transform function to apply to each element.</param>
         /// <returns>
-        /// The observable list obtained by applying <paramref name="selector"/> to each element of
-        /// <paramref name="items"/> and then concatenating the results. 
+        ///     The observable list obtained by applying <paramref name="selector" /> to each element of
+        ///     <paramref name="items" /> and then concatenating the results.
         /// </returns>
         public static IReadOnlyObservableList<TTarget> ListSelectMany<TSource, TTarget>(
             this IEnumerable<TSource> items, Func<TSource, IReadOnlyCollection<TTarget>> selector)
@@ -338,15 +331,16 @@ namespace Neuronic.CollectionModel
         }
 
         /// <summary>
-        /// Projects each element of a sequence to a <see cref="IReadOnlyCollection"/> and flattens the resulting collections into one collection.
+        ///     Projects each element of a sequence to a <see cref="IReadOnlyCollection" /> and flattens the resulting collections
+        ///     into one collection.
         /// </summary>
         /// <typeparam name="TSource">The type of the source collection items.</typeparam>
         /// <typeparam name="TTarget">The type of the target collection items.</typeparam>
         /// <param name="items">The source collection.</param>
         /// <param name="selector">A transform function to apply to each element.</param>
         /// <returns>
-        /// The observable collection obtained by applying <paramref name="selector"/> to each element of
-        /// <paramref name="items"/> and then concatenating the results.
+        ///     The observable collection obtained by applying <paramref name="selector" /> to each element of
+        ///     <paramref name="items" /> and then concatenating the results.
         /// </returns>
         public static IReadOnlyObservableCollection<TTarget> CollectionSelectMany<TSource, TTarget>(
             this IEnumerable<TSource> items, Func<TSource, IReadOnlyCollection<TTarget>> selector)
@@ -360,20 +354,112 @@ namespace Neuronic.CollectionModel
         }
 
         /// <summary>
-        /// Creates an observable view by filtering a sequence of values based on a predicate.
+        ///     Creates an observable view by filtering a sequence of values based on a predicate.
         /// </summary>
         /// <typeparam name="T">The type of the sequence items.</typeparam>
         /// <param name="items">The source collection.</param>
         /// <param name="predicate">The predicate.</param>
-        /// <param name="triggers">The name of the properties of <typeparamref name="T"/> that can 
-        /// influence in <paramref name="predicate"/>.</param>
-        /// <returns>An observable list that always contains the elements from <paramref name="items"/>
-        /// that satisfy <paramref name="predicate"/>.</returns>
+        /// <param name="triggers">
+        ///     The name of the properties of <typeparamref name="T" /> that can
+        ///     influence in <paramref name="predicate" />.
+        /// </param>
+        /// <returns>
+        ///     An observable list that always contains the elements from <paramref name="items" />
+        ///     that satisfy <paramref name="predicate" />.
+        /// </returns>
         public static IReadOnlyObservableList<T> ListWhere<T>(this IEnumerable<T> items, Predicate<T> predicate,
             params string[] triggers)
         {
             return new FilteredReadOnlyObservableList<T>(items, predicate, triggers);
-        } 
+        }
+
+        /// <summary>
+        ///     Creates several observable lists by grouping a source sequence according to some criteria.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the source items.</typeparam>
+        /// <typeparam name="TKey">The type of the keys used to group items.</typeparam>
+        /// <param name="items">The source items.</param>
+        /// <param name="selector">The function used to obtain keys that represent the items.</param>
+        /// <param name="comparer">The comparer used for key comparison.</param>
+        /// <returns>An observable list of observable groups.</returns>
+        public static IReadOnlyObservableList<ReadOnlyObservableGroup<TSource, TKey>> ListGroupBy<TSource, TKey>(
+            this IEnumerable<TSource> items, Func<TSource, TKey> selector, params string[] triggers)
+        {
+            return new GroupingReadOnlyObservableListSource<TSource, TKey>(items, selector, null, triggers);
+        }
+
+        /// <summary>
+        ///     Creates several observable lists by grouping a source sequence according to some criteria.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the source items.</typeparam>
+        /// <typeparam name="TKey">The type of the keys used to group items.</typeparam>
+        /// <param name="items">The source items.</param>
+        /// <param name="selector">The function used to obtain keys that represent the items.</param>
+        /// <param name="comparer">The comparer used for key comparison.</param>
+        /// <param name="triggers">
+        ///     The names of the source item's properties that can alter the value of
+        ///     <paramref name="selector" />.
+        /// </param>
+        /// <returns>An observable list of observable groups.</returns>
+        public static IReadOnlyObservableList<ReadOnlyObservableGroup<TSource, TKey>> ListGroupBy<TSource, TKey>(
+            this IEnumerable<TSource> items, Func<TSource, TKey> selector, IEqualityComparer<TKey> comparer,
+            params string[] triggers)
+        {
+            return new GroupingReadOnlyObservableListSource<TSource, TKey>(items, selector, comparer, triggers);
+        }
+
+        /// <summary>
+        ///     Creates several observable lists by grouping a source sequence according to some criteria.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the source items.</typeparam>
+        /// <typeparam name="TKey">The type of the keys used to group items.</typeparam>
+        /// <param name="items">The source items.</param>
+        /// <param name="explicitGroups">The explicit groups.</param>
+        /// <param name="includeImplict">
+        ///     Whether to include implicit groups (
+        ///     <see cref="GroupingReadOnlyObservableListSource{TSource,TKey}.IncludeImplicitGroups" />).
+        /// </param>
+        /// <param name="selector">The function used to obtain keys that represent the items.</param>
+        /// <param name="triggers">
+        ///     The names of the source item's properties that can alter the value of
+        ///     <paramref name="selector" />.
+        /// </param>
+        /// <returns>An observable list of observable groups.</returns>
+        public static IReadOnlyObservableList<ReadOnlyObservableGroup<TSource, TKey>> ListGroupBy<TSource, TKey>(
+            this IEnumerable<TSource> items,
+            IEnumerable<ReadOnlyObservableGroup<TSource, TKey>> explicitGroups, bool includeImplict,
+            Func<TSource, TKey> selector, params string[] triggers)
+        {
+            return new GroupingReadOnlyObservableListSource<TSource, TKey>(items, explicitGroups, selector, null,
+                triggers) {IncludeImplicitGroups = includeImplict};
+        }
+
+        /// <summary>
+        ///     Creates several observable lists by grouping a source sequence according to some criteria.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the source items.</typeparam>
+        /// <typeparam name="TKey">The type of the keys used to group items.</typeparam>
+        /// <param name="items">The source items.</param>
+        /// <param name="explicitGroups">The explicit groups.</param>
+        /// <param name="includeImplict">
+        ///     Whether to include implicit groups (
+        ///     <see cref="GroupingReadOnlyObservableListSource{TSource,TKey}.IncludeImplicitGroups" />).
+        /// </param>
+        /// <param name="selector">The function used to obtain keys that represent the items.</param>
+        /// <param name="comparer">The comparer used for key comparison.</param>
+        /// <param name="triggers">
+        ///     The names of the source item's properties that can alter the value of
+        ///     <paramref name="selector" />.
+        /// </param>
+        /// <returns>An observable list of observable groups.</returns>
+        public static IReadOnlyObservableList<ReadOnlyObservableGroup<TSource, TKey>> ListGroupBy<TSource, TKey>(
+            this IEnumerable<TSource> items,
+            IEnumerable<ReadOnlyObservableGroup<TSource, TKey>> explicitGroups, bool includeImplict,
+            Func<TSource, TKey> selector, IEqualityComparer<TKey> comparer, params string[] triggers)
+        {
+            return new GroupingReadOnlyObservableListSource<TSource, TKey>(items, explicitGroups, selector, comparer,
+                triggers) {IncludeImplicitGroups = includeImplict};
+        }
 
         private abstract class CollectionUpdaterBase<TSource, TTarget> : IWeakEventListener,
             IReadOnlyObservableCollection<TTarget>
@@ -407,13 +493,13 @@ namespace Neuronic.CollectionModel
 
             public bool ReceiveWeakEvent(Type managerType, object sender, EventArgs e)
             {
-                if (managerType == typeof (PropertyChangedEventManager))
+                if (managerType == typeof(PropertyChangedEventManager))
                 {
                     OnPropertyChanged((PropertyChangedEventArgs) e);
                     return true;
                 }
 
-                if (managerType != typeof (CollectionChangedEventManager))
+                if (managerType != typeof(CollectionChangedEventManager))
                     return false;
 
                 UpdateCollection(_composite, _source, (NotifyCollectionChangedEventArgs) e,
