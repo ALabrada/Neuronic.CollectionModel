@@ -55,10 +55,12 @@
     <Compile Include="CompositeReadOnlyObservableCollectionSource.cs" />
     <Compile Include="CompositeReadOnlyObservableCollectionSourceBase.cs" />
     <Compile Include="CompositeReadOnlyObservableListSource.cs" />
+    <Compile Include="GroupedItemContainer.cs" />
     <Compile Include="GroupingReadOnlyObservableListSource.cs" />
     <Compile Include="ISelectableItem.cs" />
     <Compile Include="ItemContainer.cs" />
     <Compile Include="Properties\Annotations.cs" />
+    <Compile Include="ReadOnlyObservableGroup.cs" />
     <Compile Include="SelectableCollectionSelector.cs" />
     <Compile Include="SelectionChangedEventManager.cs" />
     <Compile Include="SortedReadOnlyObservableList.cs" />
@@ -81,7 +83,9 @@
     <Compile Include="ViewReadOnlyObservableCollection.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Neuronic.CollectionModel.nuspec" />
+    <None Include="Neuronic.CollectionModel.nuspec">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Signature.snk" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
