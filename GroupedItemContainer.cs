@@ -55,7 +55,7 @@ namespace Neuronic.CollectionModel
         /// <value>
         /// The item's index in the source sequence.
         /// </value>
-        public int SourceIndex { get; set; }
+        public int SourceIndex { get; set; } = -1;
 
         /// <summary>
         /// Gets or sets the item's index in its group.
@@ -63,7 +63,7 @@ namespace Neuronic.CollectionModel
         /// <value>
         /// The item's index in its group.
         /// </value>
-        public int GroupIndex { get; set; }
+        public int GroupIndex { get; set; } = -1;
 
         /// <summary>
         /// Called when the value of any of the trigger property changes for this item.

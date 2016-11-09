@@ -124,7 +124,16 @@ namespace Neuronic.CollectionModel
                 _triggers = triggers;
                 _groups = groups;
 
-                UpdateAllIndexes();
+                for (int i = 0; i < Items.Count; i++)
+                {
+                    var container = Items[i];
+                    container.SourceIndex = i;
+                    container.GroupIndex = -1;
+                    container.Group = null;
+                    container.AttachTriggers(_triggers);
+                    container.KeyChanged += ContainerOnKeyChanged;
+                }
+
                 if ((_groups.Count > 0) || IncludeImplicitGroups)
                     AddMissingGroups();
             }
@@ -175,6 +184,8 @@ namespace Neuronic.CollectionModel
                 if (oldGroup != null)
                 {
                     oldGroup.InternalItems.RemoveAt(container.GroupIndex);
+                    if ((oldGroup.Count == 0) && !oldGroup.IsExplicit)
+                        _groups.Remove(oldGroup);
                     container.GroupIndex--;
                     UpdateIndexesFrom(container); // Update the indexes of the previous group. 
                 }
@@ -212,7 +223,7 @@ namespace Neuronic.CollectionModel
                 {
                     var container = Items[i];
                     container.SourceIndex = i;
-                    if (group == container.Group)
+                    if (group != null && group == container.Group)
                         container.GroupIndex = groupIndex++;
                 }
             }
@@ -256,7 +267,6 @@ namespace Neuronic.CollectionModel
             protected void AddMissingGroups()
             {
                 var groups = _groups;
-                var groupCounts = groups.Select(g => g.Count).ToList();
                 foreach (var container in Items)
                 {
                     var group = container.Group;
@@ -267,13 +277,11 @@ namespace Neuronic.CollectionModel
                         {
                             if (!IncludeImplicitGroups)
                                 continue;
-                            group = new ReadOnlyObservableGroup<TSource, TKey>(container.Key, false);
-                            groups.Add(group);
-                            groupCounts.Add(0);
+                            groups.Add(new ReadOnlyObservableGroup<TSource, TKey>(container.Key, false));
                         }
-                        container.Group = group;
-                        container.GroupIndex = groupCounts[groupIndex];
-                        groupCounts[groupIndex] = container.GroupIndex + 1;
+                        container.Group = group = groups[groupIndex];
+                        container.GroupIndex = group.Count;
+                        group.InternalItems.Add(container.Item);
                     }
                 }
             }
@@ -343,7 +351,7 @@ namespace Neuronic.CollectionModel
                 var container = Items[newIndex];
                 var oldGroupIndex = container.GroupIndex;
                 UpdateAllIndexes(container.Group); // Update all source & group indexes at once.
-                container.Group.InternalItems.Move(oldGroupIndex, container.GroupIndex);
+                container.Group?.InternalItems.Move(oldGroupIndex, container.GroupIndex);
             }
 
             /// <summary>
