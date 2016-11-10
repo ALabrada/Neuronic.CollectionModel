@@ -59,6 +59,7 @@
     <Compile Include="GroupingReadOnlyObservableListSource.cs" />
     <Compile Include="ISelectableItem.cs" />
     <Compile Include="ItemContainer.cs" />
+    <Compile Include="RangedReadOnlyObservableList.cs" />
     <Compile Include="ReadOnlyObservableGroup.cs" />
     <Compile Include="SelectableCollectionSelector.cs" />
     <Compile Include="SelectionChangedEventManager.cs" />
