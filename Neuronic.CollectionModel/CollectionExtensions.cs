@@ -83,15 +83,15 @@ namespace Neuronic.CollectionModel
 
                     if (e.OldStartingIndex < e.NewStartingIndex)
                         for (int i = e.OldItems.Count - 1,
-                                oldIndex = e.OldStartingIndex + i,
-                                newIndex = e.NewStartingIndex + i;
+                            oldIndex = e.OldStartingIndex + i,
+                            newIndex = e.NewStartingIndex + i;
                             i >= 0;
                             --i, --oldIndex, --newIndex)
                             list.Move(oldIndex, newIndex);
                     else
                         for (int i = 0,
-                                oldIndex = e.OldStartingIndex + i,
-                                newIndex = e.NewStartingIndex + i;
+                            oldIndex = e.OldStartingIndex + i,
+                            newIndex = e.NewStartingIndex + i;
                             i < e.OldItems.Count;
                             ++i, ++oldIndex, ++newIndex)
                             list.Move(oldIndex, newIndex);
@@ -461,6 +461,49 @@ namespace Neuronic.CollectionModel
                 triggers) {IncludeImplicitGroups = includeImplict};
         }
 
+        /// <summary>
+        ///     Creates an observable list from another by bypassing a specific number of elements and taking the rest.
+        /// </summary>
+        /// <typeparam name="T">The type of the list elements.</typeparam>
+        /// <param name="items">The source list.</param>
+        /// <param name="count">The number of items to bypass.</param>
+        /// <returns>An observable list that contains all the items in <paramref name="items" /> after <paramref name="count" />.</returns>
+        public static IReadOnlyObservableList<T> ListSkip<T>(this IReadOnlyObservableList<T> items, int count)
+        {
+            return new RangedReadOnlyObservableList<T>(items, count);
+        }
+
+        /// <summary>
+        ///     Creates an observable list from another by taking a specific number of elements and discarding the rest.
+        /// </summary>
+        /// <typeparam name="T">The type of the list elements.</typeparam>
+        /// <param name="items">The source list.</param>
+        /// <param name="count">The number of items to take.</param>
+        /// <returns>An observable list that contains the first <paramref name="count" /> elements of <paramref name="items" />.</returns>
+        public static IReadOnlyObservableList<T> ListTake<T>(this IReadOnlyObservableList<T> items, int count)
+        {
+            if (count < 0)
+                throw new ArgumentOutOfRangeException(nameof(count));
+            return new RangedReadOnlyObservableList<T>(items, maxCount: count);
+        }
+
+        /// <summary>
+        ///     Creates an observable list from another by taking a sub-sequence of it's items and discarding the rest.
+        /// </summary>
+        /// <typeparam name="T">The type of the list elements.</typeparam>
+        /// <param name="items">The source list.</param>
+        /// <param name="offset">The index of the first element of the sub-sequence.</param>
+        /// <param name="count">The number of elements in the sub-sequence.</param>
+        /// <returns>
+        ///     An observable list that contains only the <paramref name="count" /> elements long sub-sequence of
+        ///     <paramref name="items" /> that starts at <paramref name="offset" />.
+        /// </returns>
+        public static IReadOnlyObservableList<T> ListRange<T>(this IReadOnlyObservableList<T> items, int offset,
+            int count)
+        {
+            return new RangedReadOnlyObservableList<T>(items, offset, count);
+        }
+
         private abstract class CollectionUpdaterBase<TSource, TTarget> : IWeakEventListener,
             IReadOnlyObservableCollection<TTarget>
         {
@@ -493,13 +536,13 @@ namespace Neuronic.CollectionModel
 
             public bool ReceiveWeakEvent(Type managerType, object sender, EventArgs e)
             {
-                if (managerType == typeof(PropertyChangedEventManager))
+                if (managerType == typeof (PropertyChangedEventManager))
                 {
                     OnPropertyChanged((PropertyChangedEventArgs) e);
                     return true;
                 }
 
-                if (managerType != typeof(CollectionChangedEventManager))
+                if (managerType != typeof (CollectionChangedEventManager))
                     return false;
 
                 UpdateCollection(_composite, _source, (NotifyCollectionChangedEventArgs) e,

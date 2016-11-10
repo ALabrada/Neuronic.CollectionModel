@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 
@@ -12,7 +13,7 @@ namespace Neuronic.CollectionModel
     public class RangedReadOnlyObservableList<T> : ReadOnlyObservableList<T>
     {
         private readonly ObservableCollection<T> _list;
-        private readonly IReadOnlyObservableList<T> _source;
+        private readonly IReadOnlyList<T> _source;
         private int _offset;
         private int _maxCount;
 
@@ -22,12 +23,12 @@ namespace Neuronic.CollectionModel
         /// <param name="source">The source sequence.</param>
         /// <param name="offset">The offset of the sub-sequence.</param>
         /// <param name="maxCount">The maximum number of elements in the sub-sequence (Default to unlimited).</param>
-        public RangedReadOnlyObservableList(IReadOnlyObservableList<T> source, int offset = 0, int maxCount = -1)
+        public RangedReadOnlyObservableList(IReadOnlyList<T> source, int offset = 0, int maxCount = -1)
             : this (new ObservableCollection<T>(), source, offset, maxCount)
         {
         }
 
-        private RangedReadOnlyObservableList(ObservableCollection<T> list, IReadOnlyObservableList<T> source, int offset,
+        private RangedReadOnlyObservableList(ObservableCollection<T> list, IReadOnlyList<T> source, int offset,
             int maxCount) : base(list)
         {
             if (offset < 0)
@@ -40,7 +41,9 @@ namespace Neuronic.CollectionModel
 
             ResetItems();
 
-            CollectionChangedEventManager.AddHandler(_source, SourceOnCollectionChanged);
+            var notify = _source as INotifyCollectionChanged;
+            if (notify != null)
+                CollectionChangedEventManager.AddHandler(notify, SourceOnCollectionChanged);
         }
 
         /// <summary>
