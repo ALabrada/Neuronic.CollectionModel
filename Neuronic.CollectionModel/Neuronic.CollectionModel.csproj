@@ -31,10 +31,11 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <SignAssembly>true</SignAssembly>
+    <SignAssembly>false</SignAssembly>
   </PropertyGroup>
   <PropertyGroup>
-    <AssemblyOriginatorKeyFile>Signature.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>
+    </AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -81,12 +82,6 @@
     <Compile Include="ReadOnlyObservableList.cs" />
     <Compile Include="TransformingReadOnlyObservableList.cs" />
     <Compile Include="ViewReadOnlyObservableCollection.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Neuronic.CollectionModel.nuspec">
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="Signature.snk" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
