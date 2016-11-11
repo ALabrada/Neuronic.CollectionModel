@@ -61,14 +61,14 @@ namespace Neuronic.CollectionModel
                     throw new ArgumentOutOfRangeException(nameof(value));
                 if (_offset == value)
                     return;
-                var diff = Math.Abs(_offset - value);
-                if (diff >= Count)
-                    ResetItems();
-                else if (_offset > value)
-                    RemoveItems(diff, _offset);
-                else
-                    InsertItems(diff, _offset);
+                var diff = value - _offset;
                 _offset = value;
+                if (Math.Abs(diff) >= Count)
+                    ResetItems();
+                else if (diff > 0)
+                    RemoveItems(diff, value);
+                else
+                    InsertItems(-diff, value);
             }
         }
 
@@ -146,7 +146,7 @@ namespace Neuronic.CollectionModel
                 _list.RemoveAt(sourceIndex - Offset + i);
             if (MaxCount >= 0)
                 while (_list.Count < MaxCount && _source.Count > Offset + _list.Count)
-                    _list.Add(_source[Offset + _list.Count - 1]);
+                    _list.Add(_source[Offset + _list.Count]);
         }
 
         private void InsertItems(int count, int sourceIndex)
@@ -166,13 +166,13 @@ namespace Neuronic.CollectionModel
             if (MaxCount >= 0)
                 count = Math.Min(count, MaxCount);
             for (int i = 0; i < count; i++)
-                _list.Add(_source[Offset + _list.Count - 1]);
+                _list.Add(_source[Offset + _list.Count]);
         }
 
         private void FillItems()
         {
             while (_source.Count > Offset + _list.Count && (MaxCount < 0 || _list.Count < MaxCount))
-                _list.Add(_source[Offset + _list.Count - 1]);
+                _list.Add(_source[Offset + _list.Count]);
         }
 
         private void CleanItems()
