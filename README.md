@@ -21,7 +21,7 @@ parents.Add(new Person( ... ));
 
 ## Installation
 
-
+The binaries are available at [Nuget](https://www.nuget.org/packages/Neuronic.CollectionModel/). To install in run the command `Install-Package Neuronic.CollectionModel`.
 
 ## API Reference
 
