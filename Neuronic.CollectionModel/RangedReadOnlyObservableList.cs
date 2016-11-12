@@ -112,8 +112,14 @@ namespace Neuronic.CollectionModel
                     ResetItems();
                     break;
                 case NotifyCollectionChangedAction.Move:
-                    RemoveItems(e.OldItems.Count, Math.Max(e.OldStartingIndex, Offset));
-                    InsertItems(e.NewItems.Count, Math.Max(e.NewStartingIndex, Offset));
+                    count = e.OldItems.Count;
+                    if (MaxCount >= 0)
+                        count = Math.Min(count, Offset + MaxCount - e.OldStartingIndex);
+                    RemoveItems(count, Math.Max(e.OldStartingIndex, Offset));
+                    count = e.NewItems.Count;
+                    if (MaxCount >= 0)
+                        count = Math.Min(count, Offset + MaxCount - e.NewStartingIndex);
+                    InsertItems(count, Math.Max(e.NewStartingIndex, Offset));
                     break;
                 case NotifyCollectionChangedAction.Replace:
                     var newCount = e.OldItems.Count;
