@@ -308,7 +308,46 @@ namespace Neuronic.CollectionModel
         }
 
         /// <summary>
-        ///     Projects each element of a sequence to a <see cref="IReadOnlyCollection" /> and flattens the resulting collections
+        ///     Creates an observable list by concatenating two or more collections.
+        /// </summary>
+        /// <typeparam name="T">The type of the collection elements.</typeparam>
+        /// <param name="items">The first collection.</param>
+        /// <param name="others">One or more collections to concatenate after <paramref name="items" />, in the specified order.</param>
+        /// <returns>
+        ///     An observable list that contains the elements in <paramref name="items" /> and then, the items of each
+        ///     collection in <paramref name="others" /> in that order.
+        /// </returns>
+        public static IReadOnlyObservableList<T> ListConcat<T>(this IReadOnlyCollection<T> items,
+            params IReadOnlyCollection<T>[] others)
+        {
+            var containers = new List<CollectionContainer<T>>(others.Length + 1) {new CollectionContainer<T>(items)};
+            containers.AddRange(others.Select(c => new CollectionContainer<T>(c)));
+            var composite = new CompositeReadOnlyObservableListSource<T>(containers);
+            return composite.View;
+        }
+
+        /// <summary>
+        ///     Creates an observable collection by concatenating two or more collections.
+        /// </summary>
+        /// <typeparam name="T">The type of the collection elements.</typeparam>
+        /// <param name="items">The first collection.</param>
+        /// <param name="others">One or more collections to concatenate after <paramref name="items" />, in the specified order.</param>
+        /// <returns>
+        ///     An observable collection that contains the elements in <paramref name="items" /> and then, the items of each
+        ///     collection in <paramref name="others" /> in that order.
+        /// </returns>
+        public static IReadOnlyObservableCollection<T> CollectionConcat<T>(this IReadOnlyCollection<T> items,
+            params IReadOnlyCollection<T>[] others)
+        {
+            var containers = new List<CollectionContainer<T>>(others.Length + 1) {new CollectionContainer<T>(items)};
+            containers.AddRange(others.Select(c => new CollectionContainer<T>(c)));
+            var composite = new CompositeReadOnlyObservableCollectionSource<T>(containers);
+            return composite.View;
+        }
+
+        /// <summary>
+        ///     Projects each element of a sequence to a <see cref="IReadOnlyCollection{T}" /> and flattens the resulting
+        ///     collections
         ///     into one list.
         /// </summary>
         /// <typeparam name="TSource">The type of the source collection items.</typeparam>
@@ -331,7 +370,8 @@ namespace Neuronic.CollectionModel
         }
 
         /// <summary>
-        ///     Projects each element of a sequence to a <see cref="IReadOnlyCollection" /> and flattens the resulting collections
+        ///     Projects each element of a sequence to a <see cref="IReadOnlyCollection{T}" /> and flattens the resulting
+        ///     collections
         ///     into one collection.
         /// </summary>
         /// <typeparam name="TSource">The type of the source collection items.</typeparam>
@@ -380,7 +420,10 @@ namespace Neuronic.CollectionModel
         /// <typeparam name="TKey">The type of the keys used to group items.</typeparam>
         /// <param name="items">The source items.</param>
         /// <param name="selector">The function used to obtain keys that represent the items.</param>
-        /// <param name="comparer">The comparer used for key comparison.</param>
+        /// <param name="triggers">
+        ///     The names of the source item's properties that can alter the value of
+        ///     <paramref name="selector" />.
+        /// </param>
         /// <returns>An observable list of observable groups.</returns>
         public static IReadOnlyObservableList<ReadOnlyObservableGroup<TSource, TKey>> ListGroupBy<TSource, TKey>(
             this IEnumerable<TSource> items, Func<TSource, TKey> selector, params string[] triggers)
