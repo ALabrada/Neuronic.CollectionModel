@@ -278,6 +278,20 @@ namespace Neuronic.CollectionModel
         }
 
         /// <summary>
+        ///     Creates an observable list by extracting the elements of a specific type from a source collection.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the elements in the source collection.</typeparam>
+        /// <typeparam name="TTarget">The type of the elements to extract.</typeparam>
+        /// <param name="source">The source collection.</param>
+        /// <returns>The list of all the elements in <paramref name="source" /> that are of type <typeparamref name="TTarget" />.</returns>
+        public static IReadOnlyObservableList<TTarget> ListOfType<TSource, TTarget>(
+            this IReadOnlyObservableCollection<TSource> source) where TTarget : TSource
+        {
+            var filter = new FilteredReadOnlyObservableList<TSource>(source, item => item is TTarget);
+            return new CastingReadOnlyObservableList<TSource, TTarget>(filter);
+        }
+
+        /// <summary>
         ///     Creates a sorted view of an observable collection.
         /// </summary>
         /// <typeparam name="T">The type of the collection items.</typeparam>
