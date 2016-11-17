@@ -63,6 +63,7 @@
     <Compile Include="IObservableResult.cs" />
     <Compile Include="ISelectableItem.cs" />
     <Compile Include="ItemContainer.cs" />
+    <Compile Include="LastElementQueryResult.cs" />
     <Compile Include="ObservableResult.cs" />
     <Compile Include="QueryObservableResult.cs" />
     <Compile Include="RangedReadOnlyObservableList.cs" />

@@ -154,7 +154,7 @@ namespace Neuronic.CollectionModel
         }
 
         /// <summary>
-        /// Casts the boolean result, enabling to use boolean operators.
+        ///     Casts the boolean result, enabling to use boolean operators.
         /// </summary>
         /// <param name="result">The source operation result.</param>
         /// <returns>The casted operation result.</returns>
@@ -575,6 +575,133 @@ namespace Neuronic.CollectionModel
             int count)
         {
             return new RangedReadOnlyObservableList<T>(items, offset, count);
+        }
+
+        /// <summary>
+        ///     Creates an observable query that determines if the observable collection has any elements.
+        /// </summary>
+        /// <typeparam name="T">The type of the collection's elements.</typeparam>
+        /// <param name="items">The source collection.</param>
+        /// <returns><c>true</c> if the collection has any elements, otherwise <c>false</c>.</returns>
+        public static IObservableResult<bool> ObservableAny<T>(this IReadOnlyObservableCollection<T> items)
+        {
+            return new SimpleQueryObservableResult<T, bool>(items, collection => collection.Count > 0);
+        }
+
+        /// <summary>
+        ///     Creates an observable query that determines if the sequence has any elements satisfying some condition.
+        /// </summary>
+        /// <typeparam name="T">The type of the sequence's elements.</typeparam>
+        /// <param name="items">The source sequence.</param>
+        /// <param name="predicate">The predicate that represents the condition.</param>
+        /// <param name="triggers">
+        ///     The names of the properties of <typeparamref name="T" /> that can affect
+        ///     <paramref name="predicate" />.
+        /// </param>
+        /// <returns><c>true</c> if the collection has any elements that satisfy the condition, otherwise <c>false</c>.</returns>
+        public static IObservableResult<bool> ObservableAny<T>(this IEnumerable<T> items, Predicate<T> predicate,
+            params string[] triggers)
+        {
+            var filter = new FilteredReadOnlyObservableList<T>(items, predicate, triggers);
+            return new SimpleQueryObservableResult<T, bool>(filter, collection => collection.Count > 0);
+        }
+
+        /// <summary>
+        ///     Creates an observable query that stores the first element of a collection.
+        /// </summary>
+        /// <typeparam name="T">The type of the collection's elements.</typeparam>
+        /// <param name="items">The source collection.</param>
+        /// <param name="defaultValue">The optional default value.</param>
+        /// <returns>The first element of the collection or <paramref name="defaultValue" />.</returns>
+        public static IObservableResult<T> ObservableFirstOrDefault<T>(this IReadOnlyObservableCollection<T> items,
+            T defaultValue = default(T))
+        {
+            return new SimpleQueryObservableResult<T, T>(items,
+                collection => collection.Count == 0 ? defaultValue : collection.First());
+        }
+
+        /// <summary>
+        ///     Creates an observable query the stores the first element that satisfies a condition in a sequence.
+        /// </summary>
+        /// <typeparam name="T">The type of the sequence's elements.</typeparam>
+        /// <param name="items">The source sequence.</param>
+        /// <param name="predicate">The predicate that represents the condition.</param>
+        /// <param name="triggers">
+        ///     The names of the properties of <typeparamref name="T" /> that can affect
+        ///     <paramref name="predicate" />.
+        /// </param>
+        /// <returns>The first element of the sequence that satisfies <paramref name="predicate" />.</returns>
+        public static IObservableResult<T> ObservableFirstOrDefault<T>(this IEnumerable<T> items,
+            Predicate<T> predicate, params string[] triggers)
+        {
+            var filter = new FilteredReadOnlyObservableList<T>(items, predicate, triggers);
+            return new SimpleQueryObservableResult<T, T>(filter, collection => collection.FirstOrDefault());
+        }
+
+        /// <summary>
+        ///     Creates an observable query that stores the last element of a collection.
+        /// </summary>
+        /// <typeparam name="T">The type of the collection's elements.</typeparam>
+        /// <param name="items">The source collection.</param>
+        /// <param name="defaultValue">The optional default value.</param>
+        /// <returns>The last element of the collection or <paramref name="defaultValue" />.</returns>
+        public static IObservableResult<T> ObservableLastOrDefault<T>(this IReadOnlyObservableCollection<T> items,
+            T defaultValue = default(T))
+        {
+            if (items is IReadOnlyObservableList<T>)
+                return new SimpleQueryObservableResult<T, T>(items,
+                    collection =>
+                        collection.Count == 0
+                            ? defaultValue
+                            : ((IReadOnlyObservableList<T>) collection)[collection.Count - 1]);
+            return new LastElementQueryResult<T>(items, defaultValue);
+        }
+
+        /// <summary>
+        ///     Creates an observable query the stores the last element that satisfies a condition in a sequence.
+        /// </summary>
+        /// <typeparam name="T">The type of the sequence's elements.</typeparam>
+        /// <param name="items">The source sequence.</param>
+        /// <param name="predicate">The predicate that represents the condition.</param>
+        /// <param name="triggers">
+        ///     The names of the properties of <typeparamref name="T" /> that can affect
+        ///     <paramref name="predicate" />.
+        /// </param>
+        /// <returns>The last element of the sequence that satisfies <paramref name="predicate" />.</returns>
+        public static IObservableResult<T> ObservableLastOrDefault<T>(this IEnumerable<T> items,
+            Predicate<T> predicate, params string[] triggers)
+        {
+            var filter = new FilteredReadOnlyObservableList<T>(items, predicate, triggers);
+            if (items is IReadOnlyObservableList<T>)
+                return new SimpleQueryObservableResult<T, T>(filter,
+                    collection =>
+                        collection.Count == 0
+                            ? default(T)
+                            : ((IReadOnlyObservableList<T>) collection)[collection.Count - 1]);
+            return new LastElementQueryResult<T>(filter);
+        }
+
+        /// <summary>
+        ///     Creates an observable query that stores the element at the specified index in a collection.
+        /// </summary>
+        /// <typeparam name="T">The type of the collection's elements.</typeparam>
+        /// <param name="items">The source collection.</param>
+        /// <param name="index">The index.</param>
+        /// <param name="defaultValue">The optional default value.</param>
+        /// <returns>The first element of the collection or <paramref name="defaultValue" />.</returns>
+        public static IObservableResult<T> ObservableElementAtOrDefault<T>(this IReadOnlyObservableCollection<T> items,
+            int index,
+            T defaultValue = default(T))
+        {
+            if (items is IReadOnlyObservableList<T>)
+                return new SimpleQueryObservableResult<T, T>(items,
+                    collection =>
+                    {
+                        var list = (IReadOnlyObservableList<T>) collection;
+                        return list.Count > index ? list[index] : defaultValue;
+                    });
+            return new SimpleQueryObservableResult<T, T>(items,
+                collection => collection.Count > index ? collection.ElementAt(index) : defaultValue);
         }
 
         private abstract class CollectionUpdaterBase<TSource, TTarget> : IWeakEventListener,
