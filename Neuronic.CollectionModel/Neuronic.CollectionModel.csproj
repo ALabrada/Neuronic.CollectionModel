@@ -49,6 +49,8 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BooleanObservableResult.cs" />
+    <Compile Include="CompositeObservableResult.cs" />
     <Compile Include="CastingReadOnlyObservableCollection.cs" />
     <Compile Include="CastingReadOnlyObservableList.cs" />
     <Compile Include="CollectionContainer.cs" />

@@ -154,6 +154,16 @@ namespace Neuronic.CollectionModel
         }
 
         /// <summary>
+        /// Casts the boolean result, enabling to use boolean operators.
+        /// </summary>
+        /// <param name="result">The source operation result.</param>
+        /// <returns>The casted operation result.</returns>
+        public static BooleanObservableResult Cast(this IObservableResult<bool> result)
+        {
+            return result as BooleanObservableResult ?? new BooleanObservableResult(result);
+        }
+
+        /// <summary>
         ///     Creates a new item sequence by appending a sequence after a single-item sequence.
         /// </summary>
         /// <typeparam name="T">The type of the sequence items.</typeparam>
