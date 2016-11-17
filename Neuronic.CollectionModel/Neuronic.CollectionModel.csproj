@@ -58,12 +58,16 @@
     <Compile Include="CompositeReadOnlyObservableListSource.cs" />
     <Compile Include="GroupedItemContainer.cs" />
     <Compile Include="GroupingReadOnlyObservableListSource.cs" />
+    <Compile Include="IObservableResult.cs" />
     <Compile Include="ISelectableItem.cs" />
     <Compile Include="ItemContainer.cs" />
+    <Compile Include="ObservableResult.cs" />
+    <Compile Include="QueryObservableResult.cs" />
     <Compile Include="RangedReadOnlyObservableList.cs" />
     <Compile Include="ReadOnlyObservableGroup.cs" />
     <Compile Include="SelectableCollectionSelector.cs" />
     <Compile Include="SelectionChangedEventManager.cs" />
+    <Compile Include="SimpleQueryObservableResult.cs" />
     <Compile Include="SortedReadOnlyObservableList.cs" />
     <Compile Include="SwitchableCollectionSource.cs" />
     <Compile Include="CollectionSelector.cs" />
