@@ -442,7 +442,10 @@ namespace Neuronic.CollectionModel
         public static IReadOnlyObservableList<ReadOnlyObservableGroup<TSource, TKey>> ListGroupBy<TSource, TKey>(
             this IEnumerable<TSource> items, Func<TSource, TKey> selector, params string[] triggers)
         {
-            return new GroupingReadOnlyObservableListSource<TSource, TKey>(items, selector, null, triggers);
+            return new GroupingReadOnlyObservableListSource<TSource, TKey>(items, selector, null, triggers)
+            {
+                IncludeImplicitGroups = true
+            };
         }
 
         /// <summary>
@@ -462,7 +465,10 @@ namespace Neuronic.CollectionModel
             this IEnumerable<TSource> items, Func<TSource, TKey> selector, IEqualityComparer<TKey> comparer,
             params string[] triggers)
         {
-            return new GroupingReadOnlyObservableListSource<TSource, TKey>(items, selector, comparer, triggers);
+            return new GroupingReadOnlyObservableListSource<TSource, TKey>(items, selector, comparer, triggers)
+            {
+                IncludeImplicitGroups = true
+            };
         }
 
         /// <summary>
