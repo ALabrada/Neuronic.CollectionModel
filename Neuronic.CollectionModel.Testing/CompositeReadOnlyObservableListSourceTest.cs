@@ -1,5 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Neuronic.CollectionModel.Testing
@@ -442,6 +445,30 @@ namespace Neuronic.CollectionModel.Testing
             Assert.AreEqual(trool[12], 3);
             Assert.AreEqual(trool[13], 4);
             Assert.AreEqual(trool[14], 10);
+        }
+
+        [TestMethod]
+        public void TestRemoveSourceCollection()
+        {
+            var coll1 = Enumerable.Range(0, 5).ToList();
+            var coll2 = Enumerable.Range(5, 5).ToList();
+            var coll3 = Enumerable.Range(10, 5).ToList();
+
+            var union = new ObservableCollection<IReadOnlyCollection<int>> {coll1, coll2, coll3};
+            var collection = new ReadOnlyObservableList<IReadOnlyCollection<int>>(union).ListSelectMany(coll => coll);
+            var copy = collection.ListSelect(i => i);
+
+            Assert.AreEqual(15, collection.Count);
+            Assert.IsTrue(Enumerable.Range(0, 15).SequenceEqual(collection));
+            Assert.AreEqual(15, copy.Count);
+            Assert.IsTrue(collection.SequenceEqual(copy));
+
+            union.RemoveAt(1);
+
+            Assert.AreEqual(10, collection.Count);
+            Assert.IsTrue(Enumerable.Range(0, 5).Concat(Enumerable.Range(10, 5)).SequenceEqual(collection));
+            Assert.AreEqual(10, copy.Count);
+            Assert.IsTrue(collection.SequenceEqual(copy));
         }
 
         private void ViewCroocs_CollectionChanged1(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
