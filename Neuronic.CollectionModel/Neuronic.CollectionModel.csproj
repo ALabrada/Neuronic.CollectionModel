@@ -58,6 +58,8 @@
     <Compile Include="CompositeReadOnlyObservableCollectionSource.cs" />
     <Compile Include="CompositeReadOnlyObservableCollectionSourceBase.cs" />
     <Compile Include="CompositeReadOnlyObservableListSource.cs" />
+    <Compile Include="CustomReadOnlyObservableCollection.cs" />
+    <Compile Include="CustomReadOnlyObservableList.cs" />
     <Compile Include="GroupedItemContainer.cs" />
     <Compile Include="GroupingReadOnlyObservableListSource.cs" />
     <Compile Include="IObservableResult.cs" />

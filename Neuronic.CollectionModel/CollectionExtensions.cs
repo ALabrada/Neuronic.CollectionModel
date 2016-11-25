@@ -262,6 +262,34 @@ namespace Neuronic.CollectionModel
         }
 
         /// <summary>
+        /// Creates an observable view of a normal read-only list.
+        /// </summary>
+        /// <typeparam name="T">The type of the list's elements.</typeparam>
+        /// <param name="list">The list.</param>
+        /// <returns></returns>
+        public static IReadOnlyObservableList<T> ListAsObservable<T>(this IReadOnlyList<T> list)
+        {
+            var observableCollection = list as ObservableCollection<T>;
+            if (observableCollection != null)
+                return new ReadOnlyObservableList<T>(observableCollection);
+            return new CustomReadOnlyObservableList<T>(list);
+        }
+
+        /// <summary>
+        /// Creates an observable view of a normal read-only collection.
+        /// </summary>
+        /// <typeparam name="T">The type of the collection's elements.</typeparam>
+        /// <param name="collection">The collection.</param>
+        /// <returns></returns>
+        private static IReadOnlyObservableCollection<T> CollectionAsObservable<T>(this IReadOnlyCollection<T> collection)
+        {
+            var observableCollection = collection as ObservableCollection<T>;
+            if (observableCollection != null)
+                return new ReadOnlyObservableList<T>(observableCollection);
+            return new CustomReadOnlyObservableCollection<T>(collection);
+        }
+
+        /// <summary>
         ///     Simulates contra-variance by casting the list's items.
         /// </summary>
         /// <typeparam name="TSource">The source type.</typeparam>

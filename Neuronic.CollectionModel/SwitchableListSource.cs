@@ -50,6 +50,7 @@ namespace Neuronic.CollectionModel
                         PropertyChangedEventManager.RemoveHandler(notifyProperties, SourceOnPropertyChanged, IndexerName);
                     }
                     var notifyCollection = oldSource as INotifyCollectionChanged;
+                    if (notifyCollection != null)
                         CollectionChangedEventManager.RemoveHandler(notifyCollection, SourceOnCollectionChanged);
                 }
                 // Update source
@@ -65,7 +66,8 @@ namespace Neuronic.CollectionModel
                         PropertyChangedEventManager.AddHandler(notifyProperties, SourceOnPropertyChanged, IndexerName);
                     }
                     var notifyCollection = newSource as INotifyCollectionChanged;
-                    CollectionChangedEventManager.AddHandler(notifyCollection, SourceOnCollectionChanged);
+                    if (notifyCollection != null)
+                        CollectionChangedEventManager.AddHandler(notifyCollection, SourceOnCollectionChanged);
                 }
                 // Signal to update instance properties.
                 OnPropertyChanged(new PropertyChangedEventArgs(CountPropertyName));
