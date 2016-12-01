@@ -190,6 +190,66 @@ namespace Neuronic.CollectionModel
         }
 
         /// <summary>
+        /// Returns the minimum value of a sequence or a default value if it is empty.
+        /// </summary>
+        /// <typeparam name="T">The type of the elements in the sequence.</typeparam>
+        /// <param name="items">The sequence.</param>
+        /// <param name="comparer">The comparison function.</param>
+        /// <param name="defaultValue">The default value.</param>
+        /// <returns>
+        /// <paramref name="defaultValue"/> if <paramref name="items"/> is empty; otherwise,
+        /// the minimum value in <paramref name="items"/> according to <paramref name="comparer"/>.
+        /// </returns>
+        public static T MinOrDefault<T>(this IEnumerable<T> items, Comparison<T> comparer = null, T defaultValue = default(T))
+        {
+            comparer = comparer ?? Comparer<T>.Default.Compare; 
+            using (var enumerator = items.GetEnumerator())
+            {
+                if (!enumerator.MoveNext())
+                    return defaultValue;
+                var result = enumerator.Current;
+                while (enumerator.MoveNext())
+                {
+                    var current = enumerator.Current;
+                    var cmp = comparer(current, result);
+                    if (cmp < 0)
+                        result = current;
+                }
+                return result;
+            }
+        }
+
+        /// <summary>
+        /// Returns the maximum value of a sequence or a default value if it is empty.
+        /// </summary>
+        /// <typeparam name="T">The type of the elements in the sequence.</typeparam>
+        /// <param name="items">The sequence.</param>
+        /// <param name="comparer">The comparison function.</param>
+        /// <param name="defaultValue">The default value.</param>
+        /// <returns>
+        /// <paramref name="defaultValue"/> if <paramref name="items"/> is empty; otherwise,
+        /// the maximum value in <paramref name="items"/> according to <paramref name="comparer"/>.
+        /// </returns>
+        public static T MaxOrDefault<T>(this IEnumerable<T> items, Comparison<T> comparer = null, T defaultValue = default(T))
+        {
+            comparer = comparer ?? Comparer<T>.Default.Compare;
+            using (var enumerator = items.GetEnumerator())
+            {
+                if (!enumerator.MoveNext())
+                    return defaultValue;
+                var result = enumerator.Current;
+                while (enumerator.MoveNext())
+                {
+                    var current = enumerator.Current;
+                    var cmp = comparer(current, result);
+                    if (cmp > 0)
+                        result = current;
+                }
+                return result;
+            }
+        }
+
+        /// <summary>
         ///     Swaps the specified items in the given list.
         /// </summary>
         /// <typeparam name="T">The type of the list items.</typeparam>
@@ -281,7 +341,7 @@ namespace Neuronic.CollectionModel
         /// <typeparam name="T">The type of the collection's elements.</typeparam>
         /// <param name="collection">The collection.</param>
         /// <returns></returns>
-        private static IReadOnlyObservableCollection<T> CollectionAsObservable<T>(this IReadOnlyCollection<T> collection)
+        public static IReadOnlyObservableCollection<T> CollectionAsObservable<T>(this IReadOnlyCollection<T> collection)
         {
             var observableCollection = collection as ObservableCollection<T>;
             if (observableCollection != null)
