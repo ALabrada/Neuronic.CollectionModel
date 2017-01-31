@@ -40,6 +40,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.EnterpriseServices" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -62,10 +63,15 @@
     <Compile Include="CustomReadOnlyObservableList.cs" />
     <Compile Include="GroupedItemContainer.cs" />
     <Compile Include="GroupingReadOnlyObservableListSource.cs" />
+    <Compile Include="IManualReadOnlyObservableCollection.cs" />
+    <Compile Include="IManualReadOnlyObservableList.cs" />
     <Compile Include="IObservableResult.cs" />
     <Compile Include="ISelectableItem.cs" />
     <Compile Include="ItemContainer.cs" />
+    <Compile Include="ITransactionalReadOnlyObservableCollection.cs" />
+    <Compile Include="ITransactionalReadOnlyObservableList.cs" />
     <Compile Include="LastElementQueryResult.cs" />
+    <Compile Include="ManualReadOnlyObservableCollection.cs" />
     <Compile Include="ObservableResult.cs" />
     <Compile Include="QueryObservableResult.cs" />
     <Compile Include="RangedReadOnlyObservableList.cs" />
@@ -89,6 +95,9 @@
     <Compile Include="SwitchableListSource.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReadOnlyObservableList.cs" />
+    <Compile Include="Transaction.cs" />
+    <Compile Include="TransactionalReadOnlyObservableCollection.cs" />
+    <Compile Include="TransactionalReadOnyObservableList.cs" />
     <Compile Include="TransformingReadOnlyObservableList.cs" />
     <Compile Include="ViewReadOnlyObservableCollection.cs" />
   </ItemGroup>

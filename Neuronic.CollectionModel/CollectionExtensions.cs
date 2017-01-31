@@ -5,7 +5,6 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
-using System.Windows;
 
 namespace Neuronic.CollectionModel
 {
@@ -190,19 +189,20 @@ namespace Neuronic.CollectionModel
         }
 
         /// <summary>
-        /// Returns the minimum value of a sequence or a default value if it is empty.
+        ///     Returns the minimum value of a sequence or a default value if it is empty.
         /// </summary>
         /// <typeparam name="T">The type of the elements in the sequence.</typeparam>
         /// <param name="items">The sequence.</param>
         /// <param name="comparer">The comparison function.</param>
         /// <param name="defaultValue">The default value.</param>
         /// <returns>
-        /// <paramref name="defaultValue"/> if <paramref name="items"/> is empty; otherwise,
-        /// the minimum value in <paramref name="items"/> according to <paramref name="comparer"/>.
+        ///     <paramref name="defaultValue" /> if <paramref name="items" /> is empty; otherwise,
+        ///     the minimum value in <paramref name="items" /> according to <paramref name="comparer" />.
         /// </returns>
-        public static T MinOrDefault<T>(this IEnumerable<T> items, Comparison<T> comparer = null, T defaultValue = default(T))
+        public static T MinOrDefault<T>(this IEnumerable<T> items, Comparison<T> comparer = null,
+            T defaultValue = default(T))
         {
-            comparer = comparer ?? Comparer<T>.Default.Compare; 
+            comparer = comparer ?? Comparer<T>.Default.Compare;
             using (var enumerator = items.GetEnumerator())
             {
                 if (!enumerator.MoveNext())
@@ -220,17 +220,18 @@ namespace Neuronic.CollectionModel
         }
 
         /// <summary>
-        /// Returns the maximum value of a sequence or a default value if it is empty.
+        ///     Returns the maximum value of a sequence or a default value if it is empty.
         /// </summary>
         /// <typeparam name="T">The type of the elements in the sequence.</typeparam>
         /// <param name="items">The sequence.</param>
         /// <param name="comparer">The comparison function.</param>
         /// <param name="defaultValue">The default value.</param>
         /// <returns>
-        /// <paramref name="defaultValue"/> if <paramref name="items"/> is empty; otherwise,
-        /// the maximum value in <paramref name="items"/> according to <paramref name="comparer"/>.
+        ///     <paramref name="defaultValue" /> if <paramref name="items" /> is empty; otherwise,
+        ///     the maximum value in <paramref name="items" /> according to <paramref name="comparer" />.
         /// </returns>
-        public static T MaxOrDefault<T>(this IEnumerable<T> items, Comparison<T> comparer = null, T defaultValue = default(T))
+        public static T MaxOrDefault<T>(this IEnumerable<T> items, Comparison<T> comparer = null,
+            T defaultValue = default(T))
         {
             comparer = comparer ?? Comparer<T>.Default.Compare;
             using (var enumerator = items.GetEnumerator())
@@ -322,7 +323,7 @@ namespace Neuronic.CollectionModel
         }
 
         /// <summary>
-        /// Creates an observable view of a normal read-only list.
+        ///     Creates an observable view of a normal read-only list.
         /// </summary>
         /// <typeparam name="T">The type of the list's elements.</typeparam>
         /// <param name="list">The list.</param>
@@ -336,7 +337,7 @@ namespace Neuronic.CollectionModel
         }
 
         /// <summary>
-        /// Creates an observable view of a normal read-only collection.
+        ///     Creates an observable view of a normal read-only collection.
         /// </summary>
         /// <typeparam name="T">The type of the collection's elements.</typeparam>
         /// <param name="collection">The collection.</param>
@@ -347,6 +348,104 @@ namespace Neuronic.CollectionModel
             if (observableCollection != null)
                 return new ReadOnlyObservableList<T>(observableCollection);
             return new CustomReadOnlyObservableCollection<T>(collection);
+        }
+
+        /// <summary>
+        ///     Creates a list proxy that can be used to manually refresh the lists that depend on it.
+        /// </summary>
+        /// <typeparam name="T">The type of the collection items.</typeparam>
+        /// <param name="list">The source list.</param>
+        /// <returns>A list that can be reseted from external code.</returns>
+        public static IManualReadOnlyObservableList<T> ListAsManual<T>(this IReadOnlyObservableList<T> list)
+        {
+            return new TransactionalReadOnyObservableList<T>(list);
+        }
+
+        /// <summary>
+        ///     Creates a collection proxy that can be used to manually refresh the collections that depend on it.
+        /// </summary>
+        /// <typeparam name="T">The type of the collection items.</typeparam>
+        /// <param name="collection">The source collection.</param>
+        /// <returns>A collection that can be reseted from external code.</returns>
+        public static IManualReadOnlyObservableCollection<T> CollectionAsManual<T>(
+            this IReadOnlyObservableCollection<T> collection)
+        {
+            return new ManualReadOnlyObservableCollection<T>(collection);
+        }
+
+        /// <summary>
+        ///     Creates a list proxy that can be used to optimize performance when performing multiple
+        ///     modifications to a source list.
+        /// </summary>
+        /// <typeparam name="T">The type of the collection items.</typeparam>
+        /// <param name="list">The source list.</param>
+        /// <returns>The list proxy.</returns>
+        /// <remarks>
+        ///     <para>
+        ///         During a transaction, the notifications corresponding to the modifications in the source
+        ///         collections will not reach the collections that depend on this instance. When the transaction
+        ///         finishes, the depending collections will be refreshed if needed.
+        ///         See <see cref="TransactionalReadOnlyObservableCollection{T}" /> for more details.
+        ///     </para>
+        ///     <para>
+        ///         Use the <see cref="ITransactionalReadOnlyObservableCollection{T}.BeginTransaction" /> and
+        ///         <see cref="ITransactionalReadOnlyObservableCollection{T}.EndTransaction" /> methods to create
+        ///         transactions. You can also use <see cref="CreateTransaction{T}" /> or <see cref="Transaction{T}" />
+        ///         directly to create a transaction inside a <c>using</c> block.
+        ///     </para>
+        ///     <para>
+        ///         The transactional collections are also manual collections, so you can use
+        ///         <see cref="IManualReadOnlyObservableCollection{T}.Reset"/> to refresh the dependent
+        ///         collections either during or outside a transaction.
+        ///     </para>
+        /// </remarks>
+        public static ITransactionalReadOnlyObservableList<T> ListAsTransactional<T>(
+            this IReadOnlyObservableList<T> list)
+        {
+            return new TransactionalReadOnyObservableList<T>(list);
+        }
+
+        /// <summary>
+        ///     Creates a collection proxy that can be used to optimize performance when performing multiple
+        ///     modifications to a source collection.
+        /// </summary>
+        /// <typeparam name="T">The type of the collection items.</typeparam>
+        /// <param name="collection">The source collection.</param>
+        /// <returns>The collection proxy.</returns>
+        /// <remarks>
+        ///     <para>
+        ///         During a transaction, the notifications corresponding to the modifications in the source
+        ///         collections will not reach the collections that depend on this instance. When the transaction
+        ///         finishes, the depending collections will be refreshed if needed.
+        ///         See <see cref="TransactionalReadOnlyObservableCollection{T}" /> for more details.
+        ///     </para>
+        ///     <para>
+        ///         Use the <see cref="ITransactionalReadOnlyObservableCollection{T}.BeginTransaction" /> and
+        ///         <see cref="ITransactionalReadOnlyObservableCollection{T}.EndTransaction" /> methods to create
+        ///         transactions. You can also use <see cref="CreateTransaction{T}" /> or <see cref="Transaction{T}" />
+        ///         directly to create a transaction inside a <c>using</c> block.
+        ///     </para>
+        ///     <para>
+        ///         The transactional collections are also manual collections, so you can use
+        ///         <see cref="IManualReadOnlyObservableCollection{T}.Reset"/> to refresh the dependent
+        ///         collections either during or outside a transaction.
+        ///     </para>
+        /// </remarks>
+        public static ITransactionalReadOnlyObservableCollection<T> CollectionATransactional<T>(
+            this IReadOnlyObservableCollection<T> collection)
+        {
+            return new TransactionalReadOnlyObservableCollection<T>(collection);
+        }
+
+        /// <summary>
+        ///     Begins a transaction with a <see cref="ITransactionalReadOnlyObservableCollection{T}" />.
+        /// </summary>
+        /// <typeparam name="T">The type of the collection items.</typeparam>
+        /// <param name="collection">The transactional collection.</param>
+        /// <returns><see cref="Transaction{T}.Dispose">Dispose</see> this instance to end the transaction.</returns>
+        public static Transaction<T> CreateTransaction<T>(this ITransactionalReadOnlyObservableCollection<T> collection)
+        {
+            return new Transaction<T>(collection);
         }
 
         /// <summary>
@@ -819,11 +918,8 @@ namespace Neuronic.CollectionModel
             }
 
             public int Count => GetView().Count;
-
             public event NotifyCollectionChangedEventHandler CollectionChanged;
-
             public event PropertyChangedEventHandler PropertyChanged;
-
             protected abstract IReadOnlyObservableCollection<TTarget> GetView();
 
             protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
@@ -847,7 +943,8 @@ namespace Neuronic.CollectionModel
             {
                 _composite = composite;
                 CollectionChangedEventManager.AddHandler(_composite.View, (sender, args) => OnCollectionChanged(args));
-                PropertyChangedEventManager.AddHandler(_composite.View, (sender, args) => OnPropertyChanged(args), string.Empty);
+                PropertyChangedEventManager.AddHandler(_composite.View, (sender, args) => OnPropertyChanged(args),
+                    string.Empty);
             }
 
             public CollectionUpdater(IReadOnlyObservableCollection<TSource> source,
@@ -876,7 +973,8 @@ namespace Neuronic.CollectionModel
             {
                 _composite = composite;
                 CollectionChangedEventManager.AddHandler(_composite.View, (sender, args) => OnCollectionChanged(args));
-                PropertyChangedEventManager.AddHandler(_composite.View, (sender, args) => OnPropertyChanged(args), string.Empty);
+                PropertyChangedEventManager.AddHandler(_composite.View, (sender, args) => OnPropertyChanged(args),
+                    string.Empty);
             }
 
             public ListUpdater(IReadOnlyObservableCollection<TSource> source,
