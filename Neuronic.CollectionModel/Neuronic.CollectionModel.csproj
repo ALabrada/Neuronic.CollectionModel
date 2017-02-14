@@ -65,6 +65,7 @@
     <Compile Include="GroupingReadOnlyObservableListSource.cs" />
     <Compile Include="IManualReadOnlyObservableCollection.cs" />
     <Compile Include="IManualReadOnlyObservableList.cs" />
+    <Compile Include="InvertedBooleanObservableResult.cs" />
     <Compile Include="IObservableResult.cs" />
     <Compile Include="ISelectableItem.cs" />
     <Compile Include="ItemContainer.cs" />

@@ -794,6 +794,24 @@ namespace Neuronic.CollectionModel
         }
 
         /// <summary>
+        ///     Creates an observable query that determines if all the elements in a sequence satisfy some condition.
+        /// </summary>
+        /// <typeparam name="T">The type of the sequence's elements.</typeparam>
+        /// <param name="items">The source sequence.</param>
+        /// <param name="predicate">The predicate that represents the condition.</param>
+        /// <param name="triggers">
+        ///     The names of the properties of <typeparamref name="T" /> that can affect
+        ///     <paramref name="predicate" />.
+        /// </param>
+        /// <returns><c>true</c> if all the elements in <paramref name="items"/> satisfy <paramref name="predicate"/>, otherwise <c>false</c>.</returns>
+        public static IObservableResult<bool> ObservableAll<T>(this IEnumerable<T> items, Predicate<T> predicate,
+            params string[] triggers)
+        {
+            var filter = new FilteredReadOnlyObservableList<T>(items, i => !predicate(i), triggers);
+            return new SimpleQueryObservableResult<T, bool>(filter, collection => collection.Count == 0);
+        }
+
+        /// <summary>
         ///     Creates an observable query that stores the first element of a collection.
         /// </summary>
         /// <typeparam name="T">The type of the collection's elements.</typeparam>

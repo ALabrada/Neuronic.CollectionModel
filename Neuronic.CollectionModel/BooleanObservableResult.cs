@@ -18,7 +18,17 @@ namespace Neuronic.CollectionModel
             _result = result;
             CurrentValue = _result.CurrentValue;
             PropertyChangedEventManager.AddHandler(result,
-                (sender, args) => CurrentValue = ((IObservableResult<bool>) sender).CurrentValue, nameof(CurrentValue));
+                OnResultChanged, nameof(CurrentValue));
+        }
+
+        /// <summary>
+        /// Called when the result of the underlying operation changes.
+        /// </summary>
+        /// <param name="sender">The underlying operation.</param>
+        /// <param name="args">The <see cref="PropertyChangedEventArgs"/> instance containing the event data.</param>
+        protected virtual void OnResultChanged(object sender, PropertyChangedEventArgs args)
+        {
+            CurrentValue = ((IObservableResult<bool>) sender).CurrentValue;
         }
 
         /// <summary>
@@ -123,6 +133,18 @@ namespace Neuronic.CollectionModel
         public static IObservableResult<bool> operator |(bool first, BooleanObservableResult second)
         {
             return new CompositeObservableResult<bool, bool, bool>(first, second, (f, s) => f | s);
+        }
+
+        /// <summary>
+        /// Implements the operator !.
+        /// </summary>
+        /// <param name="operand">The operand.</param>
+        /// <returns>
+        /// The result of the operator.
+        /// </returns>
+        public static IObservableResult<bool> operator !(BooleanObservableResult operand)
+        {
+            return new InvertedBooleanObservableResult(operand._result);
         }
     }
 }
