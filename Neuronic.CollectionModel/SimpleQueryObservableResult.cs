@@ -27,6 +27,7 @@ namespace Neuronic.CollectionModel
         public SimpleQueryObservableResult(IReadOnlyObservableCollection<TSource> source, Func<IReadOnlyObservableCollection<TSource>, TResult> query) : base(source)
         {
             _query = query;
+            CurrentValue = _query(source);
         }
 
         /// <summary>
