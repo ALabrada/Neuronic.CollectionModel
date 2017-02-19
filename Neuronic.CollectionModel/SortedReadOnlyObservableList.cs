@@ -277,13 +277,18 @@ namespace Neuronic.CollectionModel
             private void ItemOnTriggerPropertyChanged(object sender, EventArgs eventArgs)
             {
                 var item = (Container) sender;
-                if (_sortedItems.Remove(item))
-                {
-                    var newSortedIndex = _sortedItems.BinarySearch(item, _comparer);
-                    Debug.Assert(newSortedIndex < 0);
-                    newSortedIndex = ~newSortedIndex;
-                    _sortedItems.Insert(newSortedIndex, item);
-                }
+                var prevIndex = _sortedItems.IndexOf(item);
+                if (prevIndex < 0)
+                    return;
+                _sortedItems.RemoveAt(prevIndex);
+                var newSortedIndex = _sortedItems.BinarySearch(item, _comparer);
+                Debug.Assert(newSortedIndex < 0);
+                newSortedIndex = ~newSortedIndex;
+                _sortedItems.Insert(newSortedIndex, item);
+
+                if (prevIndex != newSortedIndex)
+                    OnSortedCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Move,
+                        item.Item, newSortedIndex, prevIndex));
             }
 
             private void UpdateItems(int start, int end)

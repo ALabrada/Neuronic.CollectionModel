@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Neuronic.CollectionModel.Testing
@@ -216,7 +217,7 @@ namespace Neuronic.CollectionModel.Testing
             var observableCollection = new ObservableCollection<Person>(new List<Person>() { new Person(3), new Person(1), new Person(7), new Person(5), new Person(4), new Person(6), new Person(2), new Person(7) });
             var rool = new ReadOnlyObservableList<Person>(observableCollection);
             var srool = new SortedReadOnlyObservableList<Person>(rool, Person.CompareByAge, nameof(Person.Age));
-            var trool = new TransformingReadOnlyObservableList<Person, int>(srool, Selector);
+            var trool = new TransformingReadOnlyObservableList<Person, Person>(srool, p => p);
 
             int[] ages = new[] { 1, 2, 3, 4, 5, 6, 7, 7 };
 
@@ -236,10 +237,22 @@ namespace Neuronic.CollectionModel.Testing
                 Assert.AreEqual(srool[i].Age, i);
 
             Assert.AreEqual(trool.Count, 11);
-            Assert.AreEqual(trool[0], -1);
+            Assert.AreEqual(trool[0].Age, -1);
             for (int i = 1; i < trool.Count; i++)
             {
-                Assert.AreEqual(trool[i], i);
+                Assert.AreEqual(trool[i].Age, i);
+            }
+
+            observableCollection.Single(p => p.Age == observableCollection.Count - 1).Age = 0;
+
+            Assert.AreEqual(srool.Count, 11);
+            for (int i = 0; i < observableCollection.Count; i++)
+                Assert.AreEqual(srool[i].Age, i - 1);
+
+            Assert.AreEqual(trool.Count, 11);
+            for (int i = 0; i < trool.Count; i++)
+            {
+                Assert.AreEqual(trool[i].Age, i - 1);
             }
         }
 
