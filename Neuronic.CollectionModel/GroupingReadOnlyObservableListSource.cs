@@ -16,6 +16,7 @@ namespace Neuronic.CollectionModel
     {
         private readonly ContainerList _containers;
         private readonly Func<TSource, TKey> _keySelector;
+        private readonly INotifyCollectionChanged _source;
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="GroupingReadOnlyObservableListSource{TSource, TKey}" /> class.
@@ -74,9 +75,9 @@ namespace Neuronic.CollectionModel
                 : ((a, b) => comparer.Equals(a, b));
             var initialContainers = source.Select(i => new GroupedItemContainer<TSource, TKey>(i, _keySelector));
             _containers = new ContainerList(initialContainers, equals, triggers, groups);
-            var notify = source as INotifyCollectionChanged;
-            if (notify != null)
-                CollectionChangedEventManager.AddHandler(notify, OnSourceChanged);
+            _source = source as INotifyCollectionChanged;
+            if (_source != null)
+                CollectionChangedEventManager.AddHandler(_source, OnSourceChanged);
         }
 
         /// <summary>
