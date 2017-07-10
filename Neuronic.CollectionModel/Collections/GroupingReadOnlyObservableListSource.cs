@@ -75,7 +75,7 @@ namespace Neuronic.CollectionModel.Collections
                 ? new Func<TKey, TKey, bool>((a, b) => Equals(a, b))
                 : ((a, b) => comparer.Equals(a, b));
             var initialContainers = source.Select(i => new GroupedItemContainer<TSource, TKey>(i, _keySelector));
-            _containers = new ContainerList(initialContainers, equals, triggers, groups);
+            _containers = new ContainerList(this, initialContainers, @equals, triggers, groups);
             _source = source as INotifyCollectionChanged;
             if (_source != null)
                 CollectionChangedEventManager.AddHandler(_source, OnSourceChanged);
@@ -105,6 +105,7 @@ namespace Neuronic.CollectionModel.Collections
         /// </summary>
         protected class ContainerList : ObservableCollection<GroupedItemContainer<TSource, TKey>>
         {
+            private readonly GroupingReadOnlyObservableListSource<TSource, TKey> _owner;
             private readonly Func<TKey, TKey, bool> _equals;
             private readonly ObservableCollection<ReadOnlyObservableGroup<TSource, TKey>> _groups;
             private readonly string[] _triggers;
@@ -113,18 +114,27 @@ namespace Neuronic.CollectionModel.Collections
             /// <summary>
             /// Initializes a new instance of the <see cref="ContainerList"/> class.
             /// </summary>
+            /// <param name="owner">The owning grouping source.</param>
             /// <param name="collection">The initial containers.</param>
             /// <param name="equals">The key comparison function.</param>
             /// <param name="triggers">The triggers.</param>
             /// <param name="groups">The initial groups.</param>
-            public ContainerList(IEnumerable<GroupedItemContainer<TSource, TKey>> collection,
-                Func<TKey, TKey, bool> equals,
+            public ContainerList(GroupingReadOnlyObservableListSource<TSource, TKey> owner,
+                IEnumerable<GroupedItemContainer<TSource, TKey>> collection, Func<TKey, TKey, bool> @equals,
                 string[] triggers, ObservableCollection<ReadOnlyObservableGroup<TSource, TKey>> groups)
                 : base(collection)
             {
                 _equals = equals;
                 _triggers = triggers;
                 _groups = groups;
+                _owner = owner;
+
+                foreach (var @group in _groups)
+                {
+                    if (@group.Owner != null)
+                        throw new ArgumentException("At least one of the explicit groups is already in use.");
+                    @group.Owner = _owner;
+                }
 
                 for (int i = 0; i < Items.Count; i++)
                 {
@@ -179,7 +189,7 @@ namespace Neuronic.CollectionModel.Collections
                 var group = _groups.SingleOrDefault(g => _equals(g.Key, container.Key));
                 if ((@group == null) && IncludeImplicitGroups)
                 {
-                    @group = new ReadOnlyObservableGroup<TSource, TKey>(container.Key, false);
+                    @group = new ReadOnlyObservableGroup<TSource, TKey>(container.Key, false) {Owner = _owner};
                     _groups.Add(@group);
                 }
 
@@ -279,7 +289,7 @@ namespace Neuronic.CollectionModel.Collections
                         {
                             if (!IncludeImplicitGroups)
                                 continue;
-                            groups.Add(new ReadOnlyObservableGroup<TSource, TKey>(container.Key, false));
+                            groups.Add(new ReadOnlyObservableGroup<TSource, TKey>(container.Key, false) {Owner = _owner});
                         }
                         container.Group = group = groups[groupIndex];
                         container.GroupIndex = group.Count;
@@ -325,7 +335,7 @@ namespace Neuronic.CollectionModel.Collections
                 var group = _groups.SingleOrDefault(g => _equals(g.Key, container.Key));
                 if ((group == null) && IncludeImplicitGroups)
                 {
-                    group = new ReadOnlyObservableGroup<TSource, TKey>(container.Key, false);
+                    group = new ReadOnlyObservableGroup<TSource, TKey>(container.Key, false) {Owner = _owner};
                     _groups.Add(group);
                 }
 
@@ -408,7 +418,7 @@ namespace Neuronic.CollectionModel.Collections
                 var group = _groups.SingleOrDefault(g => _equals(g.Key, container.Key));
                 if ((group == null) && IncludeImplicitGroups)
                 {
-                    group = new ReadOnlyObservableGroup<TSource, TKey>(container.Key, false);
+                    group = new ReadOnlyObservableGroup<TSource, TKey>(container.Key, false) {Owner = _owner};
                     _groups.Add(group);
                 }
                 container.SourceIndex = index;

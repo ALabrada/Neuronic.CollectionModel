@@ -11,8 +11,6 @@ namespace Neuronic.CollectionModel
     /// <seealso cref="ReadOnlyObservableList{T}" />
     public class ReadOnlyObservableGroup<TSource, TKey> : ReadOnlyObservableList<TSource>
     {
-        // TODO: Save a reference to the owner.
-
         private ReadOnlyObservableGroup(ObservableCollection<TSource> items, TKey key, bool isExplicit) : base(items)
         {
             InternalItems = items;
@@ -34,6 +32,14 @@ namespace Neuronic.CollectionModel
         /// </summary>
         /// <param name="key">The key.</param>
         public ReadOnlyObservableGroup(TKey key) : this (key, true) { }
+
+        /// <summary>
+        /// Gets or sets the grouping collections source that owns and fills this instance.
+        /// </summary>
+        /// <value>
+        /// The owner.
+        /// </value>
+        internal IReadOnlyObservableCollection<ReadOnlyObservableGroup<TSource, TKey>> Owner { get; set; }
 
         /// <summary>
         /// Gets the key.
