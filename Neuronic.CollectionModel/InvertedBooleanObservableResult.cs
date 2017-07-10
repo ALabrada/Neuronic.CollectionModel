@@ -1,11 +1,12 @@
 using System.ComponentModel;
+using Neuronic.CollectionModel.Results;
 
 namespace Neuronic.CollectionModel
 {
     /// <summary>
     /// Represents the negation of a boolean query.
     /// </summary>
-    /// <seealso cref="Neuronic.CollectionModel.BooleanObservableResult" />
+    /// <seealso cref="BooleanObservableResult" />
     public class InvertedBooleanObservableResult : BooleanObservableResult
     {
         /// <summary>

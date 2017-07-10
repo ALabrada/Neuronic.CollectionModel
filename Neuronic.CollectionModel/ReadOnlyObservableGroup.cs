@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using Neuronic.CollectionModel.Collections;
 
 namespace Neuronic.CollectionModel
 {
@@ -7,9 +8,11 @@ namespace Neuronic.CollectionModel
     /// </summary>
     /// <typeparam name="TSource">The type of the source items.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <seealso cref="Neuronic.CollectionModel.ReadOnlyObservableList{TSource}" />
+    /// <seealso cref="ReadOnlyObservableList{T}" />
     public class ReadOnlyObservableGroup<TSource, TKey> : ReadOnlyObservableList<TSource>
     {
+        // TODO: Save a reference to the owner.
+
         private ReadOnlyObservableGroup(ObservableCollection<TSource> items, TKey key, bool isExplicit) : base(items)
         {
             InternalItems = items;

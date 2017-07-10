@@ -2,6 +2,7 @@
 using System.Collections.ObjectModel;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Neuronic.CollectionModel.Collections;
 
 namespace Neuronic.CollectionModel.Testing
 {

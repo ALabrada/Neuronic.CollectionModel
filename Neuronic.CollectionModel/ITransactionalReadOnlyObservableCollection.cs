@@ -1,4 +1,5 @@
 ﻿using System.Collections.Specialized;
+using Neuronic.CollectionModel.Collections;
 
 namespace Neuronic.CollectionModel
 {

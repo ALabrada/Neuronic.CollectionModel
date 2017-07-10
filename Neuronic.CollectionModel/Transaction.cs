@@ -11,6 +11,7 @@ namespace Neuronic.CollectionModel
     /// <seealso cref="System.IDisposable" />
     public class Transaction<T> : IDisposable
     {
+        private bool _isDisposed;
         private readonly ITransactionalReadOnlyObservableCollection<T> _collection;
 
         /// <summary>
@@ -19,6 +20,7 @@ namespace Neuronic.CollectionModel
         /// <param name="collection">The collection.</param>
         public Transaction(ITransactionalReadOnlyObservableCollection<T> collection)
         {
+            if (collection == null) throw new ArgumentNullException(nameof(collection));
             _collection = collection;
             _collection.BeginTransaction();
         }
@@ -28,6 +30,8 @@ namespace Neuronic.CollectionModel
         /// </summary>
         public void Dispose()
         {
+            if (_isDisposed) return;
+            _isDisposed = true;
             _collection.EndTransaction();
         }
     }

@@ -5,6 +5,10 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
+using Neuronic.CollectionModel.Collections;
+using Neuronic.CollectionModel.Collections.Containers;
+using Neuronic.CollectionModel.Extras;
+using Neuronic.CollectionModel.Results;
 
 namespace Neuronic.CollectionModel
 {
@@ -431,7 +435,7 @@ namespace Neuronic.CollectionModel
         ///         collections either during or outside a transaction.
         ///     </para>
         /// </remarks>
-        public static ITransactionalReadOnlyObservableCollection<T> CollectionATransactional<T>(
+        public static ITransactionalReadOnlyObservableCollection<T> CollectionAsTransactional<T>(
             this IReadOnlyObservableCollection<T> collection)
         {
             return new TransactionalReadOnlyObservableCollection<T>(collection);

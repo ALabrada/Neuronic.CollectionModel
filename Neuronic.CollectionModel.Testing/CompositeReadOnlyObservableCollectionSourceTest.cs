@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Neuronic.CollectionModel.Collections;
+using Neuronic.CollectionModel.Collections.Containers;
 
 namespace Neuronic.CollectionModel.Testing
 {

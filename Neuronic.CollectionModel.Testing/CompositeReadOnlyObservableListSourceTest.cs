@@ -4,6 +4,8 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Neuronic.CollectionModel.Collections;
+using Neuronic.CollectionModel.Collections.Containers;
 
 namespace Neuronic.CollectionModel.Testing
 {
