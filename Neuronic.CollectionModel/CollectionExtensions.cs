@@ -913,6 +913,55 @@ namespace Neuronic.CollectionModel
                 collection => collection.Count > index ? collection.ElementAt(index) : defaultValue);
         }
 
+        /// <summary>
+        /// Creates a list that contains the content of either one of two sources based on a condition.
+        /// </summary>
+        /// <typeparam name="T">The type of the list elements.</typeparam>
+        /// <param name="condition">The condition.</param>
+        /// <param name="positiveSource">The positive source.</param>
+        /// <param name="negativeSource">The negative source.</param>
+        /// <returns>
+        /// A list with the content of <paramref name="positiveSource"/> when <paramref name="condition"/> is True 
+        /// and <paramref name="negativeSource"/>, when it is False.
+        /// </returns>
+        /// <remarks>
+        /// <para>
+        /// This method works similar to a ternary operator (?), but with one advantage: the returned list will 
+        /// monitor the value of the condition. So, if after the method's execution the value of the condition
+        /// changes, the list will update it's content and notify it's clients.
+        /// </para>
+        /// </remarks>
+        public static IReadOnlyObservableList<T> ListBasedOnCondition<T>(this IObservableResult<bool> condition,
+            IReadOnlyObservableList<T> positiveSource, IReadOnlyObservableList<T> negativeSource)
+        {
+            return new ConditionalSwitchableListSource<T>(condition, positiveSource, negativeSource);
+        }
+
+        /// <summary>
+        /// Creates a collection that contains the content of either one of two sources based on a condition.
+        /// </summary>
+        /// <typeparam name="T">The type of the collection elements.</typeparam>
+        /// <param name="condition">The condition.</param>
+        /// <param name="positiveSource">The positive source.</param>
+        /// <param name="negativeSource">The negative source.</param>
+        /// <returns>
+        /// A collection with the content of <paramref name="positiveSource"/> when <paramref name="condition"/> is True 
+        /// and <paramref name="negativeSource"/>, when it is False.
+        /// </returns>
+        /// <remarks>
+        /// <para>
+        /// This method works similar to a ternary operator (?), but with one advantage: the returned collection will 
+        /// monitor the value of the condition. So, if after the method's execution the value of the condition
+        /// changes, the list will update it's content and notify it's clients.
+        /// </para>
+        /// </remarks>
+        public static IReadOnlyObservableCollection<T> CollectionBasedOnCondition<T>(
+            this IObservableResult<bool> condition,
+            IReadOnlyObservableCollection<T> positiveSource, IReadOnlyObservableCollection<T> negativeSource)
+        {
+            return new ConditionalSwitchableCollectionSource<T>(condition, positiveSource, negativeSource);
+        }
+
         private abstract class CollectionUpdaterBase<TSource, TTarget> : IReadOnlyObservableCollection<TTarget>
         {
             private readonly CompositeReadOnlyObservableCollectionSourceBase<TTarget> _composite;
