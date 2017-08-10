@@ -914,6 +914,20 @@ namespace Neuronic.CollectionModel
         }
 
         /// <summary>
+        /// Returns the amount of elements in a collection as an observable result.
+        /// </summary>
+        /// <typeparam name="T">The type of the collection elements.</typeparam>
+        /// <param name="items">The collection.</param>
+        /// <returns>
+        /// An <see cref="IObservableResult{T}"/> that points to the 
+        /// <see cref="IReadOnlyCollection{T}.Count"/> property of <paramref name="items"/>.
+        /// </returns>
+        public static IObservableResult<int> ObservableCount<T>(this IReadOnlyObservableCollection<T> items)
+        {
+            return new ObjectPropertyResult<IReadOnlyObservableCollection<T>, int>(items, x => x.Count);
+        }
+
+        /// <summary>
         /// Creates a list that contains the content of either one of two sources based on a condition.
         /// </summary>
         /// <typeparam name="T">The type of the list elements.</typeparam>

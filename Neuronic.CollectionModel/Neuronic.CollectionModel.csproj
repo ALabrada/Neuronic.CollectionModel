@@ -75,6 +75,7 @@
     <Compile Include="ITransactionalReadOnlyObservableList.cs" />
     <Compile Include="Results\LastElementQueryResult.cs" />
     <Compile Include="Collections\ManualReadOnlyObservableCollection.cs" />
+    <Compile Include="Results\ObjectPropertyResult.cs" />
     <Compile Include="Results\ObservableResult.cs" />
     <Compile Include="Results\QueryObservableResult.cs" />
     <Compile Include="Collections\RangedReadOnlyObservableList.cs" />
