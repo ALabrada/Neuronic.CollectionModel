@@ -175,6 +175,11 @@ namespace Neuronic.CollectionModel.Collections
                 _triggers = triggers;
                 _sortedItems = new List<Container>(Count);
                 _sortedItems.AddRange(Items);
+                foreach (var item in Items)
+                {
+                    item.AttachTriggers(_triggers);
+                    item.TriggerPropertyChanged += ItemOnTriggerPropertyChanged;
+                }
                 UpdateItems(0, Count);
                 _sortedItems.Sort(_comparer);
             }

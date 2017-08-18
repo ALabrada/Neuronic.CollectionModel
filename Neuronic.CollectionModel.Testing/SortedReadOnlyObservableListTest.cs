@@ -258,6 +258,29 @@ namespace Neuronic.CollectionModel.Testing
         }
 
         [TestMethod]
+        public void TriggerTest()
+        {
+            var values = new[] {15, 14, 89, 56, 8, 68, 17, 39, 31, 93, 78, 80, 87, 85, 57, 20, 6, 1};
+            var indexes = new[] {8, 13, 0, 2};
+
+            var people = values.Take(values.Length - indexes.Length).Select(x => new Person(x)).ToList();
+            var sortedList = new SortedReadOnlyObservableList<Person>(people.ListAsObservable(),
+                (x, y) => x.Age.CompareTo(y.Age), nameof(Person.Age));
+
+            Assert.AreEqual(people.Count, sortedList.Count);
+            Assert.IsTrue(people.OrderBy(x => x.Age).SequenceEqual(sortedList));
+
+            for (int i = 0; i < indexes.Length; i++)
+            {
+                var person = people[indexes[i]];
+                person.Age = values[values.Length - i - 1];
+            }
+
+            Assert.AreEqual(people.Count, sortedList.Count);
+            Assert.IsTrue(people.OrderBy(x => x.Age).SequenceEqual(sortedList));
+        }
+
+        [TestMethod]
         public void SetOperationsTest()
         {
             const int initialCount = 15;
