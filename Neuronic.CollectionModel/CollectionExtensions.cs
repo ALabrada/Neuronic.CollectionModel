@@ -146,16 +146,16 @@ namespace Neuronic.CollectionModel
             select = select ?? (o => (T)o);
             var setToRemove = new HashSet<T>(oldItems.Cast<object>().Select(select),
                 comparer ?? EqualityComparer<T>.Default);
-            var itemsToInsert = new Queue();
-            foreach (var newItem in newItems)
-                itemsToInsert.Enqueue(newItem);
 
-            for (int i = 0; i < list.Count && itemsToInsert.Count > 0; i++)
+            var newItemsEnumerator = newItems.GetEnumerator();
+            var newItemsLeft = newItemsEnumerator.MoveNext();
+            for (int i = 0; i < list.Count && newItemsLeft; i++)
             {
                 var oldItem = list[i];
                 if (setToRemove.Contains(oldItem))
                 {
-                    var newItem = select(itemsToInsert.Dequeue());
+                    var newItem = select(newItemsEnumerator.Current);
+                    newItemsLeft = newItemsEnumerator.MoveNext();
                     list[i] = newItem;
                     onRemove?.Invoke(oldItem);
                 }

@@ -257,6 +257,53 @@ namespace Neuronic.CollectionModel.Testing
             }
         }
 
+        [TestMethod]
+        public void SetOperationsTest()
+        {
+            const int initialCount = 15;
+            const int removeItems = 4;
+            const int insertItems = 2;
+            var items = new[] { 40, 63, 98, 20, 24, 76, 96, 53, 5, 11, 29, 12, 46, 59, 7, 45, 86, 91, 57, 95 };
+            var indexes = new[] { 6, 2, 5, 11, 0, 3, 13, 1 };
+
+            var originalSet = new HashSet<Person>(items.Take(initialCount).Select(x => new Person(x)), new PersonEqualityComparer());
+            var set = new ObservableSet<Person>(originalSet);
+            var sorted = new SortedReadOnlyObservableList<Person>(set, (x, y) => x.Age.CompareTo(y.Age),
+                new PersonEqualityComparer(), nameof(Person.Age));
+            
+            Assert.AreEqual(initialCount, set.Count);
+            Assert.AreEqual(initialCount, sorted.Count);
+            Assert.IsTrue(items.Take(initialCount).Select(x => new Person(x)).OrderBy(p => p.Age).SequenceEqual(sorted, new PersonEqualityComparer()));
+
+            foreach (var person in indexes.Take(removeItems).Select(i => new Person(items[i])))
+                set.Remove(person);
+
+            Assert.AreEqual(initialCount - removeItems, set.Count);
+            Assert.AreEqual(initialCount - removeItems, sorted.Count);
+            Assert.IsTrue(originalSet.OrderBy(p => p.Age).SequenceEqual(sorted, new PersonEqualityComparer()));
+
+            foreach (var person in items.Skip(initialCount).Take(insertItems).Select(x => new Person(x)))
+                set.Add(person);
+
+            Assert.AreEqual(initialCount - removeItems + insertItems, set.Count);
+            Assert.AreEqual(initialCount - removeItems + insertItems, sorted.Count);
+            Assert.IsTrue(originalSet.OrderBy(p => p.Age).SequenceEqual(sorted, new PersonEqualityComparer()));
+
+            foreach (var result in indexes.Skip(removeItems)
+                .Zip(items.Skip(initialCount + insertItems),
+                    (i, x) => new {OldItem = new Person(items[i]), NewItem = new Person(x)}))
+                set.SymmetricExceptWith(new[] {result.OldItem, result.NewItem});
+
+            Assert.AreEqual(initialCount - removeItems + insertItems, set.Count);
+            Assert.AreEqual(initialCount - removeItems + insertItems, sorted.Count);
+            Assert.IsTrue(originalSet.OrderBy(p => p.Age).SequenceEqual(sorted, new PersonEqualityComparer()));
+
+            set.Clear();
+
+            Assert.AreEqual(0, set.Count);
+            Assert.AreEqual(0, sorted.Count);
+        }
+
         private int Selector(Person item)
         {
             return item.Age;
@@ -270,6 +317,19 @@ namespace Neuronic.CollectionModel.Testing
 
             if (propertyChangedEventArgs.PropertyName == "Item[]")
             {
+            }
+        }
+
+        class PersonEqualityComparer : IEqualityComparer<Person>
+        {
+            public bool Equals(Person x, Person y)
+            {
+                return x.Age == y.Age;
+            }
+
+            public int GetHashCode(Person obj)
+            {
+                return obj.Age.GetHashCode();
             }
         }
     }

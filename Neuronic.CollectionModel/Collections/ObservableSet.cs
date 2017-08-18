@@ -134,10 +134,19 @@ namespace Neuronic.CollectionModel.Collections
                 if (_items.Add(item))
                     newItems.Add(item);
                 else if (_items.Remove(item))
-                    oldItems.Remove(item);
+                    oldItems.Add(item);
                 else
                     throw new InvalidOperationException(
                         "This should not happen! Eighter it has it and can remove it, or it doesn't have it and can add it");
+            }
+            if (newItems.Count == oldItems.Count)
+            {
+                if (newItems.Count > 0)
+                {
+                    OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, newItems, oldItems));
+                    OnCountChanged();
+                }
+                return;
             }
             if (oldItems.Count > 0)
             {
