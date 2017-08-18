@@ -42,9 +42,15 @@ namespace Neuronic.CollectionModel
         ///     A callback procedure that can be used to free resources when items
         ///     are removed from <paramref name="list" />.
         /// </param>
+        /// <param name="comparer">
+        ///     A comparer for the list items. This is only used if the source collection is not a list
+        ///     and does not provide index information in <paramref name="e"/>. If this parameter is <c>null</c>,
+        ///     <see cref="EqualityComparer{T}.Default"/> is used.
+        /// </param>
         public static void UpdateCollection<T>(this ObservableCollection<T> list, IEnumerable source,
             NotifyCollectionChangedEventArgs e,
-            Func<object, T> select = null, Action<T> onRemove = null)
+            Func<object, T> select = null, Action<T> onRemove = null, 
+            IEqualityComparer<T> comparer = null)
         {
             select = select ?? (o => (T) o);
             // apply the change to the snapshot
@@ -61,23 +67,28 @@ namespace Neuronic.CollectionModel
 
                 case NotifyCollectionChangedAction.Remove:
                     if (e.OldStartingIndex < 0)
-                        throw new InvalidOperationException("The index cannot be a negative value.");
-
-                    for (int i = e.OldItems.Count - 1, index = e.OldStartingIndex + i; i >= 0; --i, --index)
-                    {
-                        var item = list[index];
-                        list.RemoveAt(index);
-                        onRemove?.Invoke(item);
-                    }
+                        RemoveItems(list, e.OldItems, comparer, select, onRemove);
+                    else
+                        for (int i = e.OldItems.Count - 1, index = e.OldStartingIndex + i; i >= 0; --i, --index)
+                        {
+                            var item = list[index];
+                            list.RemoveAt(index);
+                            onRemove?.Invoke(item);
+                        }
                     break;
 
                 case NotifyCollectionChangedAction.Replace:
-                    for (int i = e.NewItems.Count - 1, index = e.NewStartingIndex + i; i >= 0; --i, --index)
-                    {
-                        var item = list[index];
-                        list[index] = select(e.NewItems[i]);
-                        onRemove?.Invoke(item);
-                    }
+                    if (e.NewStartingIndex != e.OldStartingIndex)
+                        throw new InvalidOperationException("Old and new indexes mismatch on replace.");
+                    if (e.NewStartingIndex < 0)
+                        ReplaceItems(list, e.OldItems, e.NewItems, comparer, select, onRemove);
+                    else
+                        for (int i = e.NewItems.Count - 1, index = e.NewStartingIndex + i; i >= 0; --i, --index)
+                        {
+                            var item = list[index];
+                            list[index] = select(e.NewItems[i]);
+                            onRemove?.Invoke(item);
+                        }
                     break;
 
                 case NotifyCollectionChangedAction.Move:
@@ -109,6 +120,45 @@ namespace Neuronic.CollectionModel
                     foreach (var item in source)
                         list.Add(select(item));
                     break;
+            }
+        }
+
+        private static void RemoveItems<T>(this IList<T> list, IEnumerable oldItems, 
+            IEqualityComparer<T> comparer, Func<object, T> select, Action<T> onRemove)
+        {
+            select = select ?? (o => (T)o);
+            var setToRemove = new HashSet<T>(oldItems.Cast<object>().Select(select),
+                comparer ?? EqualityComparer<T>.Default);
+            for (int i = list.Count - 1; i >= 0; i--)
+            {
+                var item = list[i];
+                if (setToRemove.Contains(item))
+                {
+                    onRemove?.Invoke(item);
+                    list.RemoveAt(i);
+                }
+            }
+        }
+
+        private static void ReplaceItems<T>(this IList<T> list, IEnumerable oldItems, IEnumerable newItems,
+            IEqualityComparer<T> comparer, Func<object, T> select, Action<T> onRemove)
+        {
+            select = select ?? (o => (T)o);
+            var setToRemove = new HashSet<T>(oldItems.Cast<object>().Select(select),
+                comparer ?? EqualityComparer<T>.Default);
+            var itemsToInsert = new Queue();
+            foreach (var newItem in newItems)
+                itemsToInsert.Enqueue(newItem);
+
+            for (int i = 0; i < list.Count && itemsToInsert.Count > 0; i++)
+            {
+                var oldItem = list[i];
+                if (setToRemove.Contains(oldItem))
+                {
+                    var newItem = select(itemsToInsert.Dequeue());
+                    list[i] = newItem;
+                    onRemove?.Invoke(oldItem);
+                }
             }
         }
 
@@ -504,6 +554,24 @@ namespace Neuronic.CollectionModel
             Comparison<T> comparison, params string[] triggers)
         {
             return new SortedReadOnlyObservableList<T>(collection, comparison, triggers);
+        }
+
+        /// <summary>
+        ///     Creates a sorted view of an observable collection.
+        /// </summary>
+        /// <typeparam name="T">The type of the collection items.</typeparam>
+        /// <param name="collection">The source collection.</param>
+        /// <param name="comparison">The comparison function.</param>
+        /// <param name="eqComparer">
+        /// A comparer for the list items. This is only used if the source collection is not a list 
+        /// and does not provide index information in its <see cref="NotifyCollectionChangedEventArgs"/> events.
+        /// </param>
+        /// <param name="triggers">The name of the properties of <typeparamref name="T" /> that the collection's order depends on.</param>
+        /// <returns>Sorted observable list.</returns>
+        public static IReadOnlyObservableList<T> ListOrderBy<T>(this IReadOnlyObservableCollection<T> collection,
+            Comparison<T> comparison, IEqualityComparer<T> eqComparer, params string[] triggers)
+        {
+            return new SortedReadOnlyObservableList<T>(collection, comparison, eqComparer, triggers);
         }
 
         /// <summary>

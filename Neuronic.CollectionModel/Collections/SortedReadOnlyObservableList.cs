@@ -19,6 +19,7 @@ namespace Neuronic.CollectionModel.Collections
     {
         private readonly ContainerCollection _items;
         private readonly IReadOnlyObservableCollection<T> _source;
+        private readonly IEqualityComparer<Container> _eqComparer;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SortedReadOnlyObservableList{T}"/> class.
@@ -27,9 +28,25 @@ namespace Neuronic.CollectionModel.Collections
         /// <param name="comparison">The comparison used to establish the order of elements.</param>
         /// <param name="triggers">The name of <typeparamref name="T"/>'s properties that can alter the collection's order.</param>
         public SortedReadOnlyObservableList(IReadOnlyObservableCollection<T> source, Comparison<T> comparison,
+            params string[] triggers) : this(source, comparison, null, triggers)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SortedReadOnlyObservableList{T}"/> class.
+        /// </summary>
+        /// <param name="source">The source collection.</param>
+        /// <param name="comparison">The comparison used to establish the order of elements.</param>
+        /// <param name="comparer">
+        /// A comparer for the list items. This is only used if the source collection is not a list 
+        /// and does not provide index information in its <see cref="NotifyCollectionChangedEventArgs"/> events.
+        /// </param>
+        /// <param name="triggers">The name of <typeparamref name="T"/>'s properties that can alter the collection's order.</param>
+        public SortedReadOnlyObservableList(IReadOnlyObservableCollection<T> source, Comparison<T> comparison, IEqualityComparer<T> comparer,
             params string[] triggers)
         {
             _source = source;
+            _eqComparer = new ContainerEqualityComparer(comparer);
             _items = new ContainerCollection(from item in source select new Container(item),
                 new ContainerComparer(comparison), triggers);
             _items.SortedCollectionChanged += (sender, args) => RaiseEvents(args);
@@ -117,7 +134,7 @@ namespace Neuronic.CollectionModel.Collections
 
         private void SourceOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            _items.UpdateCollection(_source, e, o => new Container((T) o));
+            _items.UpdateCollection(_source, e, o => new Container((T) o), comparer: _eqComparer);
         }
 
         private void RaiseEvents(NotifyCollectionChangedEventArgs newArgs)
@@ -335,6 +352,26 @@ namespace Neuronic.CollectionModel.Collections
             {
                 var cmp = _comparison(x.Item, y.Item);
                 return cmp == 0 ? x.SourceIndex.CompareTo(y.SourceIndex) : cmp;
+            }
+        }
+
+        private class ContainerEqualityComparer : IEqualityComparer<Container>
+        {
+            private readonly IEqualityComparer<T> _sourceComparer;
+
+            public ContainerEqualityComparer(IEqualityComparer<T> sourceComparer)
+            {
+                _sourceComparer = sourceComparer ?? EqualityComparer<T>.Default;
+            }
+
+            public bool Equals(Container x, Container y)
+            {
+                return _sourceComparer.Equals(x.Item, y.Item);
+            }
+
+            public int GetHashCode(Container obj)
+            {
+                return _sourceComparer.GetHashCode(obj.Item);
             }
         }
     }

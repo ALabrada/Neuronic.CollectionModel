@@ -50,6 +50,7 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Collections\ObservableSet.cs" />
     <Compile Include="Extras\ConditionalSwitchableCollectionSource.cs" />
     <Compile Include="Extras\ConditionalSwitchableListSource.cs" />
     <Compile Include="Results\BooleanObservableResult.cs" />
