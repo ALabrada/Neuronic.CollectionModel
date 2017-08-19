@@ -336,11 +336,22 @@ namespace Neuronic.CollectionModel.Collections
             }
 
             public int SourceIndex { get; set; }
+
             public event EventHandler TriggerPropertyChanged;
 
             protected override void OnTriggerPropertyChanged(object sender, PropertyChangedEventArgs args)
             {
                 TriggerPropertyChanged?.Invoke(this, args);
+            }
+
+            public override bool Equals(object obj)
+            {
+                return obj is Container x && x.SourceIndex == SourceIndex;
+            }
+
+            public override int GetHashCode()
+            {
+                return 0;
             }
         }
 
