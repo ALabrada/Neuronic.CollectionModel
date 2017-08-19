@@ -21,5 +21,15 @@ namespace Neuronic.CollectionModel.Testing
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+
+        public override bool Equals(object obj)
+        {
+            return obj is Notify x && Prop.Equals(x.Prop);
+        }
+
+        public override int GetHashCode()
+        {
+            return Prop.GetHashCode();
+        }
     }
 }

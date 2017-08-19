@@ -17,6 +17,7 @@ namespace Neuronic.CollectionModel.Collections
     {
         private readonly ContainerList _containers;
         private readonly Func<TSource, TKey> _keySelector;
+        private readonly IEqualityComparer<GroupedItemContainer<TSource, TKey>> _sourceComparer;
         private readonly INotifyCollectionChanged _source;
 
         /// <summary>
@@ -24,18 +25,23 @@ namespace Neuronic.CollectionModel.Collections
         /// </summary>
         /// <param name="source">The source sequence.</param>
         /// <param name="keySelector">The function used to obtain keys that represent the items.</param>
-        /// <param name="comparer">
+        /// <param name="keyComparer">
         ///     The comparer used for key comparison. Specify <c>null</c> to use the default comparer for
         ///     <typeparamref name="TKey" />.
+        /// </param>
+        /// <param name="sourceComparer">
+        ///     A comparer for the source items. This is only used if the source collection is not a list 
+        ///     and does not provide index information in its <see cref="NotifyCollectionChangedEventArgs"/> events.    
         /// </param>
         /// <param name="triggers">
         ///     The names of the source item's properties that can alter the value of
         ///     <paramref name="keySelector" />.
         /// </param>
         public GroupingReadOnlyObservableListSource(IEnumerable<TSource> source,
-            Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer, params string[] triggers)
+            Func<TSource, TKey> keySelector, IEqualityComparer<TKey> keyComparer,
+            IEqualityComparer<TSource> sourceComparer, params string[] triggers)
             : this(
-                source, keySelector, comparer, triggers,
+                source, keySelector, keyComparer, sourceComparer, triggers,
                 new ObservableCollection<ReadOnlyObservableGroup<TSource, TKey>>())
         {
         }
@@ -46,9 +52,13 @@ namespace Neuronic.CollectionModel.Collections
         /// <param name="source">The source sequence.</param>
         /// <param name="explicitGroups">The explicit groups.</param>
         /// <param name="keySelector">The function used to obtain keys that represent the items.</param>
-        /// <param name="comparer">
+        /// <param name="keyComparer">
         ///     The comparer used for key comparison. Specify <c>null</c> to use the default comparer for
         ///     <typeparamref name="TKey" />.
+        /// </param>
+        /// <param name="sourceComparer">
+        ///     A comparer for the source items. This is only used if the source collection is not a list 
+        ///     and does not provide index information in its <see cref="NotifyCollectionChangedEventArgs"/> events.  
         /// </param>
         /// <param name="triggers">
         ///     The names of the source item's properties that can alter the value of
@@ -56,26 +66,26 @@ namespace Neuronic.CollectionModel.Collections
         /// </param>
         public GroupingReadOnlyObservableListSource(IEnumerable<TSource> source,
             IEnumerable<ReadOnlyObservableGroup<TSource, TKey>> explicitGroups,
-            Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer, params string[] triggers)
+            Func<TSource, TKey> keySelector, IEqualityComparer<TKey> keyComparer, IEqualityComparer<TSource> sourceComparer, params string[] triggers)
             : this(
-                source, keySelector, comparer, triggers,
+                source, keySelector, keyComparer, sourceComparer, triggers,
                 new ObservableCollection<ReadOnlyObservableGroup<TSource, TKey>>(explicitGroups))
         {
         }
 
         private GroupingReadOnlyObservableListSource(IEnumerable<TSource> source,
-            Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer, string[] triggers,
+            Func<TSource, TKey> keySelector, IEqualityComparer<TKey> keyComparer,
+            IEqualityComparer<TSource> sourceComparer, string[] triggers,
             ObservableCollection<ReadOnlyObservableGroup<TSource, TKey>> groups) : base(groups)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
             _keySelector = keySelector;
+            _sourceComparer = new ContainerEqualityComparer<TSource, GroupedItemContainer<TSource, TKey>>(sourceComparer);
+            keyComparer = keyComparer ?? EqualityComparer<TKey>.Default;
             triggers = triggers ?? new string[0];
-            var equals = comparer == null
-                ? new Func<TKey, TKey, bool>((a, b) => Equals(a, b))
-                : ((a, b) => comparer.Equals(a, b));
             var initialContainers = source.Select(i => new GroupedItemContainer<TSource, TKey>(i, _keySelector));
-            _containers = new ContainerList(this, initialContainers, @equals, triggers, groups);
+            _containers = new ContainerList(this, initialContainers, keyComparer, triggers, groups);
             _source = source as INotifyCollectionChanged;
             if (_source != null)
                 CollectionChangedEventManager.AddHandler(_source, OnSourceChanged);
@@ -97,7 +107,7 @@ namespace Neuronic.CollectionModel.Collections
         private void OnSourceChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             _containers.UpdateCollection((IEnumerable<TSource>) sender, e,
-                o => new GroupedItemContainer<TSource, TKey>((TSource) o, _keySelector));
+                o => new GroupedItemContainer<TSource, TKey>((TSource) o, _keySelector), comparer: _sourceComparer);
         }
 
         /// <summary>
@@ -106,7 +116,7 @@ namespace Neuronic.CollectionModel.Collections
         protected class ContainerList : ObservableCollection<GroupedItemContainer<TSource, TKey>>
         {
             private readonly GroupingReadOnlyObservableListSource<TSource, TKey> _owner;
-            private readonly Func<TKey, TKey, bool> _equals;
+            private readonly IEqualityComparer<TKey> _keyComparer;
             private readonly ObservableCollection<ReadOnlyObservableGroup<TSource, TKey>> _groups;
             private readonly string[] _triggers;
             private bool _includeImplicitGroups;
@@ -116,18 +126,18 @@ namespace Neuronic.CollectionModel.Collections
             /// </summary>
             /// <param name="owner">The owning grouping source.</param>
             /// <param name="collection">The initial containers.</param>
-            /// <param name="equals">The key comparison function.</param>
+            /// <param name="keyComparer">The key equality comparer</param>
             /// <param name="triggers">The triggers.</param>
             /// <param name="groups">The initial groups.</param>
             public ContainerList(GroupingReadOnlyObservableListSource<TSource, TKey> owner,
-                IEnumerable<GroupedItemContainer<TSource, TKey>> collection, Func<TKey, TKey, bool> @equals,
+                IEnumerable<GroupedItemContainer<TSource, TKey>> collection, IEqualityComparer<TKey> keyComparer,
                 string[] triggers, ObservableCollection<ReadOnlyObservableGroup<TSource, TKey>> groups)
                 : base(collection)
             {
-                _equals = equals;
                 _triggers = triggers;
                 _groups = groups;
                 _owner = owner;
+                _keyComparer = keyComparer;
 
                 foreach (var @group in _groups)
                 {
@@ -183,10 +193,10 @@ namespace Neuronic.CollectionModel.Collections
             protected virtual void ContainerOnKeyChanged(GroupedItemContainer<TSource, TKey> container)
             {
                 var oldGroup = container.Group;
-                if ((oldGroup != null) && _equals(oldGroup.Key, container.Key))
+                if ((oldGroup != null) && _keyComparer.Equals(oldGroup.Key, container.Key))
                     return;
 
-                var group = _groups.SingleOrDefault(g => _equals(g.Key, container.Key));
+                var group = _groups.SingleOrDefault(g => _keyComparer.Equals(g.Key, container.Key));
                 if ((@group == null) && IncludeImplicitGroups)
                 {
                     @group = new ReadOnlyObservableGroup<TSource, TKey>(container.Key, false) {Owner = _owner};
@@ -284,7 +294,7 @@ namespace Neuronic.CollectionModel.Collections
                     var group = container.Group;
                     if (group == null)
                     {
-                        var groupIndex = groups.TakeWhile(g => !_equals(g.Key, container.Key)).Count();
+                        var groupIndex = groups.TakeWhile(g => !_keyComparer.Equals(g.Key, container.Key)).Count();
                         if (groupIndex == groups.Count)
                         {
                             if (!IncludeImplicitGroups)
@@ -332,7 +342,7 @@ namespace Neuronic.CollectionModel.Collections
             {
                 base.InsertItem(index, container);
 
-                var group = _groups.SingleOrDefault(g => _equals(g.Key, container.Key));
+                var group = _groups.SingleOrDefault(g => _keyComparer.Equals(g.Key, container.Key));
                 if ((group == null) && IncludeImplicitGroups)
                 {
                     group = new ReadOnlyObservableGroup<TSource, TKey>(container.Key, false) {Owner = _owner};
@@ -415,7 +425,7 @@ namespace Neuronic.CollectionModel.Collections
                 oldContainer.GroupIndex = -1;
                 oldContainer.SourceIndex = -1;
 
-                var group = _groups.SingleOrDefault(g => _equals(g.Key, container.Key));
+                var group = _groups.SingleOrDefault(g => _keyComparer.Equals(g.Key, container.Key));
                 if ((group == null) && IncludeImplicitGroups)
                 {
                     group = new ReadOnlyObservableGroup<TSource, TKey>(container.Key, false) {Owner = _owner};

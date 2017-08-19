@@ -17,7 +17,7 @@ namespace Neuronic.CollectionModel.Testing
             var oddGroup = new ReadOnlyObservableGroup<int, int>(1);
             var groups =
                 new GroupingReadOnlyObservableListSource<int, int>(values,
-                    new[] { oddGroup }, v => v % 2, null);
+                    new[] { oddGroup }, v => v % 2, null, null);
 
             Assert.AreEqual(1, groups.Count);
             Assert.AreEqual(oddGroup, groups[0]);
@@ -48,7 +48,7 @@ namespace Neuronic.CollectionModel.Testing
             var source = new ObservableCollection<int>();
             var groups =
                 new GroupingReadOnlyObservableListSource<int, int>(new ReadOnlyObservableList<int>(source),
-                    new[] {oddGroup}, v => v % 2, null);
+                    new[] {oddGroup}, v => v % 2, null, null);
 
             Assert.AreEqual(1, groups.Count);
             Assert.AreEqual(oddGroup, groups[0]);
@@ -83,7 +83,7 @@ namespace Neuronic.CollectionModel.Testing
             var source = new ObservableCollection<int>();
             var groups =
                 new GroupingReadOnlyObservableListSource<int, int>(new ReadOnlyObservableList<int>(source),
-                    new[] { oddGroup }, v => v % 2, null) {IncludeImplicitGroups = true};
+                    new[] { oddGroup }, v => v % 2, null, null) {IncludeImplicitGroups = true};
 
             Assert.AreEqual(1, groups.Count);
             Assert.AreEqual(oddGroup, groups[0]);
@@ -121,7 +121,7 @@ namespace Neuronic.CollectionModel.Testing
             var source = new ObservableCollection<int>(values);
             var groups =
                 new GroupingReadOnlyObservableListSource<int, int>(source,
-                    new[] { oddGroup }, v => v % 2, null);
+                    new[] { oddGroup }, v => v % 2, null, null);
 
             for (int i = 1; i < source.Count; i++)
                 source.Move(i, 0);
@@ -143,7 +143,7 @@ namespace Neuronic.CollectionModel.Testing
             var source = new ObservableCollection<int>(values);
             var groups =
                 new GroupingReadOnlyObservableListSource<int, int>(source,
-                    new[] { oddGroup }, v => v % 2, null);
+                    new[] { oddGroup }, v => v % 2, null, null);
 
             while (source.Count > 10)
                 source.RemoveAt(10);
@@ -172,7 +172,7 @@ namespace Neuronic.CollectionModel.Testing
             var source = new ObservableCollection<int>(values);
             var groups =
                 new GroupingReadOnlyObservableListSource<int, int>(source,
-                    new[] { oddGroup }, v => v % 2, null) {IncludeImplicitGroups = true};
+                    new[] { oddGroup }, v => v % 2, null, null) {IncludeImplicitGroups = true};
 
             while (source.Count > 10)
                 source.RemoveAt(10);
@@ -206,7 +206,7 @@ namespace Neuronic.CollectionModel.Testing
             var source = new ObservableCollection<int>(values);
             var groups =
                 new GroupingReadOnlyObservableListSource<int, int>(source,
-                    new[] { oddGroup }, v => v % 2, null);
+                    new[] { oddGroup }, v => v % 2, null, null);
             source.Clear();
 
             Assert.AreEqual(1, groups.Count);
@@ -223,7 +223,7 @@ namespace Neuronic.CollectionModel.Testing
             var source = new ObservableCollection<int>(values);
             var groups =
                 new GroupingReadOnlyObservableListSource<int, int>(source,
-                    new[] { oddGroup }, v => v % 2, null) {IncludeImplicitGroups = true};
+                    new[] { oddGroup }, v => v % 2, null, null) {IncludeImplicitGroups = true};
             source.Clear();
 
             Assert.AreEqual(1, groups.Count);
@@ -240,7 +240,7 @@ namespace Neuronic.CollectionModel.Testing
             var source = new ObservableCollection<int>(values);
             var groups =
                 new GroupingReadOnlyObservableListSource<int, int>(source,
-                    new[] { oddGroup }, v => v % 2, null);
+                    new[] { oddGroup }, v => v % 2, null, null);
 
             for (int i = 0; i < source.Count; i++)
                 source[i] = values[i]/2;
@@ -272,7 +272,7 @@ namespace Neuronic.CollectionModel.Testing
             var source = new ObservableCollection<int>(values);
             var groups =
                 new GroupingReadOnlyObservableListSource<int, int>(source,
-                    new[] { oddGroup }, v => v % 2, null) {IncludeImplicitGroups = true};
+                    new[] { oddGroup }, v => v % 2, null, null) {IncludeImplicitGroups = true};
 
             for (int i = 0; i < source.Count; i++)
                 source[i] = values[i] / 2;
@@ -323,7 +323,7 @@ namespace Neuronic.CollectionModel.Testing
             var oddGroup = new ReadOnlyObservableGroup<Notify, int>(1);
             var groups =
                 new GroupingReadOnlyObservableListSource<Notify, int>(values,
-                    new[] { oddGroup }, n => n.Prop % 2, null, nameof(Notify.Prop));
+                    new[] { oddGroup }, n => n.Prop % 2, null, null, nameof(Notify.Prop));
 
             foreach (var value in values)
                 value.Prop /= 2;
@@ -354,7 +354,7 @@ namespace Neuronic.CollectionModel.Testing
             var oddGroup = new ReadOnlyObservableGroup<Notify, int>(1);
             var groups =
                 new GroupingReadOnlyObservableListSource<Notify, int>(values,
-                    new[] { oddGroup }, n => n.Prop % 2, null, nameof(Notify.Prop)) {IncludeImplicitGroups = true};
+                    new[] { oddGroup }, n => n.Prop % 2, null, null, nameof(Notify.Prop)) {IncludeImplicitGroups = true};
 
             foreach (var value in values)
                 value.Prop /= 2;

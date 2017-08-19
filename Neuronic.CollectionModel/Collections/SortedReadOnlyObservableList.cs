@@ -46,7 +46,7 @@ namespace Neuronic.CollectionModel.Collections
             params string[] triggers)
         {
             _source = source;
-            _eqComparer = new ContainerEqualityComparer(comparer);
+            _eqComparer = new ContainerEqualityComparer<T, Container>(comparer);
             _items = new ContainerCollection(from item in source select new Container(item),
                 new ContainerComparer(comparison), triggers);
             _items.SortedCollectionChanged += (sender, args) => RaiseEvents(args);
@@ -357,26 +357,6 @@ namespace Neuronic.CollectionModel.Collections
             {
                 var cmp = _comparison(x.Item, y.Item);
                 return cmp == 0 ? x.SourceIndex.CompareTo(y.SourceIndex) : cmp;
-            }
-        }
-
-        private class ContainerEqualityComparer : IEqualityComparer<Container>
-        {
-            private readonly IEqualityComparer<T> _sourceComparer;
-
-            public ContainerEqualityComparer(IEqualityComparer<T> sourceComparer)
-            {
-                _sourceComparer = sourceComparer ?? EqualityComparer<T>.Default;
-            }
-
-            public bool Equals(Container x, Container y)
-            {
-                return _sourceComparer.Equals(x.Item, y.Item);
-            }
-
-            public int GetHashCode(Container obj)
-            {
-                return _sourceComparer.GetHashCode(obj.Item);
             }
         }
     }

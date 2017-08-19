@@ -126,9 +126,9 @@ namespace Neuronic.CollectionModel
         private static void RemoveItems<T>(this IList<T> list, IEnumerable oldItems, 
             IEqualityComparer<T> comparer, Func<object, T> select, Action<T> onRemove)
         {
+            if (comparer == null) throw new ArgumentNullException(nameof(comparer));
             select = select ?? (o => (T)o);
-            var setToRemove = new HashSet<T>(oldItems.Cast<object>().Select(select),
-                comparer ?? EqualityComparer<T>.Default);
+            var setToRemove = new HashSet<T>(oldItems.Cast<object>().Select(select), comparer);
             for (int i = list.Count - 1; i >= 0; i--)
             {
                 var item = list[i];
@@ -143,9 +143,10 @@ namespace Neuronic.CollectionModel
         private static void ReplaceItems<T>(this IList<T> list, IEnumerable oldItems, IEnumerable newItems,
             IEqualityComparer<T> comparer, Func<object, T> select, Action<T> onRemove)
         {
+            if (comparer == null) throw new ArgumentNullException(nameof(comparer));
             select = select ?? (o => (T)o);
             var setToRemove = new HashSet<T>(oldItems.Cast<object>().Select(select),
-                comparer ?? EqualityComparer<T>.Default);
+                comparer);
 
             var newItemsEnumerator = newItems.GetEnumerator();
             var newItemsLeft = newItemsEnumerator.MoveNext();
@@ -708,10 +709,19 @@ namespace Neuronic.CollectionModel
         ///     <paramref name="selector" />.
         /// </param>
         /// <returns>An observable list of observable groups.</returns>
+        /// <remarks>
+        /// <para>
+        ///     If <paramref name="items"/> is a <see cref="IReadOnlyObservableCollection{T}"/> with no
+        ///     implicit element order (an <see cref="ObservableSet{T}"/>, for example), you should
+        ///     override <see cref="object.Equals(object)"/> and <see cref="object.GetHashCode"/> in <typeparamref name="TSource"/>
+        ///     or provide a <see cref="IEqualityComparer{TSource}"/> through the constructor of
+        ///     <see cref="GroupingReadOnlyObservableListSource{TSource,TKey}"/>. 
+        /// </para>
+        /// </remarks>
         public static IReadOnlyObservableList<ReadOnlyObservableGroup<TSource, TKey>> ListGroupBy<TSource, TKey>(
             this IEnumerable<TSource> items, Func<TSource, TKey> selector, params string[] triggers)
         {
-            return new GroupingReadOnlyObservableListSource<TSource, TKey>(items, selector, null, triggers)
+            return new GroupingReadOnlyObservableListSource<TSource, TKey>(items, selector, null, null, triggers)
             {
                 IncludeImplicitGroups = true
             };
@@ -730,11 +740,20 @@ namespace Neuronic.CollectionModel
         ///     <paramref name="selector" />.
         /// </param>
         /// <returns>An observable list of observable groups.</returns>
+        /// <remarks>
+        /// <para>
+        ///     If <paramref name="items"/> is a <see cref="IReadOnlyObservableCollection{T}"/> with no
+        ///     implicit element order (an <see cref="ObservableSet{T}"/>, for example), you should
+        ///     override <see cref="object.Equals(object)"/> and <see cref="object.GetHashCode"/> in <typeparamref name="TSource"/>
+        ///     or provide a <see cref="IEqualityComparer{TSource}"/> through the constructor of
+        ///     <see cref="GroupingReadOnlyObservableListSource{TSource,TKey}"/>. 
+        /// </para>
+        /// </remarks>
         public static IReadOnlyObservableList<ReadOnlyObservableGroup<TSource, TKey>> ListGroupBy<TSource, TKey>(
             this IEnumerable<TSource> items, Func<TSource, TKey> selector, IEqualityComparer<TKey> comparer,
             params string[] triggers)
         {
-            return new GroupingReadOnlyObservableListSource<TSource, TKey>(items, selector, comparer, triggers)
+            return new GroupingReadOnlyObservableListSource<TSource, TKey>(items, selector, comparer, null, triggers)
             {
                 IncludeImplicitGroups = true
             };
@@ -757,12 +776,21 @@ namespace Neuronic.CollectionModel
         ///     <paramref name="selector" />.
         /// </param>
         /// <returns>An observable list of observable groups.</returns>
+        /// <remarks>
+        /// <para>
+        ///     If <paramref name="items"/> is a <see cref="IReadOnlyObservableCollection{T}"/> with no
+        ///     implicit element order (an <see cref="ObservableSet{T}"/>, for example), you should
+        ///     override <see cref="object.Equals(object)"/> and <see cref="object.GetHashCode"/> in <typeparamref name="TSource"/>
+        ///     or provide a <see cref="IEqualityComparer{TSource}"/> through the constructor of
+        ///     <see cref="GroupingReadOnlyObservableListSource{TSource,TKey}"/>. 
+        /// </para>
+        /// </remarks>
         public static IReadOnlyObservableList<ReadOnlyObservableGroup<TSource, TKey>> ListGroupBy<TSource, TKey>(
             this IEnumerable<TSource> items,
             IEnumerable<ReadOnlyObservableGroup<TSource, TKey>> explicitGroups, bool includeImplict,
             Func<TSource, TKey> selector, params string[] triggers)
         {
-            return new GroupingReadOnlyObservableListSource<TSource, TKey>(items, explicitGroups, selector, null,
+            return new GroupingReadOnlyObservableListSource<TSource, TKey>(items, explicitGroups, selector, null, null,
                 triggers) {IncludeImplicitGroups = includeImplict};
         }
 
@@ -784,12 +812,22 @@ namespace Neuronic.CollectionModel
         ///     <paramref name="selector" />.
         /// </param>
         /// <returns>An observable list of observable groups.</returns>
+        /// <remarks>
+        /// <para>
+        ///     If <paramref name="items"/> is a <see cref="IReadOnlyObservableCollection{T}"/> with no
+        ///     implicit element order (an <see cref="ObservableSet{T}"/>, for example), you should
+        ///     override <see cref="object.Equals(object)"/> and <see cref="object.GetHashCode"/> in <typeparamref name="TSource"/>
+        ///     or provide a <see cref="IEqualityComparer{TSource}"/> through the constructor of
+        ///     <see cref="GroupingReadOnlyObservableListSource{TSource,TKey}"/>. 
+        /// </para>
+        /// </remarks>
         public static IReadOnlyObservableList<ReadOnlyObservableGroup<TSource, TKey>> ListGroupBy<TSource, TKey>(
             this IEnumerable<TSource> items,
             IEnumerable<ReadOnlyObservableGroup<TSource, TKey>> explicitGroups, bool includeImplict,
             Func<TSource, TKey> selector, IEqualityComparer<TKey> comparer, params string[] triggers)
         {
             return new GroupingReadOnlyObservableListSource<TSource, TKey>(items, explicitGroups, selector, comparer,
+                null,
                 triggers) {IncludeImplicitGroups = includeImplict};
         }
 
