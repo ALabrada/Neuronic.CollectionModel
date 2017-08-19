@@ -1,8 +1,10 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Linq;
 
 namespace Neuronic.CollectionModel.Collections
 {
@@ -16,6 +18,9 @@ namespace Neuronic.CollectionModel.Collections
     public class ObservableDictionary<TKey, TValue> : IDictionary<TKey, TValue>,
         IReadOnlyObservableCollection<KeyValuePair<TKey, TValue>>
     {
+        private readonly WeakReference<DictionaryKeyCollection> _keys = new WeakReference<DictionaryKeyCollection>(null);
+        private readonly WeakReference<DictionaryValueCollection> _values = new WeakReference<DictionaryValueCollection>(null);
+
         /// <summary>
         /// Gets the item comparer.
         /// </summary>
@@ -193,6 +198,38 @@ namespace Neuronic.CollectionModel.Collections
         ICollection<TValue> IDictionary<TKey, TValue>.Values => Items.Values;
 
         /// <summary>
+        /// Gets an <see cref="T:System.Collections.Generic.ICollection`1" /> containing the keys of the <see cref="T:System.Collections.Generic.IDictionary`2" />.
+        /// </summary>
+        public IReadOnlyObservableCollection<TKey> Keys
+        {
+            get
+            {
+                DictionaryKeyCollection keys;
+                if (_keys.TryGetTarget(out keys))
+                    return keys;
+                keys = new DictionaryKeyCollection(this);
+                _keys.SetTarget(keys);
+                return keys;
+            }
+        }
+
+        /// <summary>
+        /// Gets an <see cref="T:System.Collections.Generic.ICollection`1" /> containing the values in the <see cref="T:System.Collections.Generic.IDictionary`2" />.
+        /// </summary>
+        public IReadOnlyObservableCollection<TValue> Values
+        {
+            get
+            {
+                DictionaryValueCollection values;
+                if (_values.TryGetTarget(out values))
+                    return values;
+                values = new DictionaryValueCollection(this);
+                _values.SetTarget(values);
+                return values;
+            }
+        }
+
+        /// <summary>
         /// Gets the number of elements contained in the <see cref="T:System.Collections.Generic.ICollection`1" />.
         /// </summary>
         public int Count => Items.Count;
@@ -250,6 +287,92 @@ namespace Neuronic.CollectionModel.Collections
             public int GetHashCode(KeyValuePair<TKey, TValue> obj)
             {
                 return _keyComparer.GetHashCode(obj.Key);
+            }
+        }
+
+        abstract class DictionaryCollectionBase : INotifyPropertyChanged, INotifyCollectionChanged
+        {
+            protected ObservableDictionary<TKey, TValue> Owner { get; }
+
+            protected DictionaryCollectionBase(ObservableDictionary<TKey, TValue> owner)
+            {
+                Owner = owner;
+                CollectionChangedEventManager.AddHandler(Owner, OwnerOnCollectionChanged);
+                PropertyChangedEventManager.AddHandler(Owner, (sender, args) => OnPropertyChanged(args), nameof(Count));
+            }
+
+            private void OwnerOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+            {
+                switch (e.Action)
+                {
+                    case NotifyCollectionChangedAction.Replace:
+                        OnCollectionChanged(new NotifyCollectionChangedEventArgs(e.Action, Project(e.NewItems),
+                            Project(e.OldItems)));
+                        break;
+                    case NotifyCollectionChangedAction.Add:
+                        OnCollectionChanged(new NotifyCollectionChangedEventArgs(e.Action, Project(e.NewItems)));
+                        break;
+                    case NotifyCollectionChangedAction.Remove:
+                        OnCollectionChanged(new NotifyCollectionChangedEventArgs(e.Action, Project(e.OldItems)));
+                        break;
+                    default:
+                        OnCollectionChanged(e);
+                        break;
+                }
+            }
+
+            protected abstract IList Project(IList pairs);
+
+            public int Count => Owner.Count;
+
+            public event NotifyCollectionChangedEventHandler CollectionChanged;
+
+            public event PropertyChangedEventHandler PropertyChanged;
+
+            protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
+            {
+                CollectionChanged?.Invoke(this, e);
+            }
+
+            protected virtual void OnPropertyChanged(PropertyChangedEventArgs e)
+            {
+                PropertyChanged?.Invoke(this, e);
+            }
+        }
+
+        class DictionaryKeyCollection : DictionaryCollectionBase, IReadOnlyObservableCollection<TKey>
+        {
+            public DictionaryKeyCollection(ObservableDictionary<TKey, TValue> owner) : base(owner)
+            {
+            }
+
+            public IEnumerator<TKey> GetEnumerator() => Owner.Items.Keys.GetEnumerator();
+
+            IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+            protected override IList Project(IList pairs)
+            {
+                var list = new List<TKey>(pairs.Count);
+                list.AddRange(from pair in pairs.Cast<KeyValuePair<TKey, TValue>>() select pair.Key);
+                return list;
+            }
+        }
+
+        class DictionaryValueCollection : DictionaryCollectionBase, IReadOnlyObservableCollection<TValue>
+        {
+            public DictionaryValueCollection(ObservableDictionary<TKey, TValue> owner) : base(owner)
+            {
+            }
+
+            public IEnumerator<TValue> GetEnumerator() => Owner.Items.Values.GetEnumerator();
+
+            IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+            protected override IList Project(IList pairs)
+            {
+                var list = new List<TValue>(pairs.Count);
+                list.AddRange(from pair in pairs.Cast<KeyValuePair<TKey, TValue>>() select pair.Value);
+                return list;
             }
         }
     }
