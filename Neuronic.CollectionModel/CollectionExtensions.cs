@@ -583,10 +583,16 @@ namespace Neuronic.CollectionModel
         /// <param name="collection">The source collection.</param>
         /// <param name="selector">The transforming function.</param>
         /// <param name="onRemove">The optional callback used to destroy the created <typeparamref name="TTarget" /> instances.</param>
-        /// <returns></returns>
+        /// <param name="targetComparer">
+        /// A comparer for the list items. This is only used if the source collection is not a list 
+        /// and does not provide index information in its <see cref="NotifyCollectionChangedEventArgs"/> events.
+        /// </param>
+        /// <returns>
+        /// A list with the projections of the source elements.
+        /// </returns>
         public static IReadOnlyObservableList<TTarget> ListSelect<TSource, TTarget>(
             this IReadOnlyObservableCollection<TSource> collection, Func<TSource, TTarget> selector,
-            Action<TTarget> onRemove = null)
+            Action<TTarget> onRemove = null, IEqualityComparer<TTarget> targetComparer = null)
         {
             return new TransformingReadOnlyObservableList<TSource, TTarget>(collection, selector, onRemove);
         }

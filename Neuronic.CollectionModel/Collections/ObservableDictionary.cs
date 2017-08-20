@@ -22,18 +22,9 @@ namespace Neuronic.CollectionModel.Collections
         private readonly WeakReference<DictionaryValueCollection> _values = new WeakReference<DictionaryValueCollection>(null);
 
         /// <summary>
-        /// Gets the item comparer.
-        /// </summary>
-        /// <value>
-        /// The comparer that can be used to compare the items for equality..
-        /// </value>
-        public IEqualityComparer<KeyValuePair<TKey, TValue>> Comparer { get; }
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="ObservableDictionary{TKey, TValue}"/> class.
         /// </summary>
-        /// <param name="source">The source.</param>
-        public ObservableDictionary(Dictionary<TKey, TValue> source) : this (source, source.Comparer)
+        public ObservableDictionary() : this (null)
         {
         }
 
@@ -41,11 +32,9 @@ namespace Neuronic.CollectionModel.Collections
         /// Initializes a new instance of the <see cref="ObservableDictionary{TKey, TValue}"/> class.
         /// </summary>
         /// <param name="source">The source.</param>
-        /// <param name="keyComparer">The </param>
-        public ObservableDictionary(IDictionary<TKey, TValue> source, IEqualityComparer<TKey> keyComparer)
+        public ObservableDictionary(IDictionary<TKey, TValue> source)
         {
-            Comparer = new PairComparer(keyComparer);
-            Items = source;
+            Items = source ?? new Dictionary<TKey, TValue>();
         }
 
         /// <summary>
@@ -87,6 +76,7 @@ namespace Neuronic.CollectionModel.Collections
         {
             if (Items.Count == 0)
                 return;
+            Items.Clear();
             OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
             OnCountChanged();
         }
@@ -181,26 +171,31 @@ namespace Neuronic.CollectionModel.Collections
                 var newItem = new KeyValuePair<TKey, TValue>(key, value);
                 if (Items.TryGetValue(key, out oldValue))
                 {
+                    Items[key] = value;
                     var oldItem = new KeyValuePair<TKey, TValue>(key, oldValue);
                     OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace,
                         newItem, oldItem));
                 }
                 else
-                {
-                    OnCollectionChanged(
-                        new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, newItem));
-                    OnCountChanged();
-                }
+                    Add(key, value);
             }
         }
 
-        ICollection<TKey> IDictionary<TKey, TValue>.Keys => Items.Keys;
-        ICollection<TValue> IDictionary<TKey, TValue>.Values => Items.Values;
+        ICollection<TKey> IDictionary<TKey, TValue>.Keys => ProtectedKeys;
+        ICollection<TValue> IDictionary<TKey, TValue>.Values => ProtectedValues;
 
         /// <summary>
         /// Gets an <see cref="T:System.Collections.Generic.ICollection`1" /> containing the keys of the <see cref="T:System.Collections.Generic.IDictionary`2" />.
         /// </summary>
-        public IReadOnlyObservableCollection<TKey> Keys
+        public IReadOnlyObservableCollection<TKey> Keys => ProtectedKeys;
+
+        /// <summary>
+        /// Gets the protected keys collection.
+        /// </summary>
+        /// <value>
+        /// The protected keys collection.
+        /// </value>
+        protected DictionaryKeyCollection ProtectedKeys
         {
             get
             {
@@ -216,7 +211,15 @@ namespace Neuronic.CollectionModel.Collections
         /// <summary>
         /// Gets an <see cref="T:System.Collections.Generic.ICollection`1" /> containing the values in the <see cref="T:System.Collections.Generic.IDictionary`2" />.
         /// </summary>
-        public IReadOnlyObservableCollection<TValue> Values
+        public IReadOnlyObservableCollection<TValue> Values => ProtectedValues;
+
+        /// <summary>
+        /// Gets the protected values collection.
+        /// </summary>
+        /// <value>
+        /// The protected values collection.
+        /// </value>
+        protected DictionaryValueCollection ProtectedValues
         {
             get
             {
@@ -270,32 +273,25 @@ namespace Neuronic.CollectionModel.Collections
             OnPropertyChanged(new PropertyChangedEventArgs(nameof(Count)));
         }
 
-        class PairComparer : IEqualityComparer<KeyValuePair<TKey, TValue>>
+        /// <summary>
+        /// Base class for the observable keys & values dictionary collections.
+        /// </summary>
+        /// <typeparam name="T">The type of the elements.</typeparam>
+        /// <seealso cref="System.Collections.Generic.IDictionary{TKey, TValue}" />
+        /// <seealso cref="Neuronic.CollectionModel.IReadOnlyObservableCollection{System.Collections.Generic.KeyValuePair{TKey, TValue}}" />
+        protected abstract class DictionaryCollectionBase<T> : INotifyPropertyChanged, INotifyCollectionChanged, ICollection<T>
         {
-            private readonly IEqualityComparer<TKey> _keyComparer;
+            private readonly ICollection<T> _items;
+            private ObservableDictionary<TKey, TValue> Owner { get; }
 
-            public PairComparer(IEqualityComparer<TKey> keyComparer)
+            /// <summary>
+            /// Initializes a new instance of the <see cref="DictionaryCollectionBase{T}"/> class.
+            /// </summary>
+            /// <param name="owner">The owner.</param>
+            /// <param name="items">The items.</param>
+            protected DictionaryCollectionBase(ObservableDictionary<TKey, TValue> owner, ICollection<T> items)
             {
-                _keyComparer = keyComparer ?? EqualityComparer<TKey>.Default;
-            }
-
-            public bool Equals(KeyValuePair<TKey, TValue> x, KeyValuePair<TKey, TValue> y)
-            {
-                return _keyComparer.Equals(x.Key, y.Key);
-            }
-
-            public int GetHashCode(KeyValuePair<TKey, TValue> obj)
-            {
-                return _keyComparer.GetHashCode(obj.Key);
-            }
-        }
-
-        abstract class DictionaryCollectionBase : INotifyPropertyChanged, INotifyCollectionChanged
-        {
-            protected ObservableDictionary<TKey, TValue> Owner { get; }
-
-            protected DictionaryCollectionBase(ObservableDictionary<TKey, TValue> owner)
-            {
+                _items = items;
                 Owner = owner;
                 CollectionChangedEventManager.AddHandler(Owner, OwnerOnCollectionChanged);
                 PropertyChangedEventManager.AddHandler(Owner, (sender, args) => OnPropertyChanged(args), nameof(Count));
@@ -306,14 +302,26 @@ namespace Neuronic.CollectionModel.Collections
                 switch (e.Action)
                 {
                     case NotifyCollectionChangedAction.Replace:
-                        OnCollectionChanged(new NotifyCollectionChangedEventArgs(e.Action, Project(e.NewItems),
-                            Project(e.OldItems)));
+                        if (e.NewItems.Count != e.OldItems.Count)
+                            throw new InvalidOperationException("Element count mismatch at replace");
+                        if (e.NewItems.Count == 1)
+                            OnCollectionChanged(new NotifyCollectionChangedEventArgs(e.Action,
+                                ProjectItem(e.NewItems[0]), ProjectItem(e.OldItems[0])));
+                        else if (e.NewItems.Count > 0)
+                            OnCollectionChanged(new NotifyCollectionChangedEventArgs(e.Action, ProjectList(e.NewItems),
+                                ProjectList(e.OldItems)));
                         break;
                     case NotifyCollectionChangedAction.Add:
-                        OnCollectionChanged(new NotifyCollectionChangedEventArgs(e.Action, Project(e.NewItems)));
+                        if (e.NewItems.Count == 1)
+                            OnCollectionChanged(new NotifyCollectionChangedEventArgs(e.Action, ProjectItem(e.NewItems[0])));
+                        else if (e.NewItems.Count > 0)
+                            OnCollectionChanged(new NotifyCollectionChangedEventArgs(e.Action, ProjectList(e.NewItems)));
                         break;
                     case NotifyCollectionChangedAction.Remove:
-                        OnCollectionChanged(new NotifyCollectionChangedEventArgs(e.Action, Project(e.OldItems)));
+                        if (e.OldItems.Count == 1)
+                            OnCollectionChanged(new NotifyCollectionChangedEventArgs(e.Action, ProjectItem(e.OldItems[0])));
+                        else if (e.OldItems.Count > 0)
+                            OnCollectionChanged(new NotifyCollectionChangedEventArgs(e.Action, ProjectList(e.OldItems)));
                         break;
                     default:
                         OnCollectionChanged(e);
@@ -321,58 +329,179 @@ namespace Neuronic.CollectionModel.Collections
                 }
             }
 
-            protected abstract IList Project(IList pairs);
+            /// <summary>
+            /// Projects a list of <see cref="KeyValuePair{TKey,TValue}" /> to a list of <typeparamref name="T" />.
+            /// </summary>
+            /// <param name="pairs">The list to project.</param>
+            /// <returns>
+            /// The projected list.
+            /// </returns>
+            protected virtual IList ProjectList(IList pairs)
+            {
+                var list = new List<T>(pairs.Count);
+                list.AddRange(from object pair in pairs select ProjectItem(pair));
+                return list;
+            }
 
+            /// <summary>
+            /// Projects a <see cref="KeyValuePair{TKey,TValue}" /> into a collection item.
+            /// </summary>
+            /// <param name="pair">The pair.</param>
+            /// <returns>The projected item.</returns>
+            protected abstract T ProjectItem(object pair);
+
+            /// <summary>
+            /// Adds an item to the <see cref="T:System.Collections.Generic.ICollection`1" />.
+            /// </summary>
+            /// <param name="item">The object to add to the <see cref="T:System.Collections.Generic.ICollection`1" />.</param>
+            /// <exception cref="System.NotSupportedException"></exception>
+            public void Add(T item)
+            {
+                throw new NotSupportedException();
+            }
+
+            /// <summary>
+            /// Removes all items from the <see cref="T:System.Collections.Generic.ICollection`1" />.
+            /// </summary>
+            /// <exception cref="System.NotSupportedException"></exception>
+            public void Clear()
+            {
+                throw new NotSupportedException();
+            }
+
+            /// <summary>
+            /// Determines whether the <see cref="T:System.Collections.Generic.ICollection`1" /> contains a specific value.
+            /// </summary>
+            /// <param name="item">The object to locate in the <see cref="T:System.Collections.Generic.ICollection`1" />.</param>
+            /// <returns>
+            /// true if <paramref name="item" /> is found in the <see cref="T:System.Collections.Generic.ICollection`1" />; otherwise, false.
+            /// </returns>
+            public bool Contains(T item) => _items.Contains(item);
+
+            /// <summary>
+            /// Copies the elements of the <see cref="T:System.Collections.Generic.ICollection`1" /> to an <see cref="T:System.Array" />, starting at a particular <see cref="T:System.Array" /> index.
+            /// </summary>
+            /// <param name="array">The one-dimensional <see cref="T:System.Array" /> that is the destination of the elements copied from <see cref="T:System.Collections.Generic.ICollection`1" />. The <see cref="T:System.Array" /> must have zero-based indexing.</param>
+            /// <param name="arrayIndex">The zero-based index in <paramref name="array" /> at which copying begins.</param>
+            public void CopyTo(T[] array, int arrayIndex) => _items.CopyTo(array, arrayIndex);
+
+            /// <summary>
+            /// Removes the first occurrence of a specific object from the <see cref="T:System.Collections.Generic.ICollection`1" />.
+            /// </summary>
+            /// <param name="item">The object to remove from the <see cref="T:System.Collections.Generic.ICollection`1" />.</param>
+            /// <returns>
+            /// true if <paramref name="item" /> was successfully removed from the <see cref="T:System.Collections.Generic.ICollection`1" />; otherwise, false. This method also returns false if <paramref name="item" /> is not found in the original <see cref="T:System.Collections.Generic.ICollection`1" />.
+            /// </returns>
+            /// <exception cref="System.NotSupportedException"></exception>
+            public bool Remove(T item)
+            {
+                throw new NotSupportedException();
+            }
+
+            /// <summary>
+            /// Gets the number of elements contained in the <see cref="T:System.Collections.Generic.ICollection`1" />.
+            /// </summary>
             public int Count => Owner.Count;
+            /// <summary>
+            /// Gets a value indicating whether the <see cref="T:System.Collections.Generic.ICollection`1" /> is read-only.
+            /// </summary>
+            public bool IsReadOnly => true;
 
+            /// <summary>
+            /// Occurs when the collection changes.
+            /// </summary>
             public event NotifyCollectionChangedEventHandler CollectionChanged;
 
+            /// <summary>
+            /// Occurs when a property value changes.
+            /// </summary>
             public event PropertyChangedEventHandler PropertyChanged;
 
+            /// <summary>
+            /// Raises the <see cref="E:CollectionChanged" /> event.
+            /// </summary>
+            /// <param name="e">The <see cref="NotifyCollectionChangedEventArgs"/> instance containing the event data.</param>
             protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
             {
                 CollectionChanged?.Invoke(this, e);
             }
 
+            /// <summary>
+            /// Raises the <see cref="E:PropertyChanged" /> event.
+            /// </summary>
+            /// <param name="e">The <see cref="PropertyChangedEventArgs"/> instance containing the event data.</param>
             protected virtual void OnPropertyChanged(PropertyChangedEventArgs e)
             {
                 PropertyChanged?.Invoke(this, e);
             }
-        }
 
-        class DictionaryKeyCollection : DictionaryCollectionBase, IReadOnlyObservableCollection<TKey>
-        {
-            public DictionaryKeyCollection(ObservableDictionary<TKey, TValue> owner) : base(owner)
+            /// <summary>
+            /// Returns an enumerator that iterates through the collection.
+            /// </summary>
+            /// <returns>
+            /// An enumerator that can be used to iterate through the collection.
+            /// </returns>
+            public IEnumerator<T> GetEnumerator() => _items.GetEnumerator();
+
+            IEnumerator IEnumerable.GetEnumerator()
             {
-            }
-
-            public IEnumerator<TKey> GetEnumerator() => Owner.Items.Keys.GetEnumerator();
-
-            IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
-            protected override IList Project(IList pairs)
-            {
-                var list = new List<TKey>(pairs.Count);
-                list.AddRange(from pair in pairs.Cast<KeyValuePair<TKey, TValue>>() select pair.Key);
-                return list;
+                return GetEnumerator();
             }
         }
 
-        class DictionaryValueCollection : DictionaryCollectionBase, IReadOnlyObservableCollection<TValue>
+        /// <summary>
+        /// An observable collection of dictionary keys.
+        /// </summary>
+        /// <seealso cref="System.Collections.Generic.IDictionary{TKey, TValue}" />
+        /// <seealso cref="Neuronic.CollectionModel.IReadOnlyObservableCollection{System.Collections.Generic.KeyValuePair{TKey, TValue}}" />
+        protected class DictionaryKeyCollection : DictionaryCollectionBase<TKey>, IReadOnlyObservableCollection<TKey>
         {
-            public DictionaryValueCollection(ObservableDictionary<TKey, TValue> owner) : base(owner)
+            /// <summary>
+            /// Initializes a new instance of the <see cref="DictionaryKeyCollection"/> class.
+            /// </summary>
+            /// <param name="owner">The owner.</param>
+            public DictionaryKeyCollection(ObservableDictionary<TKey, TValue> owner) : base(owner, owner.Items.Keys)
             {
             }
 
-            public IEnumerator<TValue> GetEnumerator() => Owner.Items.Values.GetEnumerator();
-
-            IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
-            protected override IList Project(IList pairs)
+            /// <summary>
+            /// Projects a <see cref="T:System.Collections.Generic.KeyValuePair`2" /> into a collection item.
+            /// </summary>
+            /// <param name="pair">The pair.</param>
+            /// <returns>
+            /// The projected item.
+            /// </returns>
+            protected override TKey ProjectItem(object pair)
             {
-                var list = new List<TValue>(pairs.Count);
-                list.AddRange(from pair in pairs.Cast<KeyValuePair<TKey, TValue>>() select pair.Value);
-                return list;
+                return ((KeyValuePair<TKey, TValue>) pair).Key;
+            }
+        }
+
+        /// <summary>
+        /// An observable collection of dictionary values.
+        /// </summary>
+        /// <seealso cref="System.Collections.Generic.IDictionary{TKey, TValue}" />
+        /// <seealso cref="Neuronic.CollectionModel.IReadOnlyObservableCollection{System.Collections.Generic.KeyValuePair{TKey, TValue}}" />
+        protected class DictionaryValueCollection : DictionaryCollectionBase<TValue>, IReadOnlyObservableCollection<TValue>
+        {
+            /// <summary>
+            /// Initializes a new instance of the <see cref="DictionaryValueCollection"/> class.
+            /// </summary>
+            /// <param name="owner">The owner.</param>
+            public DictionaryValueCollection(ObservableDictionary<TKey, TValue> owner) : base(owner, owner.Items.Values)
+            {
+            }
+
+            /// <summary>
+            /// Projects a <see cref="T:System.Collections.Generic.KeyValuePair`2" /> into a collection item.
+            /// </summary>
+            /// <param name="pair">The pair.</param>
+            /// <returns>
+            /// The projected item.
+            /// </returns>
+            protected override TValue ProjectItem(object pair)
+            {
+                return ((KeyValuePair<TKey, TValue>)pair).Value;
             }
         }
     }
