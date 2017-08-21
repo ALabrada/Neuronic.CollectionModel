@@ -117,7 +117,7 @@ namespace Neuronic.CollectionModel.Collections
         /// </summary>
         protected virtual void ClearGroups()
         {
-            foreach (var group in Groups)
+            foreach (var group in Groups.ToList())
             {
                 group.InternalItems.Clear();
                 if (!group.IsExplicit)
