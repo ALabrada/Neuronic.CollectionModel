@@ -636,6 +636,54 @@ namespace Neuronic.CollectionModel
         }
 
         /// <summary>
+        ///     Creates an observable collection with no repeated elements.
+        /// </summary>
+        /// <typeparam name="T">The type of the collection elements.</typeparam>
+        /// <param name="items">The source collection.</param>
+        /// <param name="comparer">The equality comparer, or <c>null</c> for the default equality comparer.</param>
+        /// <returns>
+        ///     An observable collection with the elements in <paramref name="items"/>, but no repetitions.
+        /// </returns>
+        public static IReadOnlyObservableCollection<T> CollectionDistinct<T>(
+            this IReadOnlyObservableCollection<T> items, IEqualityComparer<T> comparer = null)
+        {
+            return new DistinctReadOnlyObservableCollection<T>(items, comparer);
+        }
+
+        /// <summary>
+        ///     Creates an observable collection that is the set union of two or more collections.
+        /// </summary>
+        /// <typeparam name="T">The type of the collection elements.</typeparam>
+        /// <param name="items">The first collection.</param>
+        /// <param name="others">One or more collections to merge with <paramref name="items" />.</param>
+        /// <returns>
+        ///     An observable collection with all the elements from the source collections, 
+        ///     but no repetitions. The default comparer is used to determine equality.
+        /// </returns>
+        public static IReadOnlyObservableCollection<T> CollectionUnion<T>(this IReadOnlyCollection<T> items,
+            params IReadOnlyCollection<T>[] others)
+        {
+            return items.CollectionConcat(others).CollectionDistinct();
+        }
+
+        /// <summary>
+        ///     Creates an observable collection that is the set union of two or more collections.
+        /// </summary>
+        /// <typeparam name="T">The type of the collection elements.</typeparam>
+        /// <param name="items">The first collection.</param>
+        /// <param name="comparer">The equality comparer, or <c>null</c> for the default equality comparer.</param>
+        /// <param name="others">One or more collections to merge with <paramref name="items" />.</param>
+        /// <returns>
+        ///     An observable collection with all the elements from the source collections, 
+        ///     but no repetitions. 
+        /// </returns>
+        public static IReadOnlyObservableCollection<T> CollectionUnion<T>(this IReadOnlyCollection<T> items, IEqualityComparer<T> comparer,
+            params IReadOnlyCollection<T>[] others)
+        {
+            return items.CollectionConcat(others).CollectionDistinct(comparer);
+        }
+
+        /// <summary>
         ///     Projects each element of a sequence to a <see cref="IReadOnlyCollection{T}" /> and flattens the resulting
         ///     collections
         ///     into one list.
