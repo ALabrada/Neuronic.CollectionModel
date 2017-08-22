@@ -65,6 +65,7 @@
     <Compile Include="ObjectPropertyResultTest.cs" />
     <Compile Include="ObservableDictionaryTest.cs" />
     <Compile Include="Person.cs" />
+    <Compile Include="PersonEqualityComparer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RangedReadOnlyObservableListTest.cs" />
     <Compile Include="SelectableCollectionSelectorTest.cs" />
@@ -72,6 +73,7 @@
     <Compile Include="SwitchableListSourceTest.cs" />
     <Compile Include="TransformingReadOnlyObservableListTest.cs" />
     <Compile Include="SimpleQueryObservableResultTest.cs" />
+    <Compile Include="DistinctReadOnlyObservableCollectionTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Neuronic.CollectionModel\Neuronic.CollectionModel.csproj">

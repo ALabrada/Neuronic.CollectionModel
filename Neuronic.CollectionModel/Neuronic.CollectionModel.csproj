@@ -51,6 +51,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Collections\Containers\ContainerEqualityComparer.cs" />
+    <Compile Include="Collections\DistinctReadOnlyObservableCollection.cs" />
     <Compile Include="Collections\GroupingContainerList.cs" />
     <Compile Include="Collections\GroupingReadOnlyObservableCollectionSource.cs" />
     <Compile Include="Collections\ObservableDictionary.cs" />
