@@ -1,4 +1,6 @@
+using System;
 using System.ComponentModel;
+using System.Windows;
 
 namespace Neuronic.CollectionModel.Collections.Containers
 {
@@ -6,7 +8,7 @@ namespace Neuronic.CollectionModel.Collections.Containers
     /// Abstraction of an item and it's meta-data in some collection.
     /// </summary>
     /// <typeparam name="TItem">The type of the item.</typeparam>
-    public abstract class ItemContainer<TItem>
+    public abstract class ItemContainer<TItem> : IWeakEventListener
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="ItemContainer{TItem}"/> class.
@@ -34,7 +36,7 @@ namespace Neuronic.CollectionModel.Collections.Containers
             var notify = Item as INotifyPropertyChanged;
             if (notify == null) return;
             foreach (var name in triggers)
-                PropertyChangedEventManager.AddHandler(notify, OnTriggerPropertyChanged, name);
+                PropertyChangedEventManager.AddListener(notify, this, name);
         }
 
         /// <summary>
@@ -46,7 +48,7 @@ namespace Neuronic.CollectionModel.Collections.Containers
             var notify = Item as INotifyPropertyChanged;
             if (notify == null) return;
             foreach (var name in triggers)
-                PropertyChangedEventManager.RemoveHandler(notify, OnTriggerPropertyChanged, name);
+                PropertyChangedEventManager.RemoveListener(notify, this, name);
         }
 
         /// <summary>
@@ -77,6 +79,14 @@ namespace Neuronic.CollectionModel.Collections.Containers
         public override int GetHashCode()
         {
             return Item?.GetHashCode() ?? 0;
+        }
+
+        bool IWeakEventListener.ReceiveWeakEvent(Type managerType, object sender, EventArgs e)
+        {
+            if (!ReferenceEquals(Item, sender) || managerType != typeof(PropertyChangedEventManager))
+                return false;
+            OnTriggerPropertyChanged(sender, (PropertyChangedEventArgs) e);
+            return true;
         }
     }
 }

@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
+using System.Windows;
 
 namespace Neuronic.CollectionModel.Collections
 {
@@ -279,7 +280,7 @@ namespace Neuronic.CollectionModel.Collections
         /// <typeparam name="T">The type of the elements.</typeparam>
         /// <seealso cref="System.Collections.Generic.IDictionary{TKey, TValue}" />
         /// <seealso cref="Neuronic.CollectionModel.IReadOnlyObservableCollection{System.Collections.Generic.KeyValuePair{TKey, TValue}}" />
-        protected abstract class DictionaryCollectionBase<T> : INotifyPropertyChanged, INotifyCollectionChanged, ICollection<T>
+        protected abstract class DictionaryCollectionBase<T> : INotifyPropertyChanged, INotifyCollectionChanged, ICollection<T>, IWeakEventListener
         {
             private readonly ICollection<T> _items;
             private ObservableDictionary<TKey, TValue> Owner { get; }
@@ -293,8 +294,8 @@ namespace Neuronic.CollectionModel.Collections
             {
                 _items = items;
                 Owner = owner;
-                CollectionChangedEventManager.AddHandler(Owner, OwnerOnCollectionChanged);
-                PropertyChangedEventManager.AddHandler(Owner, (sender, args) => OnPropertyChanged(args), nameof(Count));
+                CollectionChangedEventManager.AddListener(Owner, this);
+                PropertyChangedEventManager.AddListener(Owner, this, nameof(Count));
             }
 
             private void OwnerOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
@@ -446,6 +447,19 @@ namespace Neuronic.CollectionModel.Collections
             IEnumerator IEnumerable.GetEnumerator()
             {
                 return GetEnumerator();
+            }
+
+            bool IWeakEventListener.ReceiveWeakEvent(Type managerType, object sender, EventArgs e)
+            {
+                if (!ReferenceEquals(sender, Owner))
+                    return false;
+                if (managerType == typeof(CollectionChangedEventManager))
+                    OwnerOnCollectionChanged(sender, (NotifyCollectionChangedEventArgs) e);
+                else if (managerType == typeof(PropertyChangedEventManager))
+                    OnPropertyChanged((PropertyChangedEventArgs) e);
+                else
+                    return false;
+                return true;
             }
         }
 
