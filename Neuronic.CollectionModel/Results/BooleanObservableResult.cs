@@ -1,11 +1,13 @@
+using System;
 using System.ComponentModel;
+using System.Windows;
 
 namespace Neuronic.CollectionModel.Results
 {
     /// <summary>
     /// An utility class that enables the use of boolean operators.
     /// </summary>
-    public class BooleanObservableResult : ObservableResult<bool>
+    public class BooleanObservableResult : ObservableResult<bool>, IWeakEventListener
     {
         private readonly IObservableResult<bool> _result;
 
@@ -17,8 +19,16 @@ namespace Neuronic.CollectionModel.Results
         {
             _result = result;
             CurrentValue = _result.CurrentValue;
-            PropertyChangedEventManager.AddHandler(result,
-                OnResultChanged, nameof(CurrentValue));
+            PropertyChangedEventManager.AddListener(result,
+                this, nameof(CurrentValue));
+        }
+
+        bool IWeakEventListener.ReceiveWeakEvent(Type managerType, object sender, EventArgs e)
+        {
+            if (!ReferenceEquals(_result, sender) || managerType != typeof(PropertyChangedEventManager))
+                return false;
+            OnResultChanged(sender, (PropertyChangedEventArgs) e);
+            return true;
         }
 
         /// <summary>

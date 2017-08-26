@@ -1,4 +1,7 @@
+using System;
 using System.Collections.Specialized;
+using System.ComponentModel;
+using System.Windows;
 
 namespace Neuronic.CollectionModel.Results
 {
@@ -8,7 +11,7 @@ namespace Neuronic.CollectionModel.Results
     /// <typeparam name="TSource">The type of the source collection items.</typeparam>
     /// <typeparam name="TResult">The type of the result.</typeparam>
     /// <seealso cref="ObservableResult{T}" />
-    public abstract class QueryObservableResult<TSource, TResult> : ObservableResult<TResult>
+    public abstract class QueryObservableResult<TSource, TResult> : ObservableResult<TResult>, IWeakEventListener
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="QueryObservableResult{TSource, TResult}"/> class.
@@ -17,7 +20,15 @@ namespace Neuronic.CollectionModel.Results
         protected QueryObservableResult(IReadOnlyObservableCollection<TSource> source)
         {
             Source = source;
-            CollectionChangedEventManager.AddHandler(source, OnSourceChanged);
+            CollectionChangedEventManager.AddListener(source, this);
+        }
+
+        bool IWeakEventListener.ReceiveWeakEvent(Type managerType, object sender, EventArgs e)
+        {
+            if (!ReferenceEquals(Source, sender) || managerType != typeof(CollectionChangedEventManager))
+                return false;
+            OnSourceChanged(sender, (NotifyCollectionChangedEventArgs)e);
+            return true;
         }
 
         /// <summary>

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Windows;
 
 namespace Neuronic.CollectionModel.Results
 {
@@ -10,7 +11,7 @@ namespace Neuronic.CollectionModel.Results
     /// <typeparam name="TSecond">The type of the second operand.</typeparam>
     /// <typeparam name="TResult">The type of the operation's result.</typeparam>
     /// <seealso cref="ObservableResult{T}" />
-    public class CompositeObservableResult<TFirst, TSecond, TResult> : ObservableResult<TResult>
+    public class CompositeObservableResult<TFirst, TSecond, TResult> : ObservableResult<TResult>, IWeakEventListener
     {
         private readonly IObservableResult<TFirst> _first;
         private readonly IObservableResult<TSecond> _second;
@@ -35,8 +36,8 @@ namespace Neuronic.CollectionModel.Results
             _second = second;
             _operation = operation;
             CurrentValue = _operation(_first.CurrentValue, _second.CurrentValue);
-            PropertyChangedEventManager.AddHandler(_first, OnOperandChanged, nameof(CurrentValue));
-            PropertyChangedEventManager.AddHandler(_second, OnOperandChanged, nameof(CurrentValue));
+            PropertyChangedEventManager.AddListener(_first, this, nameof(CurrentValue));
+            PropertyChangedEventManager.AddListener(_second, this, nameof(CurrentValue));
         }
 
         /// <summary>
@@ -58,7 +59,7 @@ namespace Neuronic.CollectionModel.Results
             _second = new FixedValue<TSecond>(second);
             _operation = operation;
             CurrentValue = _operation(_first.CurrentValue, _second.CurrentValue);
-            PropertyChangedEventManager.AddHandler(_first, OnOperandChanged, nameof(CurrentValue));
+            PropertyChangedEventManager.AddListener(_first, this, nameof(CurrentValue));
         }
 
         /// <summary>
@@ -80,7 +81,15 @@ namespace Neuronic.CollectionModel.Results
             _second = second;
             _operation = operation;
             CurrentValue = _operation(_first.CurrentValue, _second.CurrentValue);
-            PropertyChangedEventManager.AddHandler(_second, OnOperandChanged, nameof(CurrentValue));
+            PropertyChangedEventManager.AddListener(_second, this, nameof(CurrentValue));
+        }
+
+        bool IWeakEventListener.ReceiveWeakEvent(Type managerType, object sender, EventArgs e)
+        {
+            if (!ReferenceEquals(_first, sender) && !ReferenceEquals(_second, sender) || managerType != typeof(PropertyChangedEventManager))
+                return false;
+            OnOperandChanged(sender, (PropertyChangedEventArgs)e);
+            return true;
         }
 
         private void OnOperandChanged(object sender, PropertyChangedEventArgs propertyChangedEventArgs)
