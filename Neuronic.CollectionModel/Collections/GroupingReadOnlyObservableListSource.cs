@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
+using System.Windows;
 using Neuronic.CollectionModel.Collections.Containers;
 
 namespace Neuronic.CollectionModel.Collections
@@ -20,7 +21,7 @@ namespace Neuronic.CollectionModel.Collections
     /// </para>
     /// </remarks>
     public class GroupingReadOnlyObservableListSource<TSource, TKey> :
-        ReadOnlyObservableList<ReadOnlyObservableGroup<TSource, TKey>>
+        ReadOnlyObservableList<ReadOnlyObservableGroup<TSource, TKey>>, IWeakEventListener
     {
         private readonly ContainerList _containers;
         private readonly Func<TSource, TKey> _keySelector;
@@ -95,7 +96,7 @@ namespace Neuronic.CollectionModel.Collections
             _containers = new ContainerList(this, initialContainers, keyComparer, triggers, groups);
             _source = source as INotifyCollectionChanged;
             if (_source != null)
-                CollectionChangedEventManager.AddHandler(_source, OnSourceChanged);
+                CollectionChangedEventManager.AddListener(_source, this);
         }
 
         /// <summary>
@@ -109,6 +110,14 @@ namespace Neuronic.CollectionModel.Collections
         {
             get { return _containers.IncludeImplicitGroups; }
             set { _containers.IncludeImplicitGroups = value; }
+        }
+
+        bool IWeakEventListener.ReceiveWeakEvent(Type managerType, object sender, EventArgs e)
+        {
+            if (!ReferenceEquals(_source, sender) || managerType != typeof(CollectionChangedEventManager))
+                return false;
+            OnSourceChanged(sender, (NotifyCollectionChangedEventArgs) e);
+            return true;
         }
 
         private void OnSourceChanged(object sender, NotifyCollectionChangedEventArgs e)

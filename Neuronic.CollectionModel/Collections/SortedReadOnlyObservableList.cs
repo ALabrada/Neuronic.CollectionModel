@@ -6,6 +6,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Windows;
 using Neuronic.CollectionModel.Collections.Containers;
 
 namespace Neuronic.CollectionModel.Collections
@@ -15,7 +16,7 @@ namespace Neuronic.CollectionModel.Collections
     /// </summary>
     /// <typeparam name="T">The type of the collection's elements.</typeparam>
     /// <seealso cref="Neuronic.CollectionModel.IReadOnlyObservableList{T}" />
-    public class SortedReadOnlyObservableList<T> : IReadOnlyObservableList<T>
+    public class SortedReadOnlyObservableList<T> : IReadOnlyObservableList<T>, IWeakEventListener
     {
         private readonly ContainerCollection _items;
         private readonly IReadOnlyObservableCollection<T> _source;
@@ -50,7 +51,7 @@ namespace Neuronic.CollectionModel.Collections
             _items = new ContainerCollection(from item in source select new Container(item),
                 new ContainerComparer(comparison), triggers);
             _items.SortedCollectionChanged += (sender, args) => RaiseEvents(args);
-            CollectionChangedEventManager.AddHandler(_source, SourceOnCollectionChanged);
+            CollectionChangedEventManager.AddListener(_source, this);
         }
 
         /// <summary>
@@ -142,6 +143,14 @@ namespace Neuronic.CollectionModel.Collections
             OnPropertyChanged(new PropertyChangedEventArgs("Count"));
             OnPropertyChanged(new PropertyChangedEventArgs("Item[]"));
             OnCollectionChanged(newArgs);
+        }
+
+        bool IWeakEventListener.ReceiveWeakEvent(Type managerType, object sender, EventArgs e)
+        {
+            if (!ReferenceEquals(_source, sender) || managerType != typeof(CollectionChangedEventManager))
+                return false;
+            SourceOnCollectionChanged(sender, (NotifyCollectionChangedEventArgs)e);
+            return true;
         }
 
         /// <summary>

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
+using System.Windows;
 
 namespace Neuronic.CollectionModel.Collections
 {
@@ -12,7 +13,7 @@ namespace Neuronic.CollectionModel.Collections
     /// <typeparam name="TSource">The type of the elements in the source collection.</typeparam>
     /// <typeparam name="TTarget">The type of the elements in the collection.</typeparam>
     /// <seealso cref="ReadOnlyObservableList{T}" />
-    public class TransformingReadOnlyObservableList<TSource, TTarget> : ReadOnlyObservableList<TTarget>
+    public class TransformingReadOnlyObservableList<TSource, TTarget> : ReadOnlyObservableList<TTarget>, IWeakEventListener
     {
         private readonly Action<TTarget> _onRemove;
         private readonly IEqualityComparer<TTarget> _sourceComparer;
@@ -37,10 +38,18 @@ namespace Neuronic.CollectionModel.Collections
             _selector = selector;
             _onRemove = onRemove;
             _sourceComparer = targetComparer ?? EqualityComparer<TTarget>.Default;
-            CollectionChangedEventManager.AddHandler(source, SourceOnCollectionChanged);
+            CollectionChangedEventManager.AddListener(source, this);
         }
 
         private ObservableCollection<TTarget> ObservableItems => (ObservableCollection<TTarget>) Items;
+
+        bool IWeakEventListener.ReceiveWeakEvent(Type managerType, object sender, EventArgs e)
+        {
+            if (!ReferenceEquals(_source, sender) || managerType != typeof(CollectionChangedEventManager))
+                return false;
+            SourceOnCollectionChanged(sender, (NotifyCollectionChangedEventArgs)e);
+            return true;
+        }
 
         private void SourceOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
