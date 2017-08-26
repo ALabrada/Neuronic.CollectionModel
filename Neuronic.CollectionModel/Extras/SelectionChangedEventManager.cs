@@ -15,34 +15,6 @@ namespace Neuronic.CollectionModel.Extras
         }
 
         /// <summary>
-        /// Add a handler for the given source's event.
-        /// </summary>
-        public static void AddHandler(ISelectableItem source,
-            EventHandler<EventArgs> handler)
-        {
-            if (source == null)
-                throw new ArgumentNullException(nameof(source));
-            if (handler == null)
-                throw new ArgumentNullException(nameof(handler));
-
-            CurrentManager.ProtectedAddHandler(source, handler);
-        }
-
-        /// <summary>
-        /// Remove a handler for the given source's event.
-        /// </summary>
-        public static void RemoveHandler(ISelectableItem source,
-            EventHandler<EventArgs> handler)
-        {
-            if (source == null)
-                throw new ArgumentNullException(nameof(source));
-            if (handler == null)
-                throw new ArgumentNullException(nameof(handler));
-
-            CurrentManager.ProtectedRemoveHandler(source, handler);
-        }
-
-        /// <summary>
         /// Adds a listener for the given source's event.
         /// </summary>
         /// <param name="source">The source.</param>
@@ -87,14 +59,6 @@ namespace Neuronic.CollectionModel.Extras
 
                 return manager;
             }
-        }
-
-        /// <summary>
-        /// Return a new list to hold listeners to the event.
-        /// </summary>
-        protected override ListenerList NewListenerList()
-        {
-            return new ListenerList<EventArgs>();
         }
 
         /// <summary>

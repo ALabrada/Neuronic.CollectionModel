@@ -144,7 +144,8 @@ namespace Neuronic.CollectionModel.Collections
             public ContainerList(GroupingReadOnlyObservableListSource<TSource, TKey> owner,
                 IEnumerable<GroupedItemContainer<TSource, TKey>> collection, IEqualityComparer<TKey> keyComparer,
                 string[] triggers, ObservableCollection<ReadOnlyObservableGroup<TSource, TKey>> groups)
-                : base(owner, collection, keyComparer, triggers, groups.CollectionAsObservable())
+                : base(owner, collection, keyComparer, triggers,
+                    new ReadOnlyObservableList<ReadOnlyObservableGroup<TSource, TKey>>(groups))
             {
                 _groups = groups;
 
