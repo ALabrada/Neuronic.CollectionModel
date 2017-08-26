@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Windows;
 using Neuronic.CollectionModel.Collections;
 
 namespace Neuronic.CollectionModel.Extras
@@ -18,7 +19,7 @@ namespace Neuronic.CollectionModel.Extras
     /// </remarks>
     /// <typeparam name="T">The type of the collection items.</typeparam>
     /// <seealso cref="ICollectionSelector{T}" />
-    public class CollectionSelector<T> : ICollectionSelector<T>
+    public class CollectionSelector<T> : ICollectionSelector<T>, IWeakEventListener
     {
         private int _selectedIndex = -1;
         private T _selectedItem;
@@ -32,7 +33,7 @@ namespace Neuronic.CollectionModel.Extras
         {
             if (items == null) throw new ArgumentNullException(nameof(items));
             Items = items;
-            CollectionChangedEventManager.AddHandler(Items, ItemsOnCollectionChanged);
+            CollectionChangedEventManager.AddListener(Items, this);
         }
 
         /// <summary>
@@ -43,6 +44,26 @@ namespace Neuronic.CollectionModel.Extras
         public CollectionSelector(ObservableCollection<T> items)
             : this(items == null ? null : new ReadOnlyObservableList<T>(items))
         {
+        }
+        
+        bool IWeakEventListener.ReceiveWeakEvent(Type managerType, object sender, EventArgs e)
+        {
+            return OnReceiveWeakEvent(managerType, sender, e);
+        }
+
+        /// <summary>
+        /// Handles a notification.
+        /// </summary>
+        /// <param name="managerType">Type of the manager.</param>
+        /// <param name="sender">The sender.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+        /// <returns><c>true</c> if the event was handled; otherwise, <c>false</c>.</returns>
+        protected virtual bool OnReceiveWeakEvent(Type managerType, object sender, EventArgs e)
+        {
+            if (!ReferenceEquals(Items, sender) || managerType != typeof(CollectionChangedEventManager))
+                return false;
+            ItemsOnCollectionChanged(sender, (NotifyCollectionChangedEventArgs) e);
+            return true;
         }
 
         /// <summary>
