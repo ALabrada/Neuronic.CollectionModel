@@ -12,7 +12,7 @@ namespace Neuronic.CollectionModel.Collections
     /// <typeparam name="T">The type of the set elements.</typeparam>
     /// <seealso cref="System.Collections.Generic.ISet{T}" />
     /// <seealso cref="Neuronic.CollectionModel.IReadOnlyObservableCollection{T}" />
-    public class ReadOnlyObservableSet<T> : ISet<T>, IReadOnlyObservableCollection<T>
+    public class ReadOnlyObservableSet<T> : EventSource, ISet<T>, IReadOnlyObservableCollection<T>
     {
         /// <summary>
         /// Gets the source.
@@ -26,15 +26,9 @@ namespace Neuronic.CollectionModel.Collections
         /// Initializes a new instance of the <see cref="ReadOnlyObservableSet{T}"/> class.
         /// </summary>
         /// <param name="source">The source.</param>
-        public ReadOnlyObservableSet(ISet<T> source)
+        public ReadOnlyObservableSet(ISet<T> source) : base (source, nameof(Count))
         {
             Source = source;
-            var notifyCollection = source as INotifyCollectionChanged;
-            if (notifyCollection != null)
-                CollectionChangedEventManager.AddHandler(this, (sender, args) => OnCollectionChanged(args));
-            var notifyProperty = source as INotifyPropertyChanged;
-            if (notifyProperty != null)
-                PropertyChangedEventManager.AddHandler(this, (sender, args) => OnPropertyChanged(args), nameof(Count));
         }
 
         /// <summary>
@@ -169,32 +163,5 @@ namespace Neuronic.CollectionModel.Collections
         /// Gets a value indicating whether the <see cref="T:System.Collections.Generic.ICollection`1" /> is read-only.
         /// </summary>
         public bool IsReadOnly => true;
-
-        /// <summary>
-        /// Occurs when the collection changes.
-        /// </summary>
-        public event NotifyCollectionChangedEventHandler CollectionChanged;
-        /// <summary>
-        /// Occurs when the value of a property changes.
-        /// </summary>
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        /// <summary>
-        /// Raises the <see cref="E:CollectionChanged" /> event.
-        /// </summary>
-        /// <param name="e">The <see cref="NotifyCollectionChangedEventArgs"/> instance containing the event data.</param>
-        protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
-        {
-            CollectionChanged?.Invoke(this, e);
-        }
-
-        /// <summary>
-        /// Raises the <see cref="E:PropertyChanged" /> event.
-        /// </summary>
-        /// <param name="e">The <see cref="PropertyChangedEventArgs"/> instance containing the event data.</param>
-        protected virtual void OnPropertyChanged(PropertyChangedEventArgs e)
-        {
-            PropertyChanged?.Invoke(this, e);
-        }
     }
 }

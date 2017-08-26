@@ -15,7 +15,7 @@ namespace Neuronic.CollectionModel.Collections
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <seealso cref="Neuronic.CollectionModel.IReadOnlyObservableCollection{Neuronic.CollectionModel.ReadOnlyObservableGroup{TSource, TKey}}" />
     public class
-        GroupingReadOnlyObservableCollectionSource<TSource, TKey> : IReadOnlyObservableCollection<
+        GroupingReadOnlyObservableCollectionSource<TSource, TKey> : CustomReadOnlyObservableCollection<
             ReadOnlyObservableGroup<TSource, TKey>>
     {
         private readonly ContainerList _containers;
@@ -82,7 +82,7 @@ namespace Neuronic.CollectionModel.Collections
         private GroupingReadOnlyObservableCollectionSource(IEnumerable<TSource> source,
             Func<TSource, TKey> keySelector, IEqualityComparer<TKey> keyComparer,
             IEqualityComparer<TSource> sourceComparer, string[] triggers,
-            ObservableDictionary<TKey, ReadOnlyObservableGroup<TSource, TKey>> groups)
+            ObservableDictionary<TKey, ReadOnlyObservableGroup<TSource, TKey>> groups) : base (groups.Values)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
@@ -95,9 +95,7 @@ namespace Neuronic.CollectionModel.Collections
             _containers = new ContainerList(this, initialContainers, keyComparer, triggers, groups);
             _source = source as INotifyCollectionChanged;
             if (_source != null)
-                CollectionChangedEventManager.AddHandler(_source, OnSourceChanged);
-            _containers.Groups.CollectionChanged += (sender, args) => OnCollectionChanged(args);
-            _containers.Groups.PropertyChanged += (sender, args) => OnPropertyChanged(args);
+                CollectionChangedEventManager.AddListener(_source, this);
         }
 
         /// <summary>
@@ -114,59 +112,26 @@ namespace Neuronic.CollectionModel.Collections
         }
 
         /// <summary>
-        ///     Gets the enumerator.
+        /// Called when a change notification is received from the source or the groups collection.
         /// </summary>
-        /// <returns></returns>
-        public IEnumerator<ReadOnlyObservableGroup<TSource, TKey>> GetEnumerator()
+        /// <param name="managerType">Type of the manager.</param>
+        /// <param name="sender">The sender.</param>
+        /// <param name="e">The <see cref="T:System.EventArgs" /> instance containing the event data.</param>
+        /// <returns>
+        /// <c>true</c> if the event was handled; otherwise, <c>false</c>.
+        /// </returns>
+        protected override bool OnReceiveWeakEvent(Type managerType, object sender, EventArgs e)
         {
-            return _containers.Groups.GetEnumerator();
+            if (!ReferenceEquals(_source, sender) || managerType != typeof(CollectionChangedEventManager))
+                return base.OnReceiveWeakEvent(managerType, sender, e);
+            OnSourceChanged(sender, (NotifyCollectionChangedEventArgs) e);
+            return true;
         }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-
-        /// <summary>
-        ///     Gets the count.
-        /// </summary>
-        /// <value>
-        ///     The count.
-        /// </value>
-        public int Count => _containers.Groups.Count;
-
-        /// <summary>
-        ///     Occurs when the collection changes.
-        /// </summary>
-        public event NotifyCollectionChangedEventHandler CollectionChanged;
-
-        /// <summary>
-        ///     Occurs when the value of a property changes.
-        /// </summary>
-        public event PropertyChangedEventHandler PropertyChanged;
 
         private void OnSourceChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             _containers.UpdateCollection((IEnumerable<TSource>) sender, e,
                 o => new GroupedItemContainer<TSource, TKey>((TSource) o, _keySelector), comparer: _sourceComparer);
-        }
-
-        /// <summary>
-        ///     Raises the <see cref="E:CollectionChanged" /> event.
-        /// </summary>
-        /// <param name="e">The <see cref="NotifyCollectionChangedEventArgs" /> instance containing the event data.</param>
-        protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
-        {
-            CollectionChanged?.Invoke(this, e);
-        }
-
-        /// <summary>
-        ///     Raises the <see cref="E:PropertyChanged" /> event.
-        /// </summary>
-        /// <param name="e">The <see cref="PropertyChangedEventArgs" /> instance containing the event data.</param>
-        protected virtual void OnPropertyChanged(PropertyChangedEventArgs e)
-        {
-            PropertyChanged?.Invoke(this, e);
         }
 
         /// <summary>

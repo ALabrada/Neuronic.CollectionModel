@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Windows;
 
 namespace Neuronic.CollectionModel.Extras
 {
@@ -42,10 +44,10 @@ namespace Neuronic.CollectionModel.Extras
                 {
                     var notifyProperties = oldSource as INotifyPropertyChanged;
                     if (notifyProperties != null)
-                        PropertyChangedEventManager.RemoveHandler(notifyProperties, SourceOnPropertyChanged, CountPropertyName);
+                        PropertyChangedEventManager.RemoveListener(notifyProperties, this, CountPropertyName);
                     var notifyCollection = oldSource as INotifyCollectionChanged;
                     if (notifyCollection != null)
-                        CollectionChangedEventManager.RemoveHandler(notifyCollection, SourceOnCollectionChanged);
+                        CollectionChangedEventManager.RemoveListener(notifyCollection, this);
                 }
                 // Update source
                 _source = value;
@@ -55,25 +57,15 @@ namespace Neuronic.CollectionModel.Extras
                 {
                     var notifyProperties = newSource as INotifyPropertyChanged;
                     if (notifyProperties != null)
-                        PropertyChangedEventManager.AddHandler(notifyProperties, SourceOnPropertyChanged, CountPropertyName);
+                        PropertyChangedEventManager.AddListener(notifyProperties, this, CountPropertyName);
                     var notifyCollection = newSource as INotifyCollectionChanged;
                     if (notifyCollection != null)
-                        CollectionChangedEventManager.AddHandler(notifyCollection, SourceOnCollectionChanged);
+                        CollectionChangedEventManager.AddListener(notifyCollection, this);
                 }
                 // Signal to update instance properties.
                 OnPropertyChanged(new PropertyChangedEventArgs(CountPropertyName));
                 OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
             }
-        }
-
-        private void SourceOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            OnCollectionChanged(e);
-        }
-
-        private void SourceOnPropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            OnPropertyChanged(e);
         }
     }
 }

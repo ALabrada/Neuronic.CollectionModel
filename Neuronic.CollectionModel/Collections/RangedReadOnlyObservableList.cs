@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.Windows;
 
 namespace Neuronic.CollectionModel.Collections
 {
@@ -10,7 +11,7 @@ namespace Neuronic.CollectionModel.Collections
     /// </summary>
     /// <typeparam name="T">The type of the list elements.</typeparam>
     /// <seealso cref="ReadOnlyObservableList{T}" />
-    public class RangedReadOnlyObservableList<T> : ReadOnlyObservableList<T>
+    public class RangedReadOnlyObservableList<T> : ReadOnlyObservableList<T>, IWeakEventListener
     {
         private readonly ObservableCollection<T> _list;
         private readonly IReadOnlyList<T> _source;
@@ -43,7 +44,7 @@ namespace Neuronic.CollectionModel.Collections
 
             var notify = _source as INotifyCollectionChanged;
             if (notify != null)
-                CollectionChangedEventManager.AddHandler(notify, SourceOnCollectionChanged);
+                CollectionChangedEventManager.AddListener(notify, this);
         }
 
         /// <summary>
@@ -186,6 +187,14 @@ namespace Neuronic.CollectionModel.Collections
             if (MaxCount < 0) return;
             while (_list.Count > MaxCount)
                 _list.RemoveAt(_list.Count - 1);
+        }
+
+        bool IWeakEventListener.ReceiveWeakEvent(Type managerType, object sender, EventArgs e)
+        {
+            if (!ReferenceEquals(_source, sender) || managerType != typeof(CollectionChangedEventManager))
+                return false;
+            SourceOnCollectionChanged(sender, (NotifyCollectionChangedEventArgs)e);
+            return true;
         }
     }
 }

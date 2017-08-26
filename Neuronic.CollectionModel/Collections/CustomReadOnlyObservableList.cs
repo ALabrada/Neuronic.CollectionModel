@@ -18,12 +18,9 @@ namespace Neuronic.CollectionModel.Collections
         /// Initializes a new instance of the <see cref="CustomReadOnlyObservableList{T}"/> class.
         /// </summary>
         /// <param name="source">The source.</param>
-        public CustomReadOnlyObservableList(IReadOnlyList<T> source) : base(source)
+        public CustomReadOnlyObservableList(IReadOnlyList<T> source) : base(source, nameof(Count), IndexerPropertyName)
         {
             _source = source;
-            var propertyNotify = _source as INotifyPropertyChanged;
-            if (propertyNotify != null)
-                PropertyChangedEventManager.AddListener(propertyNotify, this, IndexerPropertyName);
         }
 
         /// <summary>

@@ -1,8 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.ComponentModel;
 using System.Linq;
 
 namespace Neuronic.CollectionModel.Collections
@@ -14,7 +12,7 @@ namespace Neuronic.CollectionModel.Collections
     /// <typeparam name="TTarget">The target subtype of <typeparamref name="TSource"/>.</typeparam>
     /// <seealso cref="Neuronic.CollectionModel.IReadOnlyObservableCollection{TTarget}" />
     /// <seealso cref="System.Collections.Generic.ICollection{TTarget}" />
-    public class CastingReadOnlyObservableCollection<TSource, TTarget> : IReadOnlyObservableCollection<TTarget>, ICollection<TTarget> where TTarget : TSource
+    public class CastingReadOnlyObservableCollection<TSource, TTarget> : EventSource, IReadOnlyObservableCollection<TTarget>, ICollection<TTarget> where TTarget : TSource
     {
         private IReadOnlyObservableCollection<TSource> Source { get; }
 
@@ -22,11 +20,18 @@ namespace Neuronic.CollectionModel.Collections
         /// Initializes a new instance of the <see cref="CastingReadOnlyObservableCollection{TSource, TTarget}"/> class.
         /// </summary>
         /// <param name="source">The source.</param>
-        public CastingReadOnlyObservableCollection(IReadOnlyObservableCollection<TSource> source)
+        public CastingReadOnlyObservableCollection(IReadOnlyObservableCollection<TSource> source) : this (source, nameof(Count))
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CastingReadOnlyObservableCollection{TSource, TTarget}"/> class.
+        /// </summary>
+        /// <param name="source">The source.</param>
+        /// <param name="propertyNames">The names of the properties to listen for.</param>
+        protected CastingReadOnlyObservableCollection(IReadOnlyObservableCollection<TSource> source, params string[] propertyNames) : base(source, propertyNames)
         {
             Source = source;
-            PropertyChangedEventManager.AddHandler(Source, (sender, args) => OnPropertyChanged(args), nameof(Count));
-            CollectionChangedEventManager.AddHandler(Source, (sender, args) => OnCollectionChanged(args));
         }
 
         /// <summary>
@@ -113,34 +118,6 @@ namespace Neuronic.CollectionModel.Collections
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
-        }
-
-        /// <summary>
-        /// Occurs when the collection is changed.
-        /// </summary>
-        public event NotifyCollectionChangedEventHandler CollectionChanged;
-
-        /// <summary>
-        /// Occurs when a property value changes.
-        /// </summary>
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        /// <summary>
-        /// Raises the <see cref="E:CollectionChanged" /> event.
-        /// </summary>
-        /// <param name="e">The <see cref="NotifyCollectionChangedEventArgs"/> instance containing the event data.</param>
-        protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
-        {
-            CollectionChanged?.Invoke(this, e);
-        }
-
-        /// <summary>
-        /// Raises the <see cref="E:PropertyChanged" /> event.
-        /// </summary>
-        /// <param name="e">The <see cref="PropertyChangedEventArgs"/> instance containing the event data.</param>
-        protected virtual void OnPropertyChanged(PropertyChangedEventArgs e)
-        {
-            PropertyChanged?.Invoke(this, e);
         }
     }
 }

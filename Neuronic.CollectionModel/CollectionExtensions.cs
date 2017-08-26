@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
+using System.Windows;
 using Neuronic.CollectionModel.Collections;
 using Neuronic.CollectionModel.Collections.Containers;
 using Neuronic.CollectionModel.Extras;
@@ -1272,7 +1273,7 @@ namespace Neuronic.CollectionModel
             return new ConditionalSwitchableCollectionSource<T>(condition, positiveSource, negativeSource);
         }
 
-        private abstract class CollectionUpdaterBase<TSource, TTarget> : IReadOnlyObservableCollection<TTarget>
+        private abstract class CollectionUpdaterBase<TSource, TTarget> : IReadOnlyObservableCollection<TTarget>, IWeakEventListener
         {
             private readonly CompositeReadOnlyObservableCollectionSourceBase<TTarget> _composite;
             private readonly Func<TSource, IReadOnlyCollection<TTarget>> _selector;
@@ -1286,9 +1287,7 @@ namespace Neuronic.CollectionModel
                 _composite = composite;
                 _selector = selector;
 
-                CollectionChangedEventManager.AddHandler(_source,
-                    (sender, args) => UpdateCollection(_composite, _source, args,
-                        o => new CollectionContainer<TTarget>(_selector((TSource) o))));
+                CollectionChangedEventManager.AddListener(_source, this);
             }
 
             public IEnumerator<TTarget> GetEnumerator() => GetView().GetEnumerator();
@@ -1312,6 +1311,15 @@ namespace Neuronic.CollectionModel
             {
                 PropertyChanged?.Invoke(this, e);
             }
+
+            public virtual bool ReceiveWeakEvent(Type managerType, object sender, EventArgs e)
+            {
+                if (!Equals(_source, sender) || managerType != typeof(CollectionChangedEventManager))
+                    return false;
+                UpdateCollection(_composite, _source, (NotifyCollectionChangedEventArgs) e,
+                    o => new CollectionContainer<TTarget>(_selector((TSource) o)));
+                return true;
+            }
         }
 
         private class CollectionUpdater<TSource, TTarget> : CollectionUpdaterBase<TSource, TTarget>
@@ -1323,9 +1331,8 @@ namespace Neuronic.CollectionModel
                 CompositeReadOnlyObservableCollectionSource<TTarget> composite) : base(source, selector, composite)
             {
                 _composite = composite;
-                CollectionChangedEventManager.AddHandler(_composite.View, (sender, args) => OnCollectionChanged(args));
-                PropertyChangedEventManager.AddHandler(_composite.View, (sender, args) => OnPropertyChanged(args),
-                    string.Empty);
+                CollectionChangedEventManager.AddListener(_composite.View, this);
+                PropertyChangedEventManager.AddListener(_composite.View, this, string.Empty);
             }
 
             public CollectionUpdater(IReadOnlyObservableCollection<TSource> source,
@@ -1341,6 +1348,19 @@ namespace Neuronic.CollectionModel
             {
                 return _composite.View;
             }
+
+            public override bool ReceiveWeakEvent(Type managerType, object sender, EventArgs e)
+            {
+                if (!ReferenceEquals(sender, _composite.View))
+                    return base.ReceiveWeakEvent(managerType, sender, e);
+                if (managerType == typeof(CollectionChangedEventManager))
+                    OnCollectionChanged((NotifyCollectionChangedEventArgs) e);
+                else if (managerType == typeof(PropertyChangedEventManager))
+                    OnPropertyChanged((PropertyChangedEventArgs) e);
+                else
+                    return false;
+                return true;
+            }
         }
 
         private class ListUpdater<TSource, TTarget> : CollectionUpdaterBase<TSource, TTarget>,
@@ -1353,9 +1373,8 @@ namespace Neuronic.CollectionModel
                 CompositeReadOnlyObservableListSource<TTarget> composite) : base(source, selector, composite)
             {
                 _composite = composite;
-                CollectionChangedEventManager.AddHandler(_composite.View, (sender, args) => OnCollectionChanged(args));
-                PropertyChangedEventManager.AddHandler(_composite.View, (sender, args) => OnPropertyChanged(args),
-                    string.Empty);
+                CollectionChangedEventManager.AddListener(_composite.View, this);
+                PropertyChangedEventManager.AddListener(_composite.View, this, string.Empty);
             }
 
             public ListUpdater(IReadOnlyObservableCollection<TSource> source,
@@ -1372,6 +1391,19 @@ namespace Neuronic.CollectionModel
             protected override IReadOnlyObservableCollection<TTarget> GetView()
             {
                 return _composite.View;
+            }
+
+            public override bool ReceiveWeakEvent(Type managerType, object sender, EventArgs e)
+            {
+                if (!ReferenceEquals(sender, _composite.View))
+                    return base.ReceiveWeakEvent(managerType, sender, e);
+                if (managerType == typeof(CollectionChangedEventManager))
+                    OnCollectionChanged((NotifyCollectionChangedEventArgs)e);
+                else if (managerType == typeof(PropertyChangedEventManager))
+                    OnPropertyChanged((PropertyChangedEventArgs)e);
+                else
+                    return false;
+                return true;
             }
         }
     }

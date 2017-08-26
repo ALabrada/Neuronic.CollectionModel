@@ -20,10 +20,9 @@ namespace Neuronic.CollectionModel.Collections
         /// Initializes a new instance of the <see cref="CastingReadOnlyObservableList{TSource, TTarget}"/> class.
         /// </summary>
         /// <param name="source">The source.</param>
-        public CastingReadOnlyObservableList(IReadOnlyObservableList<TSource> source) : base (source)
+        public CastingReadOnlyObservableList(IReadOnlyObservableList<TSource> source) : base (source, nameof(Count), "Item[]")
         {
             _source = source;
-            PropertyChangedEventManager.AddHandler(_source, (sender, args) => OnPropertyChanged(args), "Item[]");
         }
 
         /// <summary>

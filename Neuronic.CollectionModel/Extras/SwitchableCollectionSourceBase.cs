@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
+using System.Windows;
 
 namespace Neuronic.CollectionModel.Extras
 {
@@ -13,7 +14,7 @@ namespace Neuronic.CollectionModel.Extras
     /// <typeparam name="T">The type of the collection items.</typeparam>
     /// <seealso cref="Neuronic.CollectionModel.IReadOnlyObservableCollection{T}" />
     /// <seealso cref="System.Collections.Generic.ICollection{T}" />
-    public abstract class SwitchableCollectionSourceBase<T> : IReadOnlyObservableCollection<T>, ICollection<T>
+    public abstract class SwitchableCollectionSourceBase<T> : IReadOnlyObservableCollection<T>, ICollection<T>, IWeakEventListener
     {
         /// <summary>
         ///     The name of the <see cref="Count" /> property.
@@ -120,6 +121,19 @@ namespace Neuronic.CollectionModel.Extras
         protected virtual void OnPropertyChanged(PropertyChangedEventArgs e)
         {
             PropertyChanged?.Invoke(this, e);
+        }
+
+        bool IWeakEventListener.ReceiveWeakEvent(Type managerType, object sender, EventArgs e)
+        {
+            if (!ReferenceEquals(SourceOverride, sender))
+                return false;
+            if (managerType == typeof(CollectionChangedEventManager))
+                OnCollectionChanged((NotifyCollectionChangedEventArgs)e);
+            else if (managerType == typeof(PropertyChangedEventManager))
+                OnPropertyChanged((PropertyChangedEventArgs)e);
+            else
+                return false;
+            return true;
         }
     }
 }

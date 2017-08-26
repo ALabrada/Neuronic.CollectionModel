@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
+using System.Windows;
 using Neuronic.CollectionModel.Collections.Containers;
 
 namespace Neuronic.CollectionModel.Collections
@@ -17,7 +18,7 @@ namespace Neuronic.CollectionModel.Collections
     /// <seealso cref="Neuronic.CollectionModel.IReadOnlyObservableCollection{TItem}" />
     /// <seealso cref="System.Collections.Generic.ICollection{TItem}" />
     public abstract class FilteredReadOnlyObservableCollectionBase<TItem, TContainer> :
-        IReadOnlyObservableCollection<TItem>, ICollection<TItem> where TContainer : FilterItemContainer<TItem>
+        IReadOnlyObservableCollection<TItem>, ICollection<TItem>, IWeakEventListener where TContainer : FilterItemContainer<TItem>
     {
         /// <summary>
         ///     The filter.
@@ -52,7 +53,7 @@ namespace Neuronic.CollectionModel.Collections
             Items = items;
             Triggers = triggers;
 
-            CollectionChangedEventManager.AddHandler(Source, SourceOnCollectionChanged);
+            CollectionChangedEventManager.AddListener(Source, this);
             foreach (var item in source)
                 Items.Add(CreateContainer(item));
         }
@@ -187,6 +188,14 @@ namespace Neuronic.CollectionModel.Collections
         protected virtual void OnPropertyChanged(PropertyChangedEventArgs e)
         {
             PropertyChanged?.Invoke(this, e);
+        }
+
+        bool IWeakEventListener.ReceiveWeakEvent(Type managerType, object sender, EventArgs e)
+        {
+            if (!ReferenceEquals(Source, sender) || managerType != typeof(CollectionChangedEventManager))
+                return false;
+            SourceOnCollectionChanged(sender, (NotifyCollectionChangedEventArgs) e);
+            return true;
         }
     }
 }

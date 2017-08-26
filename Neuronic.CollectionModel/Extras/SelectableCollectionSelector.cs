@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 
 namespace Neuronic.CollectionModel.Extras
 {
@@ -17,6 +18,8 @@ namespace Neuronic.CollectionModel.Extras
         /// <param name="items">The source items.</param>
         public SelectableCollectionSelector(IReadOnlyObservableList<T> items) : base(items)
         {
+            foreach (var selectableItem in Items)
+                SelectionChangedEventManager.AddListener(selectableItem, this);
         }
 
         /// <summary>
@@ -25,6 +28,8 @@ namespace Neuronic.CollectionModel.Extras
         /// <param name="items">The source items. This instance is the only way to modify the selector's collection.</param>
         public SelectableCollectionSelector(ObservableCollection<T> items) : base(items)
         {
+            foreach (var selectableItem in Items)
+                SelectionChangedEventManager.AddListener(selectableItem, this);
         }
 
         /// <summary>
@@ -47,6 +52,14 @@ namespace Neuronic.CollectionModel.Extras
             base.OnSelectedItemChanged();
         }
 
+        protected override bool OnReceiveWeakEvent(Type managerType, object sender, EventArgs e)
+        {
+            if (managerType != typeof(PropertyChangedEventManager) || !(sender is T))
+                return base.OnReceiveWeakEvent(managerType, sender, e);
+            ItemOnSelectionChanged(sender, (PropertyChangedEventArgs)e);
+            return true;
+        }
+
         /// <summary>
         /// Called when items are added to the source collection.
         /// </summary>
@@ -56,7 +69,7 @@ namespace Neuronic.CollectionModel.Extras
         {
             base.OnItemsAdded(newStartingIndex, newItems);
             foreach (T selectableItem in newItems)
-                SelectionChangedEventManager.AddHandler(selectableItem, ItemOnSelectionChanged);
+                SelectionChangedEventManager.AddListener(selectableItem, this);
         }
 
         /// <summary>
@@ -67,7 +80,7 @@ namespace Neuronic.CollectionModel.Extras
         protected override void OnItemsRemoved(int oldStartingIndex, IList oldItems)
         {
             foreach (T selectableItem in oldItems)
-                SelectionChangedEventManager.RemoveHandler(selectableItem, ItemOnSelectionChanged);
+                SelectionChangedEventManager.RemoveListener(selectableItem, this);
             base.OnItemsRemoved(oldStartingIndex, oldItems);
         }
 
@@ -78,7 +91,7 @@ namespace Neuronic.CollectionModel.Extras
         {
             base.OnCollectionReset();
             foreach (var selectableItem in Items)
-                SelectionChangedEventManager.AddHandler(selectableItem, ItemOnSelectionChanged);
+                SelectionChangedEventManager.AddListener(selectableItem, this);
         }
 
         /// <summary>
@@ -91,10 +104,10 @@ namespace Neuronic.CollectionModel.Extras
         protected override void OnItemsReplaced(int oldStartingIndex, IList oldItems, int newStartingIndex, IList newItems)
         {
             foreach (T selectableItem in oldItems)
-                SelectionChangedEventManager.RemoveHandler(selectableItem, ItemOnSelectionChanged);
+                SelectionChangedEventManager.RemoveListener(selectableItem, this);
             base.OnItemsReplaced(oldStartingIndex, oldItems, newStartingIndex, newItems);
             foreach (T selectableItem in newItems)
-                SelectionChangedEventManager.AddHandler(selectableItem, ItemOnSelectionChanged);
+                SelectionChangedEventManager.AddListener(selectableItem, this);
         }
 
         private void ItemOnSelectionChanged(object sender, EventArgs eventArgs)

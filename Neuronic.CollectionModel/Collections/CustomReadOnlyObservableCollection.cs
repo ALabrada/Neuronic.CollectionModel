@@ -12,7 +12,7 @@ namespace Neuronic.CollectionModel.Collections
     /// </summary>
     /// <typeparam name="T">The type of the collection's elements.</typeparam>
     /// <seealso cref="Neuronic.CollectionModel.IReadOnlyObservableCollection{T}" />
-    public class CustomReadOnlyObservableCollection<T> : IReadOnlyObservableCollection<T>, IWeakEventListener
+    public class CustomReadOnlyObservableCollection<T> : EventSource, IReadOnlyObservableCollection<T>
     {
         private readonly IReadOnlyCollection<T> _source;
         private int _lastCount;
@@ -21,15 +21,21 @@ namespace Neuronic.CollectionModel.Collections
         /// Initializes a new instance of the <see cref="CustomReadOnlyObservableCollection{T}"/> class.
         /// </summary>
         /// <param name="source">The source.</param>
-        public CustomReadOnlyObservableCollection(IReadOnlyCollection<T> source)
+        public CustomReadOnlyObservableCollection(IReadOnlyCollection<T> source) : this(source, nameof(Count))
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CustomReadOnlyObservableCollection{T}"/> class.
+        /// </summary>
+        /// <param name="source">The source.</param>
+        /// <param name="propertyNames">
+        /// The names of the properties that should generate change notifications.
+        /// Use <see cref="string.Empty"/> to use the same set of properties as the source.
+        /// </param>
+        protected CustomReadOnlyObservableCollection(IReadOnlyCollection<T> source, params string[] propertyNames) : base(source, propertyNames)
         {
             _source = source;
-            var propertyNotify = _source as INotifyPropertyChanged;
-            if (propertyNotify != null)
-                PropertyChangedEventManager.AddListener(propertyNotify, this, nameof(Count));
-            var collectionNotify = _source as INotifyCollectionChanged;
-            if (collectionNotify != null)
-                CollectionChangedEventManager.AddListener(collectionNotify, this);
         }
 
         /// <summary>
@@ -49,42 +55,18 @@ namespace Neuronic.CollectionModel.Collections
         public int Count => _source.Count;
 
         /// <summary>
-        /// Occurs when the collection changes.
+        /// Called when a change notification is received from the source.
         /// </summary>
-        public event NotifyCollectionChangedEventHandler CollectionChanged;
-
-        /// <summary>
-        /// Occurs when the value of a property changes.
-        /// </summary>
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        /// <summary>
-        /// Raises the <see cref="E:CollectionChanged" /> event.
-        /// </summary>
-        /// <param name="e">The <see cref="NotifyCollectionChangedEventArgs"/> instance containing the event data.</param>
-        protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
+        /// <param name="managerType">Type of the manager.</param>
+        /// <param name="sender">The sender.</param>
+        /// <param name="e">The <see cref="EventArgs" /> instance containing the event data.</param>
+        /// <returns>
+        ///   <c>true</c> if the event was handled; otherwise, <c>false</c>.
+        /// </returns>
+        protected override bool OnReceiveWeakEvent(Type managerType, object sender, EventArgs e)
         {
-            CollectionChanged?.Invoke(this, e);
-        }
-
-        /// <summary>
-        /// Raises the <see cref="E:PropertyChanged" /> event.
-        /// </summary>
-        /// <param name="e">The <see cref="PropertyChangedEventArgs"/> instance containing the event data.</param>
-        protected virtual void OnPropertyChanged(PropertyChangedEventArgs e)
-        {
-            PropertyChanged?.Invoke(this, e);
-        }
-
-        bool IWeakEventListener.ReceiveWeakEvent(Type managerType, object sender, EventArgs e)
-        {
-            if (!ReferenceEquals(sender, _source))
+            if (!base.OnReceiveWeakEvent(managerType, sender, e))
                 return false;
-            if (managerType == typeof(PropertyChangedEventManager))
-                OnPropertyChanged(e as PropertyChangedEventArgs);
-            else if (managerType == typeof(CollectionChangedEventManager))
-                OnCollectionChanged(e as NotifyCollectionChangedEventArgs);
-            else return false;
             _lastCount = Count;
             return true;
         }

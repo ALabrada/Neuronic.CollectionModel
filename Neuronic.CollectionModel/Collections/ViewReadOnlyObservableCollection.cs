@@ -5,6 +5,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Windows;
 
 namespace Neuronic.CollectionModel.Collections
 {
@@ -15,7 +16,7 @@ namespace Neuronic.CollectionModel.Collections
     /// <typeparam name="T">The type of the collection's items.</typeparam>
     /// <seealso cref="Neuronic.CollectionModel.IReadOnlyObservableCollection{T}" />
     /// <seealso cref="System.Collections.Generic.ICollection{T}" />
-    public class ViewReadOnlyObservableCollection<T> : IReadOnlyObservableCollection<T>, ICollection<T>
+    public class ViewReadOnlyObservableCollection<T> : IReadOnlyObservableCollection<T>, ICollection<T>, IWeakEventListener
     {
         private readonly ICollectionView _view;
         private int _count;
@@ -28,7 +29,15 @@ namespace Neuronic.CollectionModel.Collections
         {
             _view = view;
             Count = view.Cast<T>().Count();
-            CollectionChangedEventManager.AddHandler(_view, ViewOnCollectionChanged);
+            CollectionChangedEventManager.AddListener(_view, this);
+        }
+
+        bool IWeakEventListener.ReceiveWeakEvent(Type managerType, object sender, EventArgs e)
+        {
+            if (!ReferenceEquals(_view, sender) || managerType != typeof(CollectionChangedEventManager))
+                return false;
+            ViewOnCollectionChanged(sender, (NotifyCollectionChangedEventArgs)e);
+            return true;
         }
 
         void ICollection<T>.Add(T item)
@@ -99,7 +108,7 @@ namespace Neuronic.CollectionModel.Collections
             {
                 if (_count == value) return;
                 _count = value;
-                OnPropertyChanged();
+                OnPropertyChanged(new PropertyChangedEventArgs(nameof(Count)));
             }
         }
 
@@ -136,13 +145,14 @@ namespace Neuronic.CollectionModel.Collections
             CollectionChanged?.Invoke(this, e);
         }
 
+
         /// <summary>
-        ///     Raises the <see cref="PropertyChanged" /> event.
+        /// Raises the <see cref="E:PropertyChanged" /> event.
         /// </summary>
-        /// <param name="propertyName">Name of the property.</param>
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        /// <param name="e">The <see cref="PropertyChangedEventArgs"/> instance containing the event data.</param>
+        protected virtual void OnPropertyChanged(PropertyChangedEventArgs e)
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            PropertyChanged?.Invoke(this, e);
         }
     }
 }

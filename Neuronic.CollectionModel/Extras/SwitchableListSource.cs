@@ -46,12 +46,12 @@ namespace Neuronic.CollectionModel.Extras
                     var notifyProperties = oldSource as INotifyPropertyChanged;
                     if (notifyProperties != null)
                     {
-                        PropertyChangedEventManager.RemoveHandler(notifyProperties, SourceOnPropertyChanged, CountPropertyName);
-                        PropertyChangedEventManager.RemoveHandler(notifyProperties, SourceOnPropertyChanged, IndexerName);
+                        PropertyChangedEventManager.RemoveListener(notifyProperties, this, CountPropertyName);
+                        PropertyChangedEventManager.RemoveListener(notifyProperties, this, IndexerName);
                     }
                     var notifyCollection = oldSource as INotifyCollectionChanged;
                     if (notifyCollection != null)
-                        CollectionChangedEventManager.RemoveHandler(notifyCollection, SourceOnCollectionChanged);
+                        CollectionChangedEventManager.RemoveListener(notifyCollection, this);
                 }
                 // Update source
                 _source = value;
@@ -62,12 +62,12 @@ namespace Neuronic.CollectionModel.Extras
                     var notifyProperties = newSource as INotifyPropertyChanged;
                     if (notifyProperties != null)
                     {
-                        PropertyChangedEventManager.AddHandler(notifyProperties, SourceOnPropertyChanged, CountPropertyName);
-                        PropertyChangedEventManager.AddHandler(notifyProperties, SourceOnPropertyChanged, IndexerName);
+                        PropertyChangedEventManager.AddListener(notifyProperties, this, CountPropertyName);
+                        PropertyChangedEventManager.AddListener(notifyProperties, this, IndexerName);
                     }
                     var notifyCollection = newSource as INotifyCollectionChanged;
                     if (notifyCollection != null)
-                        CollectionChangedEventManager.AddHandler(notifyCollection, SourceOnCollectionChanged);
+                        CollectionChangedEventManager.AddListener(notifyCollection, this);
                 }
                 // Signal to update instance properties.
                 OnPropertyChanged(new PropertyChangedEventArgs(CountPropertyName));
@@ -101,18 +101,6 @@ namespace Neuronic.CollectionModel.Extras
                     throw new IndexOutOfRangeException("The collection is empty.");
                 return (T) Source[index];
             }
-        }
-
-        private void SourceOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            if (Equals(sender, Source))
-                OnCollectionChanged(e);
-        }
-
-        private void SourceOnPropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            if (Equals(sender, Source))
-                OnPropertyChanged(e);
         }
 
         int IList<T>.IndexOf(T item)

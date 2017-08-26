@@ -43,6 +43,32 @@ namespace Neuronic.CollectionModel.Extras
         }
 
         /// <summary>
+        /// Adds a listener for the given source's event.
+        /// </summary>
+        /// <param name="source">The source.</param>
+        /// <param name="listener">The listener.</param>
+        public static void AddListener(ISelectableItem source, IWeakEventListener listener)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (listener == null) throw new ArgumentNullException(nameof(listener));
+
+            CurrentManager.ProtectedAddListener(source, listener);
+        }
+
+        /// <summary>
+        /// Removes a listener for the given source's event.
+        /// </summary>
+        /// <param name="source">The source.</param>
+        /// <param name="listener">The listener.</param>
+        public static void RemoveListener(ISelectableItem source, IWeakEventListener listener)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (listener == null) throw new ArgumentNullException(nameof(listener));
+
+            CurrentManager.ProtectedRemoveListener(source, listener);
+        }
+
+        /// <summary>
         /// Get the event manager for the current thread.
         /// </summary>
         private static SelectionChangedEventManager CurrentManager
