@@ -152,7 +152,7 @@ namespace Neuronic.CollectionModel.Collections
                     if (_count == value)
                         return;
                     _count = value;
-                    OnPropertyChanged();
+                    OnPropertyChanged(new PropertyChangedEventArgs(nameof(Count)));
                 }
             }
 
@@ -165,9 +165,9 @@ namespace Neuronic.CollectionModel.Collections
                 CollectionChanged?.Invoke(this, e);
             }
 
-            private void OnPropertyChanged([CallerMemberName] string propertyName = null)
+            protected virtual void OnPropertyChanged(PropertyChangedEventArgs e)
             {
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+                PropertyChanged?.Invoke(this, e);
             }
         }
     }

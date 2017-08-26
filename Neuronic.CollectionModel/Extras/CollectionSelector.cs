@@ -63,7 +63,7 @@ namespace Neuronic.CollectionModel.Extras
                 OnSelectedItemChanging();
                 _selectedItem = value;
                 OnSelectedItemChanged();
-                OnPropertyChanged();
+                OnPropertyChanged(new PropertyChangedEventArgs(nameof(SelectedItem)));
             }
         }
 
@@ -89,7 +89,7 @@ namespace Neuronic.CollectionModel.Extras
             {
                 if (_selectedIndex == value) return;
                 _selectedIndex = value;
-                OnPropertyChanged();
+                OnPropertyChanged(new PropertyChangedEventArgs(nameof(SelectedIndex)));
                 UpdateSelectedItem();
             }
         }
@@ -238,13 +238,14 @@ namespace Neuronic.CollectionModel.Extras
             return this.TrySelect(item);
         }
 
+
         /// <summary>
-        ///     Raises the <see cref="PropertyChanged" /> event.
+        /// Raises the <see cref="E:PropertyChanged" /> event.
         /// </summary>
-        /// <param name="propertyName">Name of the property.</param>
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        /// <param name="e">The <see cref="PropertyChangedEventArgs"/> instance containing the event data.</param>
+        protected virtual void OnPropertyChanged(PropertyChangedEventArgs e)
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            PropertyChanged?.Invoke(this, e);
         }
     }
 }

@@ -99,7 +99,7 @@ namespace Neuronic.CollectionModel.Collections
             {
                 if (_count == value) return;
                 _count = value;
-                OnPropertyChanged();
+                OnPropertyChanged(new PropertyChangedEventArgs(nameof(Count)));
             }
         }
 
@@ -136,13 +136,14 @@ namespace Neuronic.CollectionModel.Collections
             CollectionChanged?.Invoke(this, e);
         }
 
+
         /// <summary>
-        ///     Raises the <see cref="PropertyChanged" /> event.
+        /// Raises the <see cref="E:PropertyChanged" /> event.
         /// </summary>
-        /// <param name="propertyName">Name of the property.</param>
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        /// <param name="e">The <see cref="PropertyChangedEventArgs"/> instance containing the event data.</param>
+        protected virtual void OnPropertyChanged(PropertyChangedEventArgs e)
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            PropertyChanged?.Invoke(this, e);
         }
     }
 }
