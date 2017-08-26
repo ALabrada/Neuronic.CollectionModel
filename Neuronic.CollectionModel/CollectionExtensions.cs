@@ -384,12 +384,12 @@ namespace Neuronic.CollectionModel
         /// <typeparam name="T">The type of the list's elements.</typeparam>
         /// <param name="list">The list.</param>
         /// <returns></returns>
-        public static IReadOnlyObservableList<T> ListAsObservable<T>(this IReadOnlyList<T> list)
+        public static IReadOnlyObservableList<T> ListAsObservable<T>(this IEnumerable<T> list)
         {
             var observableCollection = list as ObservableCollection<T>;
             if (observableCollection != null)
                 return new ReadOnlyObservableList<T>(observableCollection);
-            return new CustomReadOnlyObservableList<T>(list);
+            return new CustomReadOnlyObservableList<T>(list as IReadOnlyList<T> ?? new ListWrapper<T>(list));
         }
 
         /// <summary>
@@ -398,12 +398,12 @@ namespace Neuronic.CollectionModel
         /// <typeparam name="T">The type of the collection's elements.</typeparam>
         /// <param name="collection">The collection.</param>
         /// <returns></returns>
-        public static IReadOnlyObservableCollection<T> CollectionAsObservable<T>(this IReadOnlyCollection<T> collection)
+        public static IReadOnlyObservableCollection<T> CollectionAsObservable<T>(this IEnumerable<T> collection)
         {
             var observableCollection = collection as ObservableCollection<T>;
             if (observableCollection != null)
                 return new ReadOnlyObservableList<T>(observableCollection);
-            return new CustomReadOnlyObservableCollection<T>(collection);
+            return new CustomReadOnlyObservableCollection<T>(collection as IReadOnlyCollection<T> ?? new CollectionWrapper<T>(collection));
         }
 
         /// <summary>
@@ -608,11 +608,14 @@ namespace Neuronic.CollectionModel
         ///     An observable list that contains the elements in <paramref name="items" /> and then, the items of each
         ///     collection in <paramref name="others" /> in that order.
         /// </returns>
-        public static IReadOnlyObservableList<T> ListConcat<T>(this IReadOnlyCollection<T> items,
-            params IReadOnlyCollection<T>[] others)
+        public static IReadOnlyObservableList<T> ListConcat<T>(this IEnumerable<T> items,
+            params IEnumerable<T>[] others)
         {
-            var containers = new List<CollectionContainer<T>>(others.Length + 1) {new CollectionContainer<T>(items)};
-            containers.AddRange(others.Select(c => new CollectionContainer<T>(c)));
+            var containers = new List<CollectionContainer<T>>(others.Length + 1)
+            {
+                new CollectionContainer<T>(items as IReadOnlyCollection<T> ?? new CollectionWrapper<T>(items))
+            };
+            containers.AddRange(others.Select(c => new CollectionContainer<T>(c as IReadOnlyCollection<T> ?? new CollectionWrapper<T>(c))));
             var composite = new CompositeReadOnlyObservableListSource<T>(containers);
             return composite.View;
         }
@@ -627,11 +630,11 @@ namespace Neuronic.CollectionModel
         ///     An observable collection that contains the elements in <paramref name="items" /> and then, the items of each
         ///     collection in <paramref name="others" /> in that order.
         /// </returns>
-        public static IReadOnlyObservableCollection<T> CollectionConcat<T>(this IReadOnlyCollection<T> items,
-            params IReadOnlyCollection<T>[] others)
+        public static IReadOnlyObservableCollection<T> CollectionConcat<T>(this IEnumerable<T> items,
+            params IEnumerable<T>[] others)
         {
-            var containers = new List<CollectionContainer<T>>(others.Length + 1) {new CollectionContainer<T>(items)};
-            containers.AddRange(others.Select(c => new CollectionContainer<T>(c)));
+            var containers = new List<CollectionContainer<T>>(others.Length + 1) {new CollectionContainer<T>(items as IReadOnlyCollection<T> ?? new CollectionWrapper<T>(items))};
+            containers.AddRange(others.Select(c => new CollectionContainer<T>(c as IReadOnlyCollection<T> ?? new CollectionWrapper<T>(c))));
             var composite = new CompositeReadOnlyObservableCollectionSource<T>(containers);
             return composite.View;
         }
@@ -661,8 +664,8 @@ namespace Neuronic.CollectionModel
         ///     An observable collection with all the elements from the source collections, 
         ///     but no repetitions. The default comparer is used to determine equality.
         /// </returns>
-        public static IReadOnlyObservableCollection<T> CollectionUnion<T>(this IReadOnlyCollection<T> items,
-            params IReadOnlyCollection<T>[] others)
+        public static IReadOnlyObservableCollection<T> CollectionUnion<T>(this IEnumerable<T> items,
+            params IEnumerable<T>[] others)
         {
             return items.CollectionConcat(others).CollectionDistinct();
         }
@@ -678,8 +681,8 @@ namespace Neuronic.CollectionModel
         ///     An observable collection with all the elements from the source collections, 
         ///     but no repetitions. 
         /// </returns>
-        public static IReadOnlyObservableCollection<T> CollectionUnion<T>(this IReadOnlyCollection<T> items, IEqualityComparer<T> comparer,
-            params IReadOnlyCollection<T>[] others)
+        public static IReadOnlyObservableCollection<T> CollectionUnion<T>(this IEnumerable<T> items, IEqualityComparer<T> comparer,
+            params IEnumerable<T>[] others)
         {
             return items.CollectionConcat(others).CollectionDistinct(comparer);
         }
@@ -698,14 +701,19 @@ namespace Neuronic.CollectionModel
         ///     <paramref name="items" /> and then concatenating the results.
         /// </returns>
         public static IReadOnlyObservableList<TTarget> ListSelectMany<TSource, TTarget>(
-            this IEnumerable<TSource> items, Func<TSource, IReadOnlyCollection<TTarget>> selector)
+            this IEnumerable<TSource> items, Func<TSource, IEnumerable<TTarget>> selector)
         {
+            var actualSelector = new Func<TSource, IReadOnlyCollection<TTarget>>(source =>
+            {
+                var selected = selector(source);
+                return selected as IReadOnlyCollection<TTarget> ?? new CollectionWrapper<TTarget>(selected);
+            });
             var collection = items as IReadOnlyObservableCollection<TSource>;
             var composite = new CompositeReadOnlyObservableListSource<TTarget>(from item in items
-                select new CollectionContainer<TTarget>(selector(item)));
+                select new CollectionContainer<TTarget>(actualSelector(item)));
             if (collection == null)
                 return composite.View;
-            return new ListUpdater<TSource, TTarget>(collection, selector, composite);
+            return new ListUpdater<TSource, TTarget>(collection, actualSelector, composite);
         }
 
         /// <summary>
@@ -722,14 +730,19 @@ namespace Neuronic.CollectionModel
         ///     <paramref name="items" /> and then concatenating the results.
         /// </returns>
         public static IReadOnlyObservableCollection<TTarget> CollectionSelectMany<TSource, TTarget>(
-            this IEnumerable<TSource> items, Func<TSource, IReadOnlyCollection<TTarget>> selector)
+            this IEnumerable<TSource> items, Func<TSource, IEnumerable<TTarget>> selector)
         {
+            var actualSelector = new Func<TSource, IReadOnlyCollection<TTarget>>(source =>
+            {
+                var selected = selector(source);
+                return selected as IReadOnlyCollection<TTarget> ?? new CollectionWrapper<TTarget>(selected);
+            });
             var collection = items as IReadOnlyObservableCollection<TSource>;
             var composite = new CompositeReadOnlyObservableCollectionSource<TTarget>(from item in items
-                select new CollectionContainer<TTarget>(selector(item)));
+                select new CollectionContainer<TTarget>(actualSelector(item)));
             if (collection == null)
                 return composite.View;
-            return new CollectionUpdater<TSource, TTarget>(collection, selector, composite);
+            return new CollectionUpdater<TSource, TTarget>(collection, actualSelector, composite);
         }
 
         /// <summary>

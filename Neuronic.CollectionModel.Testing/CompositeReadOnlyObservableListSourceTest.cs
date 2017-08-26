@@ -456,8 +456,8 @@ namespace Neuronic.CollectionModel.Testing
             var coll2 = Enumerable.Range(5, 5).ToList();
             var coll3 = Enumerable.Range(10, 5).ToList();
 
-            var union = new ObservableCollection<IReadOnlyCollection<int>> {coll1, coll2, coll3};
-            var collection = new ReadOnlyObservableList<IReadOnlyCollection<int>>(union).ListSelectMany(coll => coll);
+            var union = new ObservableCollection<IEnumerable<int>> {coll1, coll2, coll3};
+            var collection = new ReadOnlyObservableList<IEnumerable<int>>(union).ListSelectMany(coll => coll);
             var copy = collection.ListSelect(i => i);
 
             Assert.AreEqual(15, collection.Count);

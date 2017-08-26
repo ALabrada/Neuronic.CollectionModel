@@ -13,7 +13,7 @@ namespace Neuronic.CollectionModel.Testing
         {
             var values = Enumerable.Range(0, 30).ToList();
 
-            var range = new RangedReadOnlyObservableList<int>(values, 5, 7);
+            var range = new RangedReadOnlyObservableList<int>(values.ListAsObservable(), 5, 7);
             Assert.AreEqual(7, range.Count);
             Assert.IsTrue(range.SequenceEqual(values.Skip(5).Take(7)));
 
@@ -44,7 +44,7 @@ namespace Neuronic.CollectionModel.Testing
             var values = Enumerable.Range(0, 20).ToList();
 
             var source = new ObservableCollection<int>(values.Skip(5).Take(5));
-            var range = new RangedReadOnlyObservableList<int>(source, 5, 10);
+            var range = new RangedReadOnlyObservableList<int>(source.ListAsObservable(), 5, 10);
             foreach (var i in values.Skip(15))
                 source.Add(i);
             for (int i = 0; i < 5; i++)
@@ -61,7 +61,7 @@ namespace Neuronic.CollectionModel.Testing
             var values = Enumerable.Range(0, 20).ToList();
 
             var source = new ObservableCollection<int>(values);
-            var range = new RangedReadOnlyObservableList<int>(source, 3, 5);
+            var range = new RangedReadOnlyObservableList<int>(source.ListAsObservable(), 3, 5);
 
             // Remove pair values
             for (int i = source.Count - 1; i >= 0; i--)
@@ -86,7 +86,7 @@ namespace Neuronic.CollectionModel.Testing
             var values = Enumerable.Range(0, 20).ToList();
 
             var source = new ObservableCollection<int>(values);
-            var range = new RangedReadOnlyObservableList<int>(source, 7, 5);
+            var range = new RangedReadOnlyObservableList<int>(source.ListAsObservable(), 7, 5);
 
             var m = source.Count/2;
             for (int i = m + 1; i < source.Count; i++)
@@ -104,7 +104,7 @@ namespace Neuronic.CollectionModel.Testing
             var values = Enumerable.Range(0, 20).ToList();
 
             var source = new ObservableCollection<int>(values);
-            var range = new RangedReadOnlyObservableList<int>(source, 9);
+            var range = new RangedReadOnlyObservableList<int>(source.ListAsObservable(), 9);
 
             for (int i = 0; i < source.Count; i++)
                 source[i] *= 2;
@@ -118,7 +118,7 @@ namespace Neuronic.CollectionModel.Testing
             var values = Enumerable.Range(0, 20).ToList();
 
             var source = new ObservableCollection<int>(values);
-            var range = new RangedReadOnlyObservableList<int>(source, 11);
+            var range = new RangedReadOnlyObservableList<int>(source.ListAsObservable(), 11);
 
             source.Clear();
             Assert.AreEqual(0, range.Count);

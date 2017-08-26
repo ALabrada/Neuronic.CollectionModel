@@ -51,6 +51,7 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Collections\CollectionWrapper.cs" />
     <Compile Include="Collections\Containers\ContainerEqualityComparer.cs" />
     <Compile Include="Collections\DistinctReadOnlyObservableCollection.cs" />
     <Compile Include="Collections\EventSource.cs" />
