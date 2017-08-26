@@ -18,8 +18,8 @@ namespace Neuronic.CollectionModel.Collections
     public class ObservableDictionary<TKey, TValue> : IDictionary<TKey, TValue>,
         IReadOnlyObservableCollection<KeyValuePair<TKey, TValue>>
     {
-        private readonly WeakReference<DictionaryKeyCollection> _keys = new WeakReference<DictionaryKeyCollection>(null);
-        private readonly WeakReference<DictionaryValueCollection> _values = new WeakReference<DictionaryValueCollection>(null);
+        private readonly WeakReference _keys = new WeakReference(null);
+        private readonly WeakReference _values = new WeakReference(null);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ObservableDictionary{TKey, TValue}"/> class.
@@ -199,11 +199,10 @@ namespace Neuronic.CollectionModel.Collections
         {
             get
             {
-                DictionaryKeyCollection keys;
-                if (_keys.TryGetTarget(out keys))
+                var keys = _keys.Target as DictionaryKeyCollection;
+                if (keys != null)
                     return keys;
-                keys = new DictionaryKeyCollection(this);
-                _keys.SetTarget(keys);
+                _keys.Target = keys = new DictionaryKeyCollection(this);
                 return keys;
             }
         }
@@ -223,11 +222,10 @@ namespace Neuronic.CollectionModel.Collections
         {
             get
             {
-                DictionaryValueCollection values;
-                if (_values.TryGetTarget(out values))
+                var values = _values.Target as DictionaryValueCollection;
+                if (values != null)
                     return values;
-                values = new DictionaryValueCollection(this);
-                _values.SetTarget(values);
+                _values.Target = values = new DictionaryValueCollection(this);
                 return values;
             }
         }
