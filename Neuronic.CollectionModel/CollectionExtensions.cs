@@ -407,6 +407,23 @@ namespace Neuronic.CollectionModel
         }
 
         /// <summary>
+        ///     Creates an observable list by from an observable collection. 
+        /// </summary>
+        /// <typeparam name="T">The type of the collection elements.</typeparam>
+        /// <param name="collection">The source collection.</param>
+        /// <param name="comparer">
+        ///     The item comparer. Only needed if the collection does not provide index information in it's events.
+        ///     If it is <c>null</c>, the default comparer will be used.
+        /// </param>
+        /// <returns>An indexable wrapper of <paramref name="collection"/>.</returns>
+        public static IReadOnlyObservableList<T> ListFromCollection<T>(this IReadOnlyObservableCollection<T> collection,
+            IEqualityComparer<T> comparer = null)
+        {
+            return collection as IReadOnlyObservableList<T> ??
+                   new TransformingReadOnlyObservableList<T, T>(collection, x => x, targetComparer: comparer);
+        }
+
+        /// <summary>
         ///     Creates a list proxy that can be used to manually refresh the lists that depend on it.
         /// </summary>
         /// <typeparam name="T">The type of the collection items.</typeparam>
