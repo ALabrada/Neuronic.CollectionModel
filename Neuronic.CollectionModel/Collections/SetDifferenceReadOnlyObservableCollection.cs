@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using Neuronic.CollectionModel.Collections.Containers;
 
@@ -88,11 +89,12 @@ namespace Neuronic.CollectionModel.Collections
         {
             if (managerType != typeof(CollectionChangedEventManager))
                 return base.OnReceiveWeakEvent(managerType, sender, e);
+            var source = _originalSource.Select(RefCountItemContainer.CreateOriginal).Concat(_substractedSource.Select(RefCountItemContainer.CreateSubstracted));
             if (ReferenceEquals(_originalSource, sender))
-                HandleCollectionChange(_containers, _originalSource,
+                HandleCollectionChange(_containers, source,
                     RefCountItemContainer.CreateOriginal, (NotifyCollectionChangedEventArgs) e);
             else if (ReferenceEquals(_substractedSource, sender))
-                HandleCollectionChange(_containers, _substractedSource,
+                HandleCollectionChange(_containers, source,
                     RefCountItemContainer.CreateSubstracted, (NotifyCollectionChangedEventArgs) e);
             else
                 return base.OnReceiveWeakEvent(managerType, sender, e);
@@ -100,7 +102,7 @@ namespace Neuronic.CollectionModel.Collections
         }
 
         private static void HandleCollectionChange(IDictionary<T, RefCountItemContainer> containers,
-            IEnumerable<T> source, Func<T, RefCountItemContainer> containerFactory, NotifyCollectionChangedEventArgs e)
+            IEnumerable<RefCountItemContainer> source, Func<T, RefCountItemContainer> containerFactory, NotifyCollectionChangedEventArgs e)
         {
             switch (e.Action)
             {
@@ -122,7 +124,8 @@ namespace Neuronic.CollectionModel.Collections
                     break;
                 case NotifyCollectionChangedAction.Reset:
                     containers.Clear();
-                    AddRange(containers, source, containerFactory);
+                    foreach (var container in source)
+                        AddItem(containers, container);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
