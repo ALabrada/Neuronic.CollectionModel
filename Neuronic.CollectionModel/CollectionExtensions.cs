@@ -688,9 +688,9 @@ namespace Neuronic.CollectionModel
         ///     Creates an observable collection that is the set union of two or more collections.
         /// </summary>
         /// <typeparam name="T">The type of the collection elements.</typeparam>
-        /// <param name="items">The first collection.</param>
+        /// <param name="items">The first collection. Can be observable or not.</param>
         /// <param name="comparer">The equality comparer, or <c>null</c> for the default equality comparer.</param>
-        /// <param name="others">One or more collections to merge with <paramref name="items" />.</param>
+        /// <param name="others">One or more collections to merge with <paramref name="items" />. Can be observable or not.</param>
         /// <returns>
         ///     An observable collection with all the elements from the source collections, 
         ///     but no repetitions. 
@@ -699,6 +699,23 @@ namespace Neuronic.CollectionModel
             params IReadOnlyCollection<T>[] others)
         {
             return items.CollectionConcat(others).CollectionDistinct(comparer);
+        }
+
+        /// <summary>
+        ///     Creates an observable collection that is the set difference of two collections.
+        /// </summary>
+        /// <typeparam name="T">The type of the collection elements.</typeparam>
+        /// <param name="first">The first collection. Can be observable or not.</param>
+        /// <param name="second">The collection of elements to exclude. Can be observable or not.</param>
+        /// <param name="comparer">The equality comparer to use. If it is <c>null</c>, the default comparer is used.</param>
+        /// <returns>
+        ///     An observable collection that contains all the elements from <paramref name="first"/>, except those
+        ///     that also appear in <paramref name="second"/>.
+        /// </returns>
+        public static IReadOnlyObservableCollection<T> CollectionExcept<T>(this IReadOnlyCollection<T> first,
+            IReadOnlyCollection<T> second, IEqualityComparer<T> comparer = null)
+        {
+            return new SetDifferenceReadOnlyObservableCollection<T>(first, second, comparer);
         }
 
         /// <summary>
