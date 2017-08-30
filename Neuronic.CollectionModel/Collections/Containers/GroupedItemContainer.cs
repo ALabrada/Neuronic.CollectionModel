@@ -9,7 +9,7 @@ namespace Neuronic.CollectionModel.Collections.Containers
     /// <typeparam name="TSource">The type of the source items.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <seealso cref="ItemContainer{TItem}" />
-    public class GroupedItemContainer<TSource, TKey> : ItemContainer<TSource>
+    public class GroupedItemContainer<TSource, TKey> : TriggeredItemContainer<TSource>
     {
         private readonly Func<TSource, TKey> _selector;
         private TKey _key;

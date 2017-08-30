@@ -31,7 +31,22 @@ namespace Neuronic.CollectionModel.Collections
         ///     value.
         /// </param>
         public FilteredReadOnlyObservableCollection(IReadOnlyObservableCollection<T> source, Predicate<T> filter,
-            params string[] triggers) : base(source, filter, triggers)
+            params string[] triggers) : this(source, filter, null, triggers)
+        {
+        }
+
+        /// <summary>
+        ///     Initializes a new instance of the <see cref="FilteredReadOnlyObservableCollection{T}" /> class.
+        /// </summary>
+        /// <param name="source">The source collection.</param>
+        /// <param name="filter">The filter predicate.</param>
+        /// <param name="itemComparer">The equality comparer for the items, in case <paramref name="source"/> is an index-less collection.</param>
+        /// <param name="triggers">
+        ///     The names of the item's properties that can cause <paramref name="filter" /> to change its
+        ///     value.
+        /// </param>
+        public FilteredReadOnlyObservableCollection(IReadOnlyObservableCollection<T> source, Predicate<T> filter,
+            IEqualityComparer<T> itemComparer, params string[] triggers) : base(source, filter, itemComparer, triggers)
         {
             Items.CollectionChanged += ItemsOnCollectionChanged;
             _count = Items.Count(c => c.IsIncluded);

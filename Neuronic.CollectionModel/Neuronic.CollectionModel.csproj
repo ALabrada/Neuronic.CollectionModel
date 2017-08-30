@@ -53,6 +53,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Collections\Containers\ContainerEqualityComparer.cs" />
+    <Compile Include="Collections\Containers\ItemContainer.cs" />
     <Compile Include="Collections\DistinctReadOnlyObservableCollection.cs" />
     <Compile Include="Collections\EventSource.cs" />
     <Compile Include="Collections\GroupingContainerList.cs" />
@@ -60,6 +61,9 @@
     <Compile Include="Collections\ObservableDictionary.cs" />
     <Compile Include="Collections\ObservableSet.cs" />
     <Compile Include="Collections\ReadOnlyObservableSet.cs" />
+    <Compile Include="Collections\Containers\RefCountItemContainer.cs" />
+    <Compile Include="Collections\SetDifferenceReadOnlyObservableCollection.cs" />
+    <Compile Include="Collections\SetDifferenceReadOnlyObservableList.cs" />
     <Compile Include="Extras\ConditionalSwitchableCollectionSource.cs" />
     <Compile Include="Extras\ConditionalSwitchableListSource.cs" />
     <Compile Include="Results\BooleanObservableResult.cs" />
@@ -80,7 +84,7 @@
     <Compile Include="InvertedBooleanObservableResult.cs" />
     <Compile Include="IObservableResult.cs" />
     <Compile Include="Extras\ISelectableItem.cs" />
-    <Compile Include="Collections\Containers\ItemContainer.cs" />
+    <Compile Include="Collections\Containers\TriggeredItemContainer.cs" />
     <Compile Include="ITransactionalReadOnlyObservableCollection.cs" />
     <Compile Include="ITransactionalReadOnlyObservableList.cs" />
     <Compile Include="Results\LastElementQueryResult.cs" />
