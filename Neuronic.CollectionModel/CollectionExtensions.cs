@@ -715,7 +715,7 @@ namespace Neuronic.CollectionModel
         ///     An observable collection that contains all the elements from <paramref name="first"/>, except those
         ///     that also appear in <paramref name="second"/>.
         /// </returns>
-        public static IReadOnlyObservableCollection<T> CollectionExcept<T>(this IReadOnlyCollection<T> first,
+        public static IReadOnlyObservableCollection<T> CollectionExcept<T>(this IEnumerable<T> first,
             IReadOnlyCollection<T> second, IEqualityComparer<T> comparer = null)
         {
             return new SetDifferenceReadOnlyObservableCollection<T>(first, second, comparer);
