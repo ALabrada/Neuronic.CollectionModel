@@ -74,6 +74,7 @@
     <Compile Include="TransformingReadOnlyObservableListTest.cs" />
     <Compile Include="SimpleQueryObservableResultTest.cs" />
     <Compile Include="DistinctReadOnlyObservableCollectionTest.cs" />
+    <Compile Include="SetDifferenceReadOnlyObservableCollectionTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Neuronic.CollectionModel\Neuronic.CollectionModel.csproj">

@@ -21,6 +21,11 @@ namespace Neuronic.CollectionModel.Collections
         IReadOnlyObservableCollection<TItem>, ICollection<TItem>, IWeakEventListener where TContainer : FilterItemContainer<TItem>
     {
         /// <summary>
+        /// The container comparer
+        /// </summary>
+        protected readonly IEqualityComparer<TContainer> ContainerComparer;
+
+        /// <summary>
         ///     The filter.
         /// </summary>
         protected readonly Predicate<TItem> Filter;
@@ -41,17 +46,19 @@ namespace Neuronic.CollectionModel.Collections
         /// <param name="items">The collection of item containers.</param>
         /// <param name="source">The source collection.</param>
         /// <param name="filter">The filter predicate.</param>
+        /// <param name="itemComparer">The equality comparer for the items, in case <paramref name="source"/> is an index-less collection.</param>
         /// <param name="triggers">
         ///     The names of the item's properties that can cause <paramref name="filter" /> to change its
         ///     value.
         /// </param>
         protected FilteredReadOnlyObservableCollectionBase(ObservableCollection<TContainer> items,
-            IReadOnlyObservableCollection<TItem> source, Predicate<TItem> filter, params string[] triggers)
+            IReadOnlyObservableCollection<TItem> source, Predicate<TItem> filter, IEqualityComparer<TItem> itemComparer, params string[] triggers)
         {
             Source = source;
             Filter = filter;
             Items = items;
             Triggers = triggers;
+            ContainerComparer = new ContainerEqualityComparer<TItem, TContainer>(itemComparer);
 
             CollectionChangedEventManager.AddListener(Source, this);
             foreach (var item in source)
@@ -63,13 +70,14 @@ namespace Neuronic.CollectionModel.Collections
         /// </summary>
         /// <param name="source">The source collection.</param>
         /// <param name="filter">The filter predicate.</param>
+        /// <param name="itemComparer">The equality comparer for the items, in case <paramref name="source"/> is an index-less collection.</param>
         /// <param name="triggers">
         ///     The names of the item's properties that can cause <paramref name="filter" /> to change its
         ///     value.
         /// </param>
         protected FilteredReadOnlyObservableCollectionBase(IReadOnlyObservableCollection<TItem> source,
-            Predicate<TItem> filter, params string[] triggers)
-            : this(new ObservableCollection<TContainer>(), source, filter, triggers)
+            Predicate<TItem> filter, IEqualityComparer<TItem> itemComparer, params string[] triggers)
+            : this(new ObservableCollection<TContainer>(), source, filter, itemComparer, triggers)
         {
         }
 
@@ -156,7 +164,7 @@ namespace Neuronic.CollectionModel.Collections
 
         private void SourceOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            Items.UpdateCollection(Source, e, o => CreateContainer((TItem) o), DestroyContainer);
+            Items.UpdateCollection(Source, e, o => CreateContainer((TItem) o), DestroyContainer, comparer: ContainerComparer);
         }
 
         /// <summary>

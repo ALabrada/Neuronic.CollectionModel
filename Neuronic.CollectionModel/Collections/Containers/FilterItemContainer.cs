@@ -7,7 +7,7 @@ namespace Neuronic.CollectionModel.Collections.Containers
     ///     Stores an item and it's meta-data in a filtered collection.
     /// </summary>
     /// <typeparam name="TItem">The type of the item.</typeparam>
-    public class FilterItemContainer<TItem> : ItemContainer<TItem>
+    public class FilterItemContainer<TItem> : TriggeredItemContainer<TItem>
     {
         private readonly Predicate<TItem> _filter;
 

@@ -338,7 +338,7 @@ namespace Neuronic.CollectionModel.Collections
         }
 
         [DebuggerDisplay("[{SourceIndex}] {Item}")]
-        private class Container : ItemContainer<T>
+        private class Container : TriggeredItemContainer<T>
         {
             public Container(T item) : base(item)
             {
