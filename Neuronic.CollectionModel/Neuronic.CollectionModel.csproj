@@ -64,6 +64,7 @@
     <Compile Include="Collections\SetDifferenceReadOnlyObservableList.cs" />
     <Compile Include="Extras\ConditionalSwitchableCollectionSource.cs" />
     <Compile Include="Extras\ConditionalSwitchableListSource.cs" />
+    <Compile Include="Properties\Version.cs" />
     <Compile Include="Results\BooleanObservableResult.cs" />
     <Compile Include="Results\CompositeObservableResult.cs" />
     <Compile Include="Collections\CastingReadOnlyObservableCollection.cs" />
@@ -117,6 +118,9 @@
     <Compile Include="Collections\TransformingReadOnlyObservableList.cs" />
     <Compile Include="Collections\ViewReadOnlyObservableCollection.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <VersionFile Include="Version.txt" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
@@ -124,5 +128,13 @@
   </Target>
   <Target Name="AfterBuild">
   </Target>
-  -->
+  -->  
+  <Target Name="BeforeBuild">
+	<ReadLinesFromFile File="@(VersionFile)">
+        <Output TaskParameter="Lines" PropertyName="VersionNumber" />
+    </ReadLinesFromFile>
+	<Delete Files="Properties\Version.cs" />
+    <WriteLinesToFile File="Properties\Version.cs" 
+		Lines='using System.Reflection%3B&#xD;&#xA;&#xD;&#xA;[assembly: AssemblyVersion("$(VersionNumber)")]&#xD;&#xA;[assembly: AssemblyFileVersion("$(VersionNumber)")]' />
+  </Target>
 </Project>
