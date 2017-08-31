@@ -80,7 +80,7 @@
     <Compile Include="Collections\GroupingReadOnlyObservableListSource.cs" />
     <Compile Include="IManualReadOnlyObservableCollection.cs" />
     <Compile Include="IManualReadOnlyObservableList.cs" />
-    <Compile Include="InvertedBooleanObservableResult.cs" />
+    <Compile Include="Results\InvertedBooleanObservableResult.cs" />
     <Compile Include="IObservableResult.cs" />
     <Compile Include="Extras\ISelectableItem.cs" />
     <Compile Include="Collections\Containers\TriggeredItemContainer.cs" />
@@ -128,13 +128,12 @@
   </Target>
   <Target Name="AfterBuild">
   </Target>
-  -->  
+  -->
   <Target Name="BeforeBuild">
-	<ReadLinesFromFile File="@(VersionFile)">
-        <Output TaskParameter="Lines" PropertyName="VersionNumber" />
+    <ReadLinesFromFile File="@(VersionFile)">
+      <Output TaskParameter="Lines" PropertyName="VersionNumber" />
     </ReadLinesFromFile>
-	<Delete Files="Properties\Version.cs" />
-    <WriteLinesToFile File="Properties\Version.cs" 
-		Lines='using System.Reflection%3B&#xD;&#xA;&#xD;&#xA;[assembly: AssemblyVersion("$(VersionNumber)")]&#xD;&#xA;[assembly: AssemblyFileVersion("$(VersionNumber)")]' />
+    <Delete Files="Properties\Version.cs" />
+    <WriteLinesToFile File="Properties\Version.cs" Lines="using System.Reflection%3B&#xD;&#xA;&#xD;&#xA;[assembly: AssemblyVersion(&quot;$(VersionNumber)&quot;)]&#xD;&#xA;[assembly: AssemblyFileVersion(&quot;$(VersionNumber)&quot;)]" />
   </Target>
 </Project>
