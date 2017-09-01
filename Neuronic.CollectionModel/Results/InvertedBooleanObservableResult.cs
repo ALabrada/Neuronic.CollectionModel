@@ -1,7 +1,6 @@
 using System.ComponentModel;
-using Neuronic.CollectionModel.Results;
 
-namespace Neuronic.CollectionModel
+namespace Neuronic.CollectionModel.Results
 {
     /// <summary>
     /// Represents the negation of a boolean query.
