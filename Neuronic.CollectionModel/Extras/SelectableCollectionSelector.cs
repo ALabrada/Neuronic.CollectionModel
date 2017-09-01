@@ -52,11 +52,20 @@ namespace Neuronic.CollectionModel.Extras
             base.OnSelectedItemChanged();
         }
 
+        /// <summary>
+        /// Handles a notification.
+        /// </summary>
+        /// <param name="managerType">Type of the manager.</param>
+        /// <param name="sender">The sender.</param>
+        /// <param name="e">The <see cref="T:System.EventArgs" /> instance containing the event data.</param>
+        /// <returns>
+        ///   <c>true</c> if the event was handled; otherwise, <c>false</c>.
+        /// </returns>
         protected override bool OnReceiveWeakEvent(Type managerType, object sender, EventArgs e)
         {
-            if (managerType != typeof(PropertyChangedEventManager) || !(sender is T))
+            if (managerType != typeof(SelectionChangedEventManager) || !(sender is T))
                 return base.OnReceiveWeakEvent(managerType, sender, e);
-            ItemOnSelectionChanged(sender, (PropertyChangedEventArgs)e);
+            ItemOnSelectionChanged(sender, e);
             return true;
         }
 
