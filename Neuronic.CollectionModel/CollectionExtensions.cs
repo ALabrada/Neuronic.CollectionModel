@@ -18,6 +18,7 @@ namespace Neuronic.CollectionModel
     /// </summary>
     public static class CollectionExtensions
     {
+        #region Internal Operations
         /// <summary>
         ///     Updates the specified observable collection.
         /// </summary>
@@ -50,10 +51,10 @@ namespace Neuronic.CollectionModel
         /// </param>
         public static void UpdateCollection<T>(this ObservableCollection<T> list, IEnumerable source,
             NotifyCollectionChangedEventArgs e,
-            Func<object, T> select = null, Action<T> onRemove = null, 
+            Func<object, T> select = null, Action<T> onRemove = null,
             IEqualityComparer<T> comparer = null)
         {
-            select = select ?? (o => (T) o);
+            select = select ?? (o => (T)o);
             // apply the change to the snapshot
             switch (e.Action)
             {
@@ -124,7 +125,7 @@ namespace Neuronic.CollectionModel
             }
         }
 
-        private static void RemoveItems<T>(this IList<T> list, IEnumerable oldItems, 
+        private static void RemoveItems<T>(this IList<T> list, IEnumerable oldItems,
             IEqualityComparer<T> comparer, Func<object, T> select, Action<T> onRemove)
         {
             if (comparer == null) throw new ArgumentNullException(nameof(comparer));
@@ -184,7 +185,7 @@ namespace Neuronic.CollectionModel
         internal static void ReplaceItems<T>(this IList<T> list, IEnumerable oldItems, IEnumerable newItems, int index,
             Func<object, T> select = null, Action<T> onRemove = null)
         {
-            select = select ?? (o => (T) o);
+            select = select ?? (o => (T)o);
             bool thereIsOldItems, thereIsNewItems;
             IEnumerator oldItemsEnumerator = oldItems.GetEnumerator(), newItemsEnumerator = newItems.GetEnumerator();
             while ((thereIsNewItems = newItemsEnumerator.MoveNext()) &
@@ -206,7 +207,8 @@ namespace Neuronic.CollectionModel
                 onRemove?.Invoke(oldItem);
                 thereIsOldItems = oldItemsEnumerator.MoveNext();
             }
-        }
+        } 
+        #endregion
 
         /// <summary>
         ///     Casts the boolean result, enabling to use boolean operators.
@@ -333,16 +335,22 @@ namespace Neuronic.CollectionModel
         /// </returns>
         public static int IndexOf<T>(this IEnumerable<T> items, T item, IEqualityComparer<T> comparer = null)
         {
+            var list = items as IList;
+            if (list != null)
+                return list.IndexOf(item);
+
             comparer = comparer ?? EqualityComparer<T>.Default;
-            var enumerator = items.GetEnumerator();
-            var count = 0;
-            while (enumerator.MoveNext())
+            using (var enumerator = items.GetEnumerator())
             {
-                if (comparer.Equals(enumerator.Current, item))
-                    return count;
-                count++;
+                var count = 0;
+                while (enumerator.MoveNext())
+                {
+                    if (comparer.Equals(enumerator.Current, item))
+                        return count;
+                    count++;
+                }
+                return -1; 
             }
-            return -1;
         }
 
         /// <summary>
@@ -355,10 +363,12 @@ namespace Neuronic.CollectionModel
         /// <param name="count">The maximum number of items to copy.</param>
         public static void CopyTo<T>(this IEnumerable<T> items, T[] array, int start, int count)
         {
-            var enumerator = items.GetEnumerator();
-            var last = Math.Min(start + count, array.Length);
-            for (var i = start; (i < last) && enumerator.MoveNext(); i++)
-                array[i] = enumerator.Current;
+            using (var enumerator = items.GetEnumerator())
+            {
+                var last = Math.Min(start + count, array.Length);
+                for (var i = start; (i < last) && enumerator.MoveNext(); i++)
+                    array[i] = enumerator.Current; 
+            }
         }
 
         /// <summary>
@@ -382,28 +392,34 @@ namespace Neuronic.CollectionModel
         ///     Creates an observable view of a normal read-only list.
         /// </summary>
         /// <typeparam name="T">The type of the list's elements.</typeparam>
-        /// <param name="list">The list.</param>
+        /// <param name="items">The list.</param>
         /// <returns></returns>
-        public static IReadOnlyObservableList<T> ListAsObservable<T>(this IEnumerable<T> list)
+        public static IReadOnlyObservableList<T> ListAsObservable<T>(this IEnumerable<T> items)
         {
-            var observableCollection = list as ObservableCollection<T>;
+            var observableCollection = items as ObservableCollection<T>;
             if (observableCollection != null)
                 return new ReadOnlyObservableList<T>(observableCollection);
-            return new CustomReadOnlyObservableList<T>(list as IReadOnlyList<T> ?? new ListWrapper<T>(list));
+            var list = items as IReadOnlyList<T>;
+            if (list != null)    
+                return new CustomReadOnlyObservableList<T>(list);
+            return new ListWrapper<T>(items);
         }
 
         /// <summary>
         ///     Creates an observable view of a normal read-only collection.
         /// </summary>
         /// <typeparam name="T">The type of the collection's elements.</typeparam>
-        /// <param name="collection">The collection.</param>
+        /// <param name="items">The collection.</param>
         /// <returns></returns>
-        public static IReadOnlyObservableCollection<T> CollectionAsObservable<T>(this IEnumerable<T> collection)
+        public static IReadOnlyObservableCollection<T> CollectionAsObservable<T>(this IEnumerable<T> items)
         {
-            var observableCollection = collection as ObservableCollection<T>;
+            var observableCollection = items as ObservableCollection<T>;
             if (observableCollection != null)
                 return new ReadOnlyObservableList<T>(observableCollection);
-            return new CustomReadOnlyObservableCollection<T>(collection as IReadOnlyCollection<T> ?? new CollectionWrapper<T>(collection));
+            var collection = items as IReadOnlyCollection<T>;
+            if (collection != null)
+                return new CustomReadOnlyObservableCollection<T>(collection);
+            return new CollectionWrapper<T>(items);
         }
 
         /// <summary>
@@ -630,9 +646,9 @@ namespace Neuronic.CollectionModel
         {
             var containers = new List<CollectionContainer<T>>(others.Length + 1)
             {
-                new CollectionContainer<T>(items as IReadOnlyCollection<T> ?? new CollectionWrapper<T>(items))
+                new CollectionContainer<T>(items)
             };
-            containers.AddRange(others.Select(c => new CollectionContainer<T>(c as IReadOnlyCollection<T> ?? new CollectionWrapper<T>(c))));
+            containers.AddRange(others.Select(c => new CollectionContainer<T>(c)));
             var composite = new CompositeReadOnlyObservableListSource<T>(containers);
             return composite.View;
         }
@@ -650,8 +666,8 @@ namespace Neuronic.CollectionModel
         public static IReadOnlyObservableCollection<T> CollectionConcat<T>(this IEnumerable<T> items,
             params IEnumerable<T>[] others)
         {
-            var containers = new List<CollectionContainer<T>>(others.Length + 1) {new CollectionContainer<T>(items as IReadOnlyCollection<T> ?? new CollectionWrapper<T>(items))};
-            containers.AddRange(others.Select(c => new CollectionContainer<T>(c as IReadOnlyCollection<T> ?? new CollectionWrapper<T>(c))));
+            var containers = new List<CollectionContainer<T>>(others.Length + 1) {new CollectionContainer<T>(items)};
+            containers.AddRange(others.Select(c => new CollectionContainer<T>(c)));
             var composite = new CompositeReadOnlyObservableCollectionSource<T>(containers);
             return composite.View;
         }
@@ -716,13 +732,13 @@ namespace Neuronic.CollectionModel
         ///     that also appear in <paramref name="second"/>.
         /// </returns>
         public static IReadOnlyObservableCollection<T> CollectionExcept<T>(this IEnumerable<T> first,
-            IReadOnlyCollection<T> second, IEqualityComparer<T> comparer = null)
+            IEnumerable<T> second, IEqualityComparer<T> comparer = null)
         {
             return new SetDifferenceReadOnlyObservableCollection<T>(first, second, comparer);
         }
 
         /// <summary>
-        ///     Projects each element of a sequence to a <see cref="IReadOnlyCollection{T}" /> and flattens the resulting
+        ///     Projects each element of a sequence to a <see cref="IEnumerable{T}" /> and flattens the resulting
         ///     collections
         ///     into one list.
         /// </summary>
@@ -737,21 +753,16 @@ namespace Neuronic.CollectionModel
         public static IReadOnlyObservableList<TTarget> ListSelectMany<TSource, TTarget>(
             this IEnumerable<TSource> items, Func<TSource, IEnumerable<TTarget>> selector)
         {
-            var actualSelector = new Func<TSource, IReadOnlyCollection<TTarget>>(source =>
-            {
-                var selected = selector(source);
-                return selected as IReadOnlyCollection<TTarget> ?? new CollectionWrapper<TTarget>(selected);
-            });
             var collection = items as IReadOnlyObservableCollection<TSource>;
             var composite = new CompositeReadOnlyObservableListSource<TTarget>(from item in items
-                select new CollectionContainer<TTarget>(actualSelector(item)));
+                select new CollectionContainer<TTarget>(selector(item)));
             if (collection == null)
                 return composite.View;
-            return new ListUpdater<TSource, TTarget>(collection, actualSelector, composite);
+            return new ListUpdater<TSource, TTarget>(collection, selector, composite);
         }
 
         /// <summary>
-        ///     Projects each element of a sequence to a <see cref="IReadOnlyCollection{T}" /> and flattens the resulting
+        ///     Projects each element of a sequence to a <see cref="IEnumerable{T}" /> and flattens the resulting
         ///     collections
         ///     into one collection.
         /// </summary>
@@ -766,17 +777,12 @@ namespace Neuronic.CollectionModel
         public static IReadOnlyObservableCollection<TTarget> CollectionSelectMany<TSource, TTarget>(
             this IEnumerable<TSource> items, Func<TSource, IEnumerable<TTarget>> selector)
         {
-            var actualSelector = new Func<TSource, IReadOnlyCollection<TTarget>>(source =>
-            {
-                var selected = selector(source);
-                return selected as IReadOnlyCollection<TTarget> ?? new CollectionWrapper<TTarget>(selected);
-            });
             var collection = items as IReadOnlyObservableCollection<TSource>;
             var composite = new CompositeReadOnlyObservableCollectionSource<TTarget>(from item in items
-                select new CollectionContainer<TTarget>(actualSelector(item)));
+                select new CollectionContainer<TTarget>(selector(item)));
             if (collection == null)
                 return composite.View;
-            return new CollectionUpdater<TSource, TTarget>(collection, actualSelector, composite);
+            return new CollectionUpdater<TSource, TTarget>(collection, selector, composite);
         }
 
         /// <summary>
@@ -799,6 +805,7 @@ namespace Neuronic.CollectionModel
             return new FilteredReadOnlyObservableList<T>(items, predicate, triggers);
         }
 
+        #region GroupBy
         /// <summary>
         ///     Creates several observable lists by grouping a source sequence according to some criteria.
         /// </summary>
@@ -893,7 +900,8 @@ namespace Neuronic.CollectionModel
             Func<TSource, TKey> selector, params string[] triggers)
         {
             return new GroupingReadOnlyObservableListSource<TSource, TKey>(items, explicitGroups, selector, null, null,
-                triggers) {IncludeImplicitGroups = includeImplict};
+                triggers)
+            { IncludeImplicitGroups = includeImplict };
         }
 
         /// <summary>
@@ -930,7 +938,8 @@ namespace Neuronic.CollectionModel
         {
             return new GroupingReadOnlyObservableListSource<TSource, TKey>(items, explicitGroups, selector, comparer,
                 null,
-                triggers) {IncludeImplicitGroups = includeImplict};
+                triggers)
+            { IncludeImplicitGroups = includeImplict };
         }
 
         /// <summary>
@@ -1028,7 +1037,7 @@ namespace Neuronic.CollectionModel
         {
             return new GroupingReadOnlyObservableCollectionSource<TSource, TKey>(items, explicitGroups, selector, null, null,
                     triggers)
-                { IncludeImplicitGroups = includeImplict };
+            { IncludeImplicitGroups = includeImplict };
         }
 
         /// <summary>
@@ -1066,8 +1075,9 @@ namespace Neuronic.CollectionModel
             return new GroupingReadOnlyObservableCollectionSource<TSource, TKey>(items, explicitGroups, selector, comparer,
                     null,
                     triggers)
-                { IncludeImplicitGroups = includeImplict };
-        }
+            { IncludeImplicitGroups = includeImplict };
+        } 
+        #endregion
 
         /// <summary>
         ///     Creates an observable list from another by bypassing a specific number of elements and taking the rest.
@@ -1323,11 +1333,11 @@ namespace Neuronic.CollectionModel
         private abstract class CollectionUpdaterBase<TSource, TTarget> : IReadOnlyObservableCollection<TTarget>, IWeakEventListener
         {
             private readonly CompositeReadOnlyObservableCollectionSourceBase<TTarget> _composite;
-            private readonly Func<TSource, IReadOnlyCollection<TTarget>> _selector;
+            private readonly Func<TSource, IEnumerable<TTarget>> _selector;
             private readonly IReadOnlyObservableCollection<TSource> _source;
 
             protected CollectionUpdaterBase(IReadOnlyObservableCollection<TSource> source,
-                Func<TSource, IReadOnlyCollection<TTarget>> selector,
+                Func<TSource, IEnumerable<TTarget>> selector,
                 CompositeReadOnlyObservableCollectionSourceBase<TTarget> composite)
             {
                 _source = source;
@@ -1374,7 +1384,7 @@ namespace Neuronic.CollectionModel
             private readonly CompositeReadOnlyObservableCollectionSource<TTarget> _composite;
 
             public CollectionUpdater(IReadOnlyObservableCollection<TSource> source,
-                Func<TSource, IReadOnlyCollection<TTarget>> selector,
+                Func<TSource, IEnumerable<TTarget>> selector,
                 CompositeReadOnlyObservableCollectionSource<TTarget> composite) : base(source, selector, composite)
             {
                 _composite = composite;
@@ -1383,7 +1393,7 @@ namespace Neuronic.CollectionModel
             }
 
             public CollectionUpdater(IReadOnlyObservableCollection<TSource> source,
-                Func<TSource, IReadOnlyCollection<TTarget>> selector)
+                Func<TSource, IEnumerable<TTarget>> selector)
                 : this(
                     source, selector,
                     new CompositeReadOnlyObservableCollectionSource<TTarget>(from item in source
@@ -1416,7 +1426,7 @@ namespace Neuronic.CollectionModel
             private readonly CompositeReadOnlyObservableListSource<TTarget> _composite;
 
             public ListUpdater(IReadOnlyObservableCollection<TSource> source,
-                Func<TSource, IReadOnlyCollection<TTarget>> selector,
+                Func<TSource, IEnumerable<TTarget>> selector,
                 CompositeReadOnlyObservableListSource<TTarget> composite) : base(source, selector, composite)
             {
                 _composite = composite;
@@ -1425,7 +1435,7 @@ namespace Neuronic.CollectionModel
             }
 
             public ListUpdater(IReadOnlyObservableCollection<TSource> source,
-                Func<TSource, IReadOnlyCollection<TTarget>> selector)
+                Func<TSource, IEnumerable<TTarget>> selector)
                 : this(
                     source, selector,
                     new CompositeReadOnlyObservableListSource<TTarget>(from item in source

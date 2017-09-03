@@ -5,26 +5,20 @@ using System.Linq;
 
 namespace Neuronic.CollectionModel.Collections
 {
-    internal class CollectionWrapper<T> : EventSource, IReadOnlyCollection<T>
+    internal class CollectionWrapper<T> : EventSource, IReadOnlyObservableCollection<T>
     {
-        public CollectionWrapper(ICollection items) : this(items, nameof(Count))
+        public CollectionWrapper(ICollection items) : this(items, items, nameof(Count))
         {
         }
 
-        public CollectionWrapper(IEnumerable<T> items) : this(items, nameof(Count))
+        public CollectionWrapper(IEnumerable<T> items) : this(items, items as ICollection, nameof(Count))
         {
         }
 
-        public CollectionWrapper(ICollection items, params string[] propertyNames) : base(items, propertyNames)
+        protected CollectionWrapper(IEnumerable source, ICollection items, params string[] propertyNames) : base (source, propertyNames)
         {
-            if (items == null) throw new ArgumentNullException(nameof(items));
-            Items = items;
-        }
-
-        public CollectionWrapper(IEnumerable<T> items, params string[] propertyNames) : base(items, propertyNames)
-        {
-            if (items == null) throw new ArgumentNullException(nameof(items));
-            Items = items.ToList();
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            Items = items ?? source.Cast<T>().ToList();
         }
 
         protected ICollection Items { get; }
@@ -42,18 +36,18 @@ namespace Neuronic.CollectionModel.Collections
         public int Count => Items.Count;
     }
 
-    internal class ListWrapper<T> : CollectionWrapper<T>, IReadOnlyList<T>
+    internal class ListWrapper<T> : CollectionWrapper<T>, IReadOnlyObservableList<T>
     {
-        public ListWrapper(IList list) : base(list, nameof(Count), "Item[]")
+        public ListWrapper(IList list) : base(list, list, nameof(Count), "Item[]")
         {
         }
 
-        public ListWrapper(IEnumerable<T> items) : base(items, nameof(Count), "Item[]")
+        public ListWrapper(IEnumerable<T> items) : base(items, items as IList, nameof(Count), "Item[]")
         {
         }
 
-        protected new IList Items => (IList) base.Items;
+        protected new IList Items => (IList)base.Items;
 
-        public T this[int index] => (T) Items[index];
+        public T this[int index] => (T)Items[index];
     }
 }
