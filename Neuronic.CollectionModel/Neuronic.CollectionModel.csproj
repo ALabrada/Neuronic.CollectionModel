@@ -57,6 +57,7 @@
     <Compile Include="Collections\EventSource.cs" />
     <Compile Include="Collections\GroupingContainerList.cs" />
     <Compile Include="Collections\GroupingReadOnlyObservableCollectionSource.cs" />
+    <Compile Include="Collections\LazyCollection.cs" />
     <Compile Include="Collections\ObservableDictionary.cs" />
     <Compile Include="Collections\ObservableSet.cs" />
     <Compile Include="Collections\ReadOnlyObservableSet.cs" />
