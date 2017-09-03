@@ -31,6 +31,15 @@ namespace Neuronic.CollectionModel.Collections.Containers
         }
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="CollectionContainer{T}"/> class.
+        /// </summary>
+        /// <param name="collection">The collection.</param>
+        public CollectionContainer(IEnumerable<T> collection) : this(
+            collection as IReadOnlyCollection<T> ?? new CollectionWrapper<T>(collection))
+        {
+        }
+
+        /// <summary>
         /// Gets the collection.
         /// </summary>
         /// <value>
