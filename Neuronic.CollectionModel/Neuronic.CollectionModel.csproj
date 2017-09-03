@@ -63,6 +63,8 @@
     <Compile Include="Collections\Containers\RefCountItemContainer.cs" />
     <Compile Include="Collections\SetDifferenceReadOnlyObservableCollection.cs" />
     <Compile Include="Collections\SetDifferenceReadOnlyObservableList.cs" />
+    <Compile Include="Collections\SetIntersectionReadOnlyObservableCollection.cs" />
+    <Compile Include="Collections\SetOperationReadOnlyObservableCollection.cs" />
     <Compile Include="Extras\ConditionalSwitchableCollectionSource.cs" />
     <Compile Include="Extras\ConditionalSwitchableListSource.cs" />
     <Compile Include="Properties\Version.cs" />

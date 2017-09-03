@@ -738,6 +738,22 @@ namespace Neuronic.CollectionModel
         }
 
         /// <summary>
+        ///     Creates an observable collection that is the set intersection of two collections.
+        /// </summary>
+        /// <typeparam name="T">The type of the collection elements.</typeparam>
+        /// <param name="first">The first collection. Can be observable or not.</param>
+        /// <param name="second">The collection of elements to exclude. Can be observable or not.</param>
+        /// <param name="comparer">The equality comparer to use. If it is <c>null</c>, the default comparer is used.</param>
+        /// <returns>
+        ///     An observable collection that contains all the elements that appear both in <paramref name="first"/> and <paramref name="second"/>.
+        /// </returns>
+        public static IReadOnlyObservableCollection<T> CollectionIntersect<T>(this IEnumerable<T> first,
+            IEnumerable<T> second, IEqualityComparer<T> comparer = null)
+        {
+            return new SetIntersectionReadOnlyObservableCollection<T>(first, second, comparer);
+        }
+
+        /// <summary>
         ///     Projects each element of a sequence to a <see cref="IEnumerable{T}" /> and flattens the resulting
         ///     collections
         ///     into one list.
