@@ -1170,6 +1170,20 @@ namespace Neuronic.CollectionModel
         }
 
         /// <summary>
+        ///     Creates an observable result that determines if an element is present in a collection.
+        /// </summary>
+        /// <typeparam name="T">The type of the elements.</typeparam>
+        /// <param name="items">The collection of items.</param>
+        /// <param name="value">The value to find.</param>
+        /// <param name="comparer">The equality comparer. If none is specified, the default comparer is used.</param>
+        /// <returns><c>true</c> if <paramref name="items"/> contains <paramref name="value"/>; otherwise, false.</returns>
+        public static IObservableResult<bool> ObservableContains<T>(this IReadOnlyObservableCollection<T> items,
+            T value, IEqualityComparer<T> comparer = null)
+        {
+            return new ContainsObservableResult<T>(items, value, comparer);
+        }
+
+        /// <summary>
         ///     Creates an observable query that stores the first element of a collection.
         /// </summary>
         /// <typeparam name="T">The type of the collection's elements.</typeparam>

@@ -81,6 +81,7 @@
     <Compile Include="Collections\GroupingReadOnlyObservableListSource.cs" />
     <Compile Include="IManualReadOnlyObservableCollection.cs" />
     <Compile Include="IManualReadOnlyObservableList.cs" />
+    <Compile Include="Results\ContainsObservableResult.cs" />
     <Compile Include="Results\InvertedBooleanObservableResult.cs" />
     <Compile Include="IObservableResult.cs" />
     <Compile Include="Extras\ISelectableItem.cs" />
