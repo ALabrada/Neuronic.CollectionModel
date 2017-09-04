@@ -41,7 +41,7 @@ namespace Neuronic.CollectionModel.Collections
         /// </summary>
         /// <param name="source">The source.</param>
         /// <param name="query">The transformation query.</param>
-        public LazyCollection(IEnumerable<TSource> source, Func<IEnumerable<TSource>, IEnumerable<TResult>> query) : base(source, query)
+        public LazyCollection(IEnumerable<TSource> source, Func<IEnumerable<TSource>, IEnumerable<TResult>> query) : base(source)
         {
             _query = query;
             Source = source;
