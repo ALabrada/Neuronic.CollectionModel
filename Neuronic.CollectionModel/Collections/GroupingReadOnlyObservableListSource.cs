@@ -5,6 +5,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Windows;
 using Neuronic.CollectionModel.Collections.Containers;
+using Neuronic.CollectionModel.WeakEventPattern;
 
 namespace Neuronic.CollectionModel.Collections
 {

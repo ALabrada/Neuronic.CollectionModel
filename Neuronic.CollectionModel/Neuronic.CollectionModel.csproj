@@ -47,9 +47,9 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
-    <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="WeakEventPattern\CollectionChangedEventManager.cs" />
     <Compile Include="Collections\CollectionWrapper.cs" />
     <Compile Include="Collections\Containers\ContainerEqualityComparer.cs" />
     <Compile Include="Collections\Containers\ItemContainer.cs" />
@@ -68,6 +68,9 @@
     <Compile Include="Collections\SetOperationReadOnlyObservableCollection.cs" />
     <Compile Include="Extras\ConditionalSwitchableCollectionSource.cs" />
     <Compile Include="Extras\ConditionalSwitchableListSource.cs" />
+    <Compile Include="WeakEventPattern\PropertyChangedEventManager.cs" />
+    <Compile Include="WeakEventPattern\WeakEventManager.cs" />
+    <Compile Include="WeakEventPattern\IWeakEventListener.cs" />
     <Compile Include="Properties\Version.cs" />
     <Compile Include="Results\BooleanObservableResult.cs" />
     <Compile Include="Results\CompositeObservableResult.cs" />
@@ -121,7 +124,6 @@
     <Compile Include="Collections\TransactionalReadOnlyObservableCollection.cs" />
     <Compile Include="Collections\TransactionalReadOnyObservableList.cs" />
     <Compile Include="Collections\TransformingReadOnlyObservableList.cs" />
-    <Compile Include="Collections\ViewReadOnlyObservableCollection.cs" />
   </ItemGroup>
   <ItemGroup>
     <VersionFile Include="Version.txt" />

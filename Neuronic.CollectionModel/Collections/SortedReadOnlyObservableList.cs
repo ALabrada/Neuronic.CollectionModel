@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 using Neuronic.CollectionModel.Collections.Containers;
+using Neuronic.CollectionModel.WeakEventPattern;
 
 namespace Neuronic.CollectionModel.Collections
 {
@@ -95,43 +96,6 @@ namespace Neuronic.CollectionModel.Collections
         /// <param name="index">The index.</param>
         /// <returns></returns>
         public T this[int index] => _items.GetSortedItem(index);
-
-        /// <summary>
-        /// Creates a <see cref="SortedReadOnlyObservableList{T}"/> from the same collection used by CollectionViewSource.
-        /// </summary>
-        /// <param name="source">The source collection.</param>
-        /// <param name="descriptions">The descriptions of the sorting function.</param>
-        /// <returns>Sorted collection.</returns>
-        public static SortedReadOnlyObservableList<T> FromDescriptions(IReadOnlyObservableCollection<T> source,
-            SortDescriptionCollection descriptions)
-        {
-            var properties =
-                descriptions.Select(
-                    d =>
-                    {
-                        var propertyInfo = typeof (T).GetProperty(d.PropertyName);
-                        return
-                            new
-                            {
-                                d.Direction,
-                                Comparer =
-                                    (IComparer)
-                                        typeof (Comparer<>).MakeGenericType(propertyInfo.PropertyType)
-                                            .GetProperty("Default")
-                                            .GetGetMethod()
-                                            .Invoke(null, null),
-                                Method = new Func<T, object>(x => propertyInfo.GetGetMethod().Invoke(x, null))
-                            };
-                    });
-            var comparison = new Comparison<T>((x, y) => (from property in properties
-                let xValue = property.Method(x)
-                let yValue = property.Method(y)
-                let comp = property.Comparer.Compare(xValue, yValue)
-                where comp != 0
-                select property.Direction == ListSortDirection.Ascending ? comp : -comp).FirstOrDefault());
-            var triggers = descriptions.Select(d => d.PropertyName).ToArray();
-            return new SortedReadOnlyObservableList<T>(source, comparison, triggers);
-        }
 
         private void SourceOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {

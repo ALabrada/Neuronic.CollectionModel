@@ -1,5 +1,6 @@
 using System;
 using System.Windows;
+using Neuronic.CollectionModel.WeakEventPattern;
 
 namespace Neuronic.CollectionModel.Extras
 {
@@ -7,39 +8,11 @@ namespace Neuronic.CollectionModel.Extras
     /// Manager used to implement the Weak Event Pattern for the <see cref="ISelectableItem.SelectionChanged"/> event.
     /// </summary>
     /// <seealso cref="System.Windows.WeakEventManager" />
-    public class SelectionChangedEventManager : WeakEventManager
+    internal class SelectionChangedEventManager : WeakEventManager
     {
         private SelectionChangedEventManager()
         {
 
-        }
-
-        /// <summary>
-        /// Add a handler for the given source's event.
-        /// </summary>
-        public static void AddHandler(ISelectableItem source,
-            EventHandler<EventArgs> handler)
-        {
-            if (source == null)
-                throw new ArgumentNullException(nameof(source));
-            if (handler == null)
-                throw new ArgumentNullException(nameof(handler));
-
-            CurrentManager.ProtectedAddHandler(source, handler);
-        }
-
-        /// <summary>
-        /// Remove a handler for the given source's event.
-        /// </summary>
-        public static void RemoveHandler(ISelectableItem source,
-            EventHandler<EventArgs> handler)
-        {
-            if (source == null)
-                throw new ArgumentNullException(nameof(source));
-            if (handler == null)
-                throw new ArgumentNullException(nameof(handler));
-
-            CurrentManager.ProtectedRemoveHandler(source, handler);
         }
 
         /// <summary>
@@ -87,14 +60,6 @@ namespace Neuronic.CollectionModel.Extras
 
                 return manager;
             }
-        }
-
-        /// <summary>
-        /// Return a new list to hold listeners to the event.
-        /// </summary>
-        protected override ListenerList NewListenerList()
-        {
-            return new ListenerList<EventArgs>();
         }
 
         /// <summary>
