@@ -49,7 +49,7 @@ namespace Neuronic.CollectionModel.Results
         /// <summary>
         ///     Occurs when a property value is changing.
         /// </summary>
-        public event PropertyChangingEventHandler PropertyChanging;
+        //public event PropertyChangingEventHandler PropertyChanging;
 
         /// <summary>
         ///     Called when the value of <see cref="CurrentValue" /> is changing.
@@ -57,7 +57,6 @@ namespace Neuronic.CollectionModel.Results
         protected virtual void OnCurrentValueChanging()
         {
             CurrentValueChanging?.Invoke(this, EventArgs.Empty);
-            OnPropertyChanging(new PropertyChangingEventArgs(nameof(CurrentValue)));
         }
 
         /// <summary>
@@ -76,15 +75,6 @@ namespace Neuronic.CollectionModel.Results
         protected virtual void OnPropertyChanged(PropertyChangedEventArgs e)
         {
             PropertyChanged?.Invoke(this, e);
-        }
-
-        /// <summary>
-        ///     Raises the <see cref="E:PropertyChanging" /> event.
-        /// </summary>
-        /// <param name="e">The <see cref="PropertyChangingEventArgs" /> instance containing the event data.</param>
-        protected virtual void OnPropertyChanging(PropertyChangingEventArgs e)
-        {
-            PropertyChanging?.Invoke(this, e);
         }
 
         /// <summary>

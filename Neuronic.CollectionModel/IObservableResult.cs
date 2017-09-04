@@ -8,8 +8,7 @@ namespace Neuronic.CollectionModel
     /// </summary>
     /// <typeparam name="T">The type of the operation's result</typeparam>
     /// <seealso cref="System.ComponentModel.INotifyPropertyChanged" />
-    /// <seealso cref="System.ComponentModel.INotifyPropertyChanging" />
-    public interface IObservableResult<out T> : INotifyPropertyChanged, INotifyPropertyChanging
+    public interface IObservableResult<out T> : INotifyPropertyChanged
     {
         /// <summary>
         /// Gets the current value.

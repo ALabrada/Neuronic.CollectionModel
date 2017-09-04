@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -9,7 +8,7 @@ namespace Neuronic.CollectionModel.WeakEventPattern
 {
     internal abstract class WeakEventManager
     {
-        private static readonly ConcurrentDictionary<Type, WeakEventManager> _managers = new ConcurrentDictionary<Type, WeakEventManager>();
+        private static readonly Dictionary<Type, WeakEventManager> _managers = new Dictionary<Type, WeakEventManager>();
         private readonly LinkedList<ListenerInfo> _listeners = new LinkedList<ListenerInfo>();
         private readonly ReaderWriterLockSlim _lock = new ReaderWriterLockSlim();
 
@@ -72,13 +71,19 @@ namespace Neuronic.CollectionModel.WeakEventPattern
 
         protected static void SetCurrentManager(Type managerType, WeakEventManager manager)
         {
-            _managers[managerType] = manager;
+            lock (_managers)
+            {
+                _managers[managerType] = manager;
+            }
         }
 
         protected static WeakEventManager GetCurrentManager(Type managerType)
         {
-            WeakEventManager result;
-            return _managers.TryGetValue(managerType, out result) ? result : null;
+            lock (_managers)
+            {
+                WeakEventManager result;
+                return _managers.TryGetValue(managerType, out result) ? result : null;
+            }
         }
 
         /// <summary>
