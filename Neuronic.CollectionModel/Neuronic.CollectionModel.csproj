@@ -59,12 +59,15 @@
     <Compile Include="Collections\EventSource.cs" />
     <Compile Include="Collections\GroupingContainerList.cs" />
     <Compile Include="Collections\GroupingReadOnlyObservableCollectionSource.cs" />
+    <Compile Include="Collections\LazyCollection.cs" />
     <Compile Include="Collections\ObservableDictionary.cs" />
     <Compile Include="Collections\ObservableSet.cs" />
     <Compile Include="Collections\ReadOnlyObservableSet.cs" />
     <Compile Include="Collections\Containers\RefCountItemContainer.cs" />
     <Compile Include="Collections\SetDifferenceReadOnlyObservableCollection.cs" />
     <Compile Include="Collections\SetDifferenceReadOnlyObservableList.cs" />
+    <Compile Include="Collections\SetIntersectionReadOnlyObservableCollection.cs" />
+    <Compile Include="Collections\SetOperationReadOnlyObservableCollection.cs" />
     <Compile Include="Extras\ConditionalSwitchableCollectionSource.cs" />
     <Compile Include="Extras\ConditionalSwitchableListSource.cs" />
     <Compile Include="Properties\Version.cs" />
@@ -83,6 +86,7 @@
     <Compile Include="Collections\GroupingReadOnlyObservableListSource.cs" />
     <Compile Include="IManualReadOnlyObservableCollection.cs" />
     <Compile Include="IManualReadOnlyObservableList.cs" />
+    <Compile Include="Results\ContainsObservableResult.cs" />
     <Compile Include="Results\InvertedBooleanObservableResult.cs" />
     <Compile Include="IObservableResult.cs" />
     <Compile Include="Extras\ISelectableItem.cs" />

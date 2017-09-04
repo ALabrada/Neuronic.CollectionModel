@@ -8,51 +8,51 @@ namespace Neuronic.CollectionModel.Collections.Containers
     /// <seealso cref="Neuronic.CollectionModel.Collections.CustomReadOnlyObservableCollection{T}" />
     public class RefCountItemContainer<T> : ItemContainer<T>, INotifyPropertyChanged
     {
-        private int _originalCount;
-        private int _substractedCount;
+        private int _countOnFirst;
+        private int _countOnSecond;
 
-        private RefCountItemContainer(T item, int originalCount, int substractedCount) : base(item)
+        private RefCountItemContainer(T item, int countOnFirst, int countOnSecond) : base(item)
         {
-            _originalCount = originalCount;
-            _substractedCount = substractedCount;
+            _countOnFirst = countOnFirst;
+            _countOnSecond = countOnSecond;
         }
 
         /// <summary>
-        /// Creates a container for an item from the original source.
+        /// Creates a container for an item from the first operand source.
         /// </summary>
         /// <param name="item">The item.</param>
         /// <returns>The container of <paramref name="item"/>.</returns>
-        public static RefCountItemContainer<T> CreateOriginal(T item) => new RefCountItemContainer<T>(item, 1, 0);
+        public static RefCountItemContainer<T> CreateFromFirst(T item) => new RefCountItemContainer<T>(item, 1, 0);
 
         /// <summary>
-        /// Creates a container for an item from the substracted source.
+        /// Creates a container for an item from the second operand source.
         /// </summary>
         /// <param name="item">The item.</param>
         /// <returns>The container of <paramref name="item"/>.</returns>
-        public static RefCountItemContainer<T> CreateSubstracted(T item) => new RefCountItemContainer<T>(item, 0, 1);
+        public static RefCountItemContainer<T> CreateFromSecond(T item) => new RefCountItemContainer<T>(item, 0, 1);
 
         /// <summary>
-        /// Gets or sets the number of times the item appears in the original source.
+        /// Gets or sets the number of times the item appears in the first operand source.
         /// </summary>
         /// <value>
-        /// The number of time the item appears in the original source.
+        /// The number of time the item appears in the first operand source.
         /// </value>
-        public int OriginalCount
+        public int CountOnFirst
         {
-            get { return _originalCount; }
-            set { Set(nameof(OriginalCount), ref _originalCount, value); }
+            get { return _countOnFirst; }
+            set { Set(nameof(CountOnFirst), ref _countOnFirst, value); }
         }
 
         /// <summary>
-        /// Gets or sets the number of times the item appears in the substracted source.
+        /// Gets or sets the number of times the item appears in the second operand source.
         /// </summary>
         /// <value>
-        /// The number of times the item appears in the substracted source.
+        /// The number of times the item appears in the second operand source.
         /// </value>
-        public int SubstractedCount
+        public int CountOnSecond
         {
-            get { return _substractedCount; }
-            set { Set(nameof(SubstractedCount), ref _substractedCount, value); }
+            get { return _countOnSecond; }
+            set { Set(nameof(CountOnSecond), ref _countOnSecond, value); }
         }
 
         /// <summary>
@@ -78,8 +78,8 @@ namespace Neuronic.CollectionModel.Collections.Containers
         /// <param name="other">The other.</param>
         public void Increment(RefCountItemContainer<T> other)
         {
-            OriginalCount += other.OriginalCount;
-            SubstractedCount += other.SubstractedCount;
+            CountOnFirst += other.CountOnFirst;
+            CountOnSecond += other.CountOnSecond;
         }
 
         /// <summary>
@@ -88,8 +88,8 @@ namespace Neuronic.CollectionModel.Collections.Containers
         /// <param name="other">The other.</param>
         public void Decrement(RefCountItemContainer<T> other)
         {
-            OriginalCount -= other.OriginalCount;
-            SubstractedCount -= other.SubstractedCount;
+            CountOnFirst -= other.CountOnFirst;
+            CountOnSecond -= other.CountOnSecond;
         }
 
         /// <summary>
