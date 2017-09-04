@@ -60,16 +60,16 @@ namespace Neuronic.CollectionModel.Collections
             IEqualityComparer<T> comparer,
             ObservableDictionary<T, RefCountItemContainer<T>> containers) : base(
             new FilteredReadOnlyObservableList<RefCountItemContainer<T>>(containers.Values,
-                    container => container.OriginalCount > 0 && container.SubstractedCount == 0, 
+                    container => container.CountOnFirst > 0 && container.CountOnSecond == 0, 
                     new ContainerEqualityComparer<T, RefCountItemContainer<T>>(comparer),
-                    nameof(RefCountItemContainer<T>.OriginalCount), nameof(RefCountItemContainer<T>.SubstractedCount))
+                    nameof(RefCountItemContainer<T>.CountOnFirst), nameof(RefCountItemContainer<T>.CountOnSecond))
                 .ListSelect(container => container.Item))
         {
             _originalSource = originalSource;
             _containers = containers;
             _substractedSource = substractedSource;
-            AddRange(_containers, _substractedSource, RefCountItemContainer<T>.CreateSubstracted);
-            AddRange(_containers, _originalSource, RefCountItemContainer<T>.CreateOriginal);
+            AddRange(_containers, _substractedSource, RefCountItemContainer<T>.CreateFromSecond);
+            AddRange(_containers, _originalSource, RefCountItemContainer<T>.CreateFromFirst);
 
             var originalNotify = _originalSource as INotifyCollectionChanged;
             if (originalNotify != null)
@@ -92,13 +92,13 @@ namespace Neuronic.CollectionModel.Collections
         {
             if (managerType != typeof(CollectionChangedEventManager))
                 return base.OnReceiveWeakEvent(managerType, sender, e);
-            var source = _originalSource.Select(RefCountItemContainer<T>.CreateOriginal).Concat(_substractedSource.Select(RefCountItemContainer<T>.CreateSubstracted));
+            var source = _originalSource.Select(RefCountItemContainer<T>.CreateFromFirst).Concat(_substractedSource.Select(RefCountItemContainer<T>.CreateFromSecond));
             if (ReferenceEquals(_originalSource, sender))
                 HandleCollectionChange(_containers, source,
-                    RefCountItemContainer<T>.CreateOriginal, (NotifyCollectionChangedEventArgs)e);
+                    RefCountItemContainer<T>.CreateFromFirst, (NotifyCollectionChangedEventArgs)e);
             else if (ReferenceEquals(_substractedSource, sender))
                 HandleCollectionChange(_containers, source,
-                    RefCountItemContainer<T>.CreateSubstracted, (NotifyCollectionChangedEventArgs)e);
+                    RefCountItemContainer<T>.CreateFromSecond, (NotifyCollectionChangedEventArgs)e);
             else
                 return base.OnReceiveWeakEvent(managerType, sender, e);
             return true;
@@ -141,7 +141,7 @@ namespace Neuronic.CollectionModel.Collections
             if (!containers.TryGetValue(container.Item, out other))
                 return false;
             other.Decrement(container);
-            if (other.OriginalCount == 0 && other.SubstractedCount == 0)
+            if (other.CountOnFirst == 0 && other.CountOnSecond == 0)
                 containers.Remove(other.Item);
             return true;
         }
