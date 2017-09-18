@@ -1,7 +1,8 @@
 ﻿{
   "supports": {},
   "dependencies": {
-    "NETStandard.Library": "2.0.0"
+    "NETStandard.Library": "2.0.0",
+    "System.Dynamic.Runtime": "4.3.0"
   },
   "frameworks": {
     "netstandard1.0": {}

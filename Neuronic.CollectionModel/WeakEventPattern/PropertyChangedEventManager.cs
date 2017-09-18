@@ -22,9 +22,7 @@ namespace Neuronic.CollectionModel.WeakEventPattern
             if (listener == null) throw new ArgumentNullException(nameof(listener));
             if (propertyName == null) throw new ArgumentNullException(nameof(propertyName));
 
-            var manager = CurrentManager;
-            manager.AddListener(new PropertyListenerInfo(source, listener, propertyName));
-            manager.StartListening(source);
+            CurrentManager.ProtectedAddListener(source, new PropertyListenerInfo(listener, propertyName));
         }
 
         /// <summary>
@@ -39,9 +37,7 @@ namespace Neuronic.CollectionModel.WeakEventPattern
             if (listener == null) throw new ArgumentNullException(nameof(listener));
             if (propertyName == null) throw new ArgumentNullException(nameof(propertyName));
 
-            var manager = CurrentManager;
-            manager.StopListening(source);
-            manager.RemoveListener(new PropertyListenerInfo(source, listener, propertyName));
+            CurrentManager.ProtectedRemoveListener(source, new PropertyListenerInfo(listener, propertyName));
         }
 
         /// <summary>
@@ -92,7 +88,7 @@ namespace Neuronic.CollectionModel.WeakEventPattern
 
         protected class PropertyListenerInfo : ListenerInfo
         {
-            public PropertyListenerInfo(object source, IWeakEventListener listener, string propertyName) : base(source, listener)
+            public PropertyListenerInfo(IWeakEventListener listener, string propertyName) : base(listener)
             {
                 PropertyName = propertyName;
             }
