@@ -127,7 +127,10 @@ namespace Neuronic.CollectionModel.Extras
         bool IWeakEventListener.ReceiveWeakEvent(Type managerType, object sender, EventArgs e)
         {
             if (!ReferenceEquals(SourceOverride, sender))
-                return false;
+                // If a modification in the current source can trigger a source change, 
+                // the modification event can reach this method after the source change, 
+                // but with the previous source as sender.
+                return true; 
             if (managerType == typeof(CollectionChangedEventManager))
                 OnCollectionChanged((NotifyCollectionChangedEventArgs)e);
             else if (managerType == typeof(PropertyChangedEventManager))
