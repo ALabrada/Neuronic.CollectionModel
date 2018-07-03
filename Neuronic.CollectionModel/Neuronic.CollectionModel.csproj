@@ -66,6 +66,7 @@
     <Compile Include="Collections\SetDifferenceReadOnlyObservableList.cs" />
     <Compile Include="Collections\SetIntersectionReadOnlyObservableCollection.cs" />
     <Compile Include="Collections\SetOperationReadOnlyObservableCollection.cs" />
+    <Compile Include="Collections\SingleItemObservableList.cs" />
     <Compile Include="Extras\ConditionalSwitchableCollectionSource.cs" />
     <Compile Include="Extras\ConditionalSwitchableListSource.cs" />
     <Compile Include="Properties\Version.cs" />
@@ -117,6 +118,7 @@
     <Compile Include="Extras\SwitchableListSource.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Collections\ReadOnlyObservableList.cs" />
+    <Compile Include="Results\TernaryObservableResult.cs" />
     <Compile Include="Transaction.cs" />
     <Compile Include="Collections\TransactionalReadOnlyObservableCollection.cs" />
     <Compile Include="Collections\TransactionalReadOnyObservableList.cs" />
