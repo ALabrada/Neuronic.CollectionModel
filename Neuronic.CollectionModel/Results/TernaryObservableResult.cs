@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Neuronic.CollectionModel.WeakEventPattern;
 
 namespace Neuronic.CollectionModel.Results
 {
@@ -12,7 +13,7 @@ namespace Neuronic.CollectionModel.Results
     /// </summary>
     /// <typeparam name="TResult">The type of the result.</typeparam>
     /// <seealso cref="Neuronic.CollectionModel.Results.ObservableResult{TResult}" />
-    public class TernaryObservableResult<TResult> : ObservableResult<TResult>
+    public class TernaryObservableResult<TResult> : ObservableResult<TResult>, IWeakEventListener
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="TernaryObservableResult{TResult}"/> class.
@@ -28,10 +29,6 @@ namespace Neuronic.CollectionModel.Results
             Condition = condition;
             PositiveResult = positiveResult;
             NegativeResult = negativeResult;
-
-            PropertyChangedEventManager.AddHandler(Condition, OnObservableResultChanged, nameof(IObservableResult<bool>.CurrentValue));
-            PropertyChangedEventManager.AddHandler(PositiveResult, OnObservableResultChanged, nameof(IObservableResult<TResult>.CurrentValue));
-            PropertyChangedEventManager.AddHandler(NegativeResult, OnObservableResultChanged, nameof(IObservableResult<TResult>.CurrentValue));
 
             UpdateCurrentValue();
         }
@@ -68,6 +65,18 @@ namespace Neuronic.CollectionModel.Results
         private void OnObservableResultChanged(object sender, PropertyChangedEventArgs propertyChangedEventArgs)
         {
             UpdateCurrentValue();
+        }
+
+        bool IWeakEventListener.ReceiveWeakEvent(Type managerType, object sender, EventArgs e)
+        {
+            if (managerType != typeof(PropertyChangedEventManager))
+                return true;
+            var args = (PropertyChangedEventArgs) e;
+            if (args.PropertyName != nameof(IObservableResult<TResult>.CurrentValue))
+                return true;
+            if (ReferenceEquals(sender, Condition) || ReferenceEquals(sender, PositiveResult) || ReferenceEquals(sender, NegativeResult))
+                OnObservableResultChanged(sender, args);
+            return true;
         }
     }
 }
