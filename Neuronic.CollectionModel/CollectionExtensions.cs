@@ -423,6 +423,28 @@ namespace Neuronic.CollectionModel
         }
 
         /// <summary>
+        ///     Creates an observable list that contains a single item.
+        /// </summary>
+        /// <typeparam name="T">Type type of the collection's element.</typeparam>
+        /// <param name="item">The single item.</param>
+        /// <returns>An observable list that contains only <paramref name="item"/>.</returns>
+        public static IReadOnlyObservableList<T> ObservableAsList<T>(this IObservableResult<T> item)
+        {
+            return new SingleItemObservableList<T>(item);
+        }
+
+        /// <summary>
+        ///     Creates an observable list that contains a single item.
+        /// </summary>
+        /// <typeparam name="T">Type type of the collection's element.</typeparam>
+        /// <param name="item">The single item.</param>
+        /// <returns>An observable list that contains only <paramref name="item"/>.</returns>
+        public static IReadOnlyObservableList<T> AsList<T>(this T item)
+        {
+            return new SingleItemObservableList<T>(item);
+        }
+
+        /// <summary>
         ///     Creates an observable list by from an observable collection. 
         /// </summary>
         /// <typeparam name="T">The type of the collection elements.</typeparam>
