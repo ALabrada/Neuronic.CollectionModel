@@ -30,6 +30,10 @@ namespace Neuronic.CollectionModel.Results
             PositiveResult = positiveResult;
             NegativeResult = negativeResult;
 
+            PropertyChangedEventManager.AddListener(Condition, this, nameof(IObservableResult<bool>.CurrentValue));
+            PropertyChangedEventManager.AddListener(PositiveResult, this, nameof(IObservableResult<TResult>.CurrentValue));
+            PropertyChangedEventManager.AddListener(NegativeResult, this, nameof(IObservableResult<TResult>.CurrentValue));
+
             UpdateCurrentValue();
         }
 
