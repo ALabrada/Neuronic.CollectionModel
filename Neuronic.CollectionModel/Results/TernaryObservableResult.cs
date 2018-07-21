@@ -4,7 +4,11 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+#if NETSTD
 using Neuronic.CollectionModel.WeakEventPattern;
+#else
+using System.Windows;
+#endif
 
 namespace Neuronic.CollectionModel.Results
 {
@@ -75,7 +79,7 @@ namespace Neuronic.CollectionModel.Results
         {
             if (managerType != typeof(PropertyChangedEventManager))
                 return true;
-            var args = (PropertyChangedEventArgs) e;
+            var args = (PropertyChangedEventArgs)e;
             if (args.PropertyName != nameof(IObservableResult<TResult>.CurrentValue))
                 return true;
             if (ReferenceEquals(sender, Condition) || ReferenceEquals(sender, PositiveResult) || ReferenceEquals(sender, NegativeResult))

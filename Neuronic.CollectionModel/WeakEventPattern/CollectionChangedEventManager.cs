@@ -1,3 +1,4 @@
+#if NETSTD
 using System;
 using System.Collections.Specialized;
 
@@ -7,7 +8,7 @@ namespace Neuronic.CollectionModel.WeakEventPattern
     {
         private CollectionChangedEventManager()
         {
-            
+
         }
 
         /// <summary>
@@ -59,7 +60,7 @@ namespace Neuronic.CollectionModel.WeakEventPattern
 
         protected override void StartListening(object source)
         {
-            var nSource = (INotifyCollectionChanged) source;
+            var nSource = (INotifyCollectionChanged)source;
             nSource.CollectionChanged += OnCollectionChanged;
         }
 
@@ -74,4 +75,5 @@ namespace Neuronic.CollectionModel.WeakEventPattern
             DeliverEvent(sender, e);
         }
     }
-}
+} 
+#endif

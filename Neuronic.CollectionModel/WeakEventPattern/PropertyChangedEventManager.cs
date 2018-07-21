@@ -1,3 +1,4 @@
+#if NETSTD
 using System;
 using System.ComponentModel;
 
@@ -7,7 +8,7 @@ namespace Neuronic.CollectionModel.WeakEventPattern
     {
         private PropertyChangedEventManager()
         {
-            
+
         }
 
         /// <summary>
@@ -82,7 +83,7 @@ namespace Neuronic.CollectionModel.WeakEventPattern
         {
             var sourcePropName = (eventArgs as PropertyChangedEventArgs)?.PropertyName;
             return base.OnChooseListener(listener, eventArgs) && sourcePropName == string.Empty ||
-                   string.Equals(sourcePropName, ((PropertyListenerInfo) listener).PropertyName,
+                   string.Equals(sourcePropName, ((PropertyListenerInfo)listener).PropertyName,
                        StringComparison.Ordinal);
         }
 
@@ -102,4 +103,5 @@ namespace Neuronic.CollectionModel.WeakEventPattern
             }
         }
     }
-}
+} 
+#endif

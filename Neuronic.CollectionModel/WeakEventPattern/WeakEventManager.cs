@@ -1,3 +1,4 @@
+#if NETSTD
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -105,8 +106,8 @@ namespace Neuronic.CollectionModel.WeakEventPattern
             {
                 listeners = new List<IWeakEventListener>(sourceInfo.Listeners.Count);
                 listeners.AddRange(from info in sourceInfo.Listeners
-                    where OnChooseListener(info, eventArgs)
-                    select info.Listener);
+                                   where OnChooseListener(info, eventArgs)
+                                   select info.Listener);
 
                 if (!sourceInfo.Listeners.Any())
                 {
@@ -252,3 +253,5 @@ namespace Neuronic.CollectionModel.WeakEventPattern
         }
     }
 }
+
+#endif
