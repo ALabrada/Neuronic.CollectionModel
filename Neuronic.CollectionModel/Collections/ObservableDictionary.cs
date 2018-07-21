@@ -19,8 +19,13 @@ namespace Neuronic.CollectionModel.Collections
     public class ObservableDictionary<TKey, TValue> : IDictionary<TKey, TValue>,
         IReadOnlyObservableCollection<KeyValuePair<TKey, TValue>>
     {
+#if NET40
         private readonly WeakReference _keys = new WeakReference(null);
         private readonly WeakReference _values = new WeakReference(null);
+#else
+        private readonly WeakReference<DictionaryKeyCollection> _keys = new WeakReference<DictionaryKeyCollection>(null);
+        private readonly WeakReference<DictionaryValueCollection> _values = new WeakReference<DictionaryValueCollection>(null);
+#endif
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ObservableDictionary{TKey, TValue}"/> class.
@@ -200,11 +205,20 @@ namespace Neuronic.CollectionModel.Collections
         {
             get
             {
+#if NET40
                 var keys = _keys.Target as DictionaryKeyCollection;
                 if (keys != null)
                     return keys;
                 _keys.Target = keys = new DictionaryKeyCollection(this);
                 return keys;
+#else
+                DictionaryKeyCollection keys;
+                if (_keys.TryGetTarget(out keys))
+                    return keys;
+                keys = new DictionaryKeyCollection(this);
+                _keys.SetTarget(keys);
+                return keys;
+#endif
             }
         }
 
@@ -223,11 +237,20 @@ namespace Neuronic.CollectionModel.Collections
         {
             get
             {
+#if NET40
                 var values = _values.Target as DictionaryValueCollection;
                 if (values != null)
                     return values;
                 _values.Target = values = new DictionaryValueCollection(this);
                 return values;
+#else
+                DictionaryValueCollection values;
+                if (_values.TryGetTarget(out values))
+                    return values;
+                values = new DictionaryValueCollection(this);
+                _values.SetTarget(values);
+                return values;
+#endif
             }
         }
 

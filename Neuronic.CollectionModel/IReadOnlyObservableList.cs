@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace Neuronic.CollectionModel
 {
     /// <summary>
@@ -11,6 +13,7 @@ namespace Neuronic.CollectionModel
     {
     }
 
+#if NET40
     /// <summary>
     ///     Represents a read-only collection of elements that can be accessed by index;
     /// </summary>
@@ -28,4 +31,5 @@ namespace Neuronic.CollectionModel
         /// <returns>The element at <paramref name="index" />.</returns>
         T this[int index] { get; }
     }
+#endif
 }
