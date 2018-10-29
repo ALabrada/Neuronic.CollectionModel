@@ -227,7 +227,7 @@ namespace Neuronic.CollectionModel.Extras
             if (SelectedIndex >= oldStartingIndex &&
                 SelectedIndex < oldStartingIndex + oldItems.Count)
             {
-                SelectedIndex = Math.Min(oldStartingIndex, ((ICollection) Items).Count - 1);
+                SelectedIndex = Math.Min(oldStartingIndex, Items.Count - 1);
                 UpdateSelectedItem();
             }
             else if (SelectedIndex > oldStartingIndex)
