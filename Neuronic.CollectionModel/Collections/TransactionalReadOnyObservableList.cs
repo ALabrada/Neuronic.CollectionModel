@@ -50,7 +50,7 @@ namespace Neuronic.CollectionModel.Collections
                     OnPropertyChanged(e);
                     break;
                 default:
-                    HandlePropertyEvents(e);
+                    base.HandlePropertyEvents(e);
                     break;
             }
         }
