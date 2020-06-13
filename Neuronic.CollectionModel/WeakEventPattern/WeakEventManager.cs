@@ -10,7 +10,11 @@ using Neuronic.CollectionModel.Extras;
 
 namespace Neuronic.CollectionModel.WeakEventPattern
 {
-    internal abstract class WeakEventManager
+    /// <summary>
+    /// Provides a base class for the event manager that is used in the weak event pattern.
+    /// The manager adds and removes listeners for events (or callbacks) that also use the pattern.
+    /// </summary>
+    public abstract class WeakEventManager
     {
         private static readonly Dictionary<Type, WeakEventManager> Managers = new Dictionary<Type, WeakEventManager>();
         private readonly ConditionalWeakTable<object, SourceInfo> _table = new ConditionalWeakTable<object, SourceInfo>();

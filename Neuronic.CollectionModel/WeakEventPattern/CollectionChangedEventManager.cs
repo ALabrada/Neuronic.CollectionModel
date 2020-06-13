@@ -4,7 +4,12 @@ using System.Collections.Specialized;
 
 namespace Neuronic.CollectionModel.WeakEventPattern
 {
-    internal class CollectionChangedEventManager : WeakEventManager
+    /// <summary>
+    /// Provides a <see cref="WeakEventManager"/> implementation so that you can use the "weak event listener"
+    /// pattern to attach listeners for the <see cref="INotifyCollectionChanged.CollectionChanged"/> event.
+    /// </summary>
+    /// <seealso cref="Neuronic.CollectionModel.WeakEventPattern.WeakEventManager" />
+    public class CollectionChangedEventManager : WeakEventManager
     {
         private CollectionChangedEventManager()
         {

@@ -4,7 +4,11 @@ using System.ComponentModel;
 
 namespace Neuronic.CollectionModel.WeakEventPattern
 {
-    internal class PropertyChangedEventManager : WeakEventManager
+    /// <summary>
+    /// Provides a <see cref="WeakEventManager"/> implementation so that you can use the "weak event listener"
+    /// pattern to attach listeners for the <see cref="INotifyPropertyChanged.PropertyChanged"/> event.
+    /// </summary>
+    public class PropertyChangedEventManager : WeakEventManager
     {
         private PropertyChangedEventManager()
         {
