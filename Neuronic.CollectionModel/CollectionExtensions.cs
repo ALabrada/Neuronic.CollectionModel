@@ -435,6 +435,18 @@ namespace Neuronic.CollectionModel
         }
 
         /// <summary>
+        ///     Creates an <see cref="IObserver{T}"/> that generated an event every time one of the specified properties changes.
+        /// </summary>
+        /// <typeparam name="T">The type of the observed item.</typeparam>
+        /// <param name="item">The item.</param>
+        /// <param name="properties">The properties.</param>
+        /// <returns>The observable.</returns>
+        public static IObservable<T> Observe<T>(this T item, params string[] properties) where T: INotifyPropertyChanged
+        {
+            return new NotifyObservable<T>(item, properties);
+        }
+
+        /// <summary>
         ///     Creates an observable list that contains a single item.
         /// </summary>
         /// <typeparam name="T">Type type of the collection's element.</typeparam>

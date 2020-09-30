@@ -157,5 +157,10 @@ namespace Neuronic.CollectionModel.Results
         {
             return new CompositeObservableResult<T, T, bool>(first, second, (f, s) => !Equals(f, s));
         }
+
+        IDisposable IObservable<T>.Subscribe(IObserver<T> observer)
+        {
+            return new ObservableResultSubscription<T>(this, observer);
+        }
     }
 }
