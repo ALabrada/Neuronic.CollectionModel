@@ -25,7 +25,7 @@ namespace Neuronic.CollectionModel.Collections
         ReadOnlyObservableList<ReadOnlyObservableGroup<TSource, TKey>>, IWeakEventListener
     {
         private readonly ContainerList _containers;
-        private readonly Func<TSource, TKey> _keySelector;
+        private readonly Func<TSource, IObservable<TKey>> _keySelector;
         private readonly IEqualityComparer<GroupedItemContainer<TSource, TKey>> _sourceComparer;
         private readonly INotifyCollectionChanged _source;
 
@@ -50,7 +50,8 @@ namespace Neuronic.CollectionModel.Collections
             Func<TSource, TKey> keySelector, IEqualityComparer<TKey> keyComparer,
             IEqualityComparer<TSource> sourceComparer, params string[] triggers)
             : this(
-                source, keySelector, keyComparer, sourceComparer, triggers,
+                source, item => new FunctionObservable<TSource, TKey>(item, keySelector, triggers),
+                keyComparer, sourceComparer, 
                 new ObservableCollection<ReadOnlyObservableGroup<TSource, TKey>>())
         {
         }
@@ -77,14 +78,60 @@ namespace Neuronic.CollectionModel.Collections
             IEnumerable<ReadOnlyObservableGroup<TSource, TKey>> explicitGroups,
             Func<TSource, TKey> keySelector, IEqualityComparer<TKey> keyComparer, IEqualityComparer<TSource> sourceComparer, params string[] triggers)
             : this(
-                source, keySelector, keyComparer, sourceComparer, triggers,
+                source, item => new FunctionObservable<TSource, TKey>(item, keySelector, triggers), 
+                keyComparer, sourceComparer, 
+                new ObservableCollection<ReadOnlyObservableGroup<TSource, TKey>>(explicitGroups))
+        {
+        }
+
+        /// <summary>
+        ///     Initializes a new instance of the <see cref="GroupingReadOnlyObservableListSource{TSource, TKey}" /> class.
+        /// </summary>
+        /// <param name="source">The source sequence.</param>
+        /// <param name="keySelector">The function used to obtain keys that represent the items.</param>
+        /// <param name="keyComparer">
+        ///     The comparer used for key comparison. Specify <c>null</c> to use the default comparer for
+        ///     <typeparamref name="TKey" />.
+        /// </param>
+        /// <param name="sourceComparer">
+        ///     A comparer for the source items. This is only used if the source collection is not a list 
+        ///     and does not provide index information in its <see cref="NotifyCollectionChangedEventArgs"/> events.    
+        /// </param>
+        public GroupingReadOnlyObservableListSource(IEnumerable<TSource> source,
+            Func<TSource, IObservable<TKey>> keySelector, IEqualityComparer<TKey> keyComparer,
+            IEqualityComparer<TSource> sourceComparer)
+            : this(
+                source, keySelector, keyComparer, sourceComparer, 
+                new ObservableCollection<ReadOnlyObservableGroup<TSource, TKey>>())
+        {
+        }
+
+        /// <summary>
+        ///     Initializes a new instance of the <see cref="GroupingReadOnlyObservableListSource{TSource, TKey}" /> class.
+        /// </summary>
+        /// <param name="source">The source sequence.</param>
+        /// <param name="explicitGroups">The explicit groups.</param>
+        /// <param name="keySelector">The function used to obtain keys that represent the items.</param>
+        /// <param name="keyComparer">
+        ///     The comparer used for key comparison. Specify <c>null</c> to use the default comparer for
+        ///     <typeparamref name="TKey" />.
+        /// </param>
+        /// <param name="sourceComparer">
+        ///     A comparer for the source items. This is only used if the source collection is not a list 
+        ///     and does not provide index information in its <see cref="NotifyCollectionChangedEventArgs"/> events.  
+        /// </param>
+        public GroupingReadOnlyObservableListSource(IEnumerable<TSource> source,
+            IEnumerable<ReadOnlyObservableGroup<TSource, TKey>> explicitGroups,
+            Func<TSource, IObservable<TKey>> keySelector, IEqualityComparer<TKey> keyComparer, IEqualityComparer<TSource> sourceComparer)
+            : this(
+                source, keySelector, keyComparer, sourceComparer, 
                 new ObservableCollection<ReadOnlyObservableGroup<TSource, TKey>>(explicitGroups))
         {
         }
 
         private GroupingReadOnlyObservableListSource(IEnumerable<TSource> source,
-            Func<TSource, TKey> keySelector, IEqualityComparer<TKey> keyComparer,
-            IEqualityComparer<TSource> sourceComparer, string[] triggers,
+            Func<TSource, IObservable<TKey>> keySelector, IEqualityComparer<TKey> keyComparer,
+            IEqualityComparer<TSource> sourceComparer, 
             ObservableCollection<ReadOnlyObservableGroup<TSource, TKey>> groups) : base(groups)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
@@ -92,9 +139,8 @@ namespace Neuronic.CollectionModel.Collections
             _keySelector = keySelector;
             _sourceComparer = new ContainerEqualityComparer<TSource, GroupedItemContainer<TSource, TKey>>(sourceComparer);
             keyComparer = keyComparer ?? EqualityComparer<TKey>.Default;
-            triggers = triggers ?? new string[0];
             var initialContainers = source.Select(i => new GroupedItemContainer<TSource, TKey>(i, _keySelector));
-            _containers = new ContainerList(this, initialContainers, keyComparer, triggers, groups);
+            _containers = new ContainerList(this, initialContainers, keyComparer, groups);
             _source = source as INotifyCollectionChanged;
             if (_source != null)
                 CollectionChangedEventManager.AddListener(_source, this);
@@ -144,8 +190,8 @@ namespace Neuronic.CollectionModel.Collections
             /// <param name="groups">The initial groups.</param>
             public ContainerList(GroupingReadOnlyObservableListSource<TSource, TKey> owner,
                 IEnumerable<GroupedItemContainer<TSource, TKey>> collection, IEqualityComparer<TKey> keyComparer,
-                string[] triggers, ObservableCollection<ReadOnlyObservableGroup<TSource, TKey>> groups)
-                : base(owner, collection, keyComparer, triggers,
+                ObservableCollection<ReadOnlyObservableGroup<TSource, TKey>> groups)
+                : base(owner, collection, keyComparer, 
                     new ReadOnlyObservableList<ReadOnlyObservableGroup<TSource, TKey>>(groups))
             {
                 _groups = groups;

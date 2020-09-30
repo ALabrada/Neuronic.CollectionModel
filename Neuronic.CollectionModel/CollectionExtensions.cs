@@ -1154,7 +1154,153 @@ namespace Neuronic.CollectionModel
                     null,
                     triggers)
             { IncludeImplicitGroups = includeImplict };
-        } 
+        }
+
+        /// <summary>
+        ///     Creates several observable lists by grouping a source sequence according to some criteria.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the source items.</typeparam>
+        /// <typeparam name="TKey">The type of the keys used to group items.</typeparam>
+        /// <param name="items">The source items.</param>
+        /// <param name="selector">The function used to obtain keys that represent the items.</param>
+        /// <param name="keyComparer">
+        ///     The comparer used for key comparison. Specify <c>null</c> to use the default comparer for
+        ///     <typeparamref name="TKey" />.
+        /// </param>
+        /// <param name="sourceComparer">
+        ///     A comparer for the source items. This is only used if the source collection is not a list 
+        ///     and does not provide index information in its <see cref="NotifyCollectionChangedEventArgs"/> events.  
+        /// </param>
+        /// <returns>An observable list of observable groups.</returns>
+        /// <remarks>
+        /// <para>
+        ///     If <paramref name="items"/> is a <see cref="IReadOnlyObservableCollection{T}"/> with no
+        ///     implicit element order (an <see cref="ObservableSet{T}"/>, for example), you should
+        ///     override <see cref="object.Equals(object)"/> and <see cref="object.GetHashCode"/> in <typeparamref name="TSource"/>
+        ///     or provide a <see cref="IEqualityComparer{TSource}"/> through the constructor of
+        ///     <see cref="GroupingReadOnlyObservableListSource{TSource,TKey}"/>. 
+        /// </para>
+        /// </remarks>
+        public static IReadOnlyObservableList<ReadOnlyObservableGroup<TSource, TKey>> ListGroupBy<TSource, TKey>(
+            this IEnumerable<TSource> items,
+            Func<TSource, IObservable<TKey>> selector,
+            IEqualityComparer<TKey> keyComparer = null, IEqualityComparer<TSource> sourceComparer = null)
+        {
+            return new GroupingReadOnlyObservableListSource<TSource, TKey>(items, selector, keyComparer, sourceComparer);
+        }
+
+        /// <summary>
+        ///     Creates several observable collection by grouping a source sequence according to some criteria.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the source items.</typeparam>
+        /// <typeparam name="TKey">The type of the keys used to group items.</typeparam>
+        /// <param name="items">The source items.</param>
+        /// <param name="selector">The function used to obtain keys that represent the items.</param> 
+        /// <param name="keyComparer">
+        ///     The comparer used for key comparison. Specify <c>null</c> to use the default comparer for
+        ///     <typeparamref name="TKey" />.
+        /// </param>
+        /// <param name="sourceComparer">
+        ///     A comparer for the source items. This is only used if the source collection is not a list 
+        ///     and does not provide index information in its <see cref="NotifyCollectionChangedEventArgs"/> events.  
+        /// </param>
+        /// <returns>An observable collection of observable groups.</returns>
+        /// <remarks>
+        /// <para>
+        ///     If <paramref name="items"/> is a <see cref="IReadOnlyObservableCollection{T}"/> with no
+        ///     implicit element order (an <see cref="ObservableSet{T}"/>, for example), you should
+        ///     override <see cref="object.Equals(object)"/> and <see cref="object.GetHashCode"/> in <typeparamref name="TSource"/>
+        ///     or provide a <see cref="IEqualityComparer{TSource}"/> through the constructor of
+        ///     <see cref="GroupingReadOnlyObservableListSource{TSource,TKey}"/>. 
+        /// </para>
+        /// </remarks>
+        public static IReadOnlyObservableCollection<ReadOnlyObservableGroup<TSource, TKey>> CollectionGroupBy<TSource, TKey>(
+            this IEnumerable<TSource> items,
+            Func<TSource, IObservable<TKey>> selector,
+            IEqualityComparer<TKey> keyComparer = null, IEqualityComparer<TSource> sourceComparer = null)
+        {
+            return new GroupingReadOnlyObservableCollectionSource<TSource, TKey>(items, selector, keyComparer, sourceComparer);
+        }
+
+        /// <summary>
+        ///     Creates several observable lists by grouping a source sequence according to some criteria.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the source items.</typeparam>
+        /// <typeparam name="TKey">The type of the keys used to group items.</typeparam>
+        /// <param name="items">The source items.</param>
+        /// <param name="explicitGroups">The explicit groups.</param>
+        /// <param name="includeImplict">
+        ///     Whether to include implicit groups (
+        ///     <see cref="GroupingReadOnlyObservableListSource{TSource,TKey}.IncludeImplicitGroups" />).
+        /// </param>
+        /// <param name="selector">The function used to obtain keys that represent the items.</param>
+        /// <param name="keyComparer">
+        ///     The comparer used for key comparison. Specify <c>null</c> to use the default comparer for
+        ///     <typeparamref name="TKey" />.
+        /// </param>
+        /// <param name="sourceComparer">
+        ///     A comparer for the source items. This is only used if the source collection is not a list 
+        ///     and does not provide index information in its <see cref="NotifyCollectionChangedEventArgs"/> events.  
+        /// </param>
+        /// <returns>An observable list of observable groups.</returns>
+        /// <remarks>
+        /// <para>
+        ///     If <paramref name="items"/> is a <see cref="IReadOnlyObservableCollection{T}"/> with no
+        ///     implicit element order (an <see cref="ObservableSet{T}"/>, for example), you should
+        ///     override <see cref="object.Equals(object)"/> and <see cref="object.GetHashCode"/> in <typeparamref name="TSource"/>
+        ///     or provide a <see cref="IEqualityComparer{TSource}"/> through the constructor of
+        ///     <see cref="GroupingReadOnlyObservableListSource{TSource,TKey}"/>. 
+        /// </para>
+        /// </remarks>
+        public static IReadOnlyObservableList<ReadOnlyObservableGroup<TSource, TKey>> ListGroupBy<TSource, TKey>(
+            this IEnumerable<TSource> items,
+            IEnumerable<ReadOnlyObservableGroup<TSource, TKey>> explicitGroups, bool includeImplict,
+            Func<TSource, IObservable<TKey>> selector, 
+            IEqualityComparer<TKey> keyComparer = null, IEqualityComparer<TSource> sourceComparer = null)
+        {
+            return new GroupingReadOnlyObservableListSource<TSource, TKey>(items, explicitGroups, selector, keyComparer, sourceComparer)
+            { IncludeImplicitGroups = includeImplict };
+        }
+
+        /// <summary>
+        ///     Creates several observable lists by grouping a source sequence according to some criteria.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the source items.</typeparam>
+        /// <typeparam name="TKey">The type of the keys used to group items.</typeparam>
+        /// <param name="items">The source items.</param>
+        /// <param name="explicitGroups">The explicit groups.</param>
+        /// <param name="includeImplict">
+        ///     Whether to include implicit groups (
+        ///     <see cref="GroupingReadOnlyObservableListSource{TSource,TKey}.IncludeImplicitGroups" />).
+        /// </param>
+        /// <param name="selector">The function used to obtain keys that represent the items.</param> 
+        /// <param name="keyComparer">
+        ///     The comparer used for key comparison. Specify <c>null</c> to use the default comparer for
+        ///     <typeparamref name="TKey" />.
+        /// </param>
+        /// <param name="sourceComparer">
+        ///     A comparer for the source items. This is only used if the source collection is not a list 
+        ///     and does not provide index information in its <see cref="NotifyCollectionChangedEventArgs"/> events.  
+        /// </param>
+        /// <returns>An observable collection of observable groups.</returns>
+        /// <remarks>
+        /// <para>
+        ///     If <paramref name="items"/> is a <see cref="IReadOnlyObservableCollection{T}"/> with no
+        ///     implicit element order (an <see cref="ObservableSet{T}"/>, for example), you should
+        ///     override <see cref="object.Equals(object)"/> and <see cref="object.GetHashCode"/> in <typeparamref name="TSource"/>
+        ///     or provide a <see cref="IEqualityComparer{TSource}"/> through the constructor of
+        ///     <see cref="GroupingReadOnlyObservableListSource{TSource,TKey}"/>. 
+        /// </para>
+        /// </remarks>
+        public static IReadOnlyObservableCollection<ReadOnlyObservableGroup<TSource, TKey>> CollectionGroupBy<TSource, TKey>(
+            this IEnumerable<TSource> items,
+            IEnumerable<ReadOnlyObservableGroup<TSource, TKey>> explicitGroups, bool includeImplict,
+            Func<TSource, IObservable<TKey>> selector, 
+            IEqualityComparer<TKey> keyComparer = null, IEqualityComparer<TSource> sourceComparer = null)
+        {
+            return new GroupingReadOnlyObservableCollectionSource<TSource, TKey>(items, explicitGroups, selector, keyComparer, sourceComparer)
+            { IncludeImplicitGroups = includeImplict };
+        }
         #endregion
 
         /// <summary>

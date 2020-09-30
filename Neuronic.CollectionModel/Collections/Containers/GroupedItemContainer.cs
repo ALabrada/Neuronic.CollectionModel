@@ -9,20 +9,16 @@ namespace Neuronic.CollectionModel.Collections.Containers
     /// <typeparam name="TSource">The type of the source items.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <seealso cref="ItemContainer{TItem}" />
-    public class GroupedItemContainer<TSource, TKey> : TriggeredItemContainer<TSource>
+    public class GroupedItemContainer<TSource, TKey> : ObservableItemContainer<TSource, TKey>
     {
-        private readonly Func<TSource, TKey> _selector;
         private TKey _key;
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="GroupedItemContainer{TSource, TKey}"/> class.
-        /// </summary>
-        /// <param name="item">The contained item.</param>
-        /// <param name="selector">The function used to obtain a grouping key that represents the item.</param>
-        public GroupedItemContainer(TSource item, Func<TSource, TKey> selector) : base (item)
+        public GroupedItemContainer(TSource item, Func<TSource, IObservable<TKey>> selector) : this (item, selector(item))
         {
-            _selector = selector;
-            Key = _selector(item);
+        }
+
+        public GroupedItemContainer(TSource item, IObservable<TKey> observable) : base(item, observable)
+        {
         }
 
         /// <summary>
@@ -66,16 +62,6 @@ namespace Neuronic.CollectionModel.Collections.Containers
         public int GroupIndex { get; set; } = -1;
 
         /// <summary>
-        /// Called when the value of any of the trigger property changes for this item.
-        /// </summary>
-        /// <param name="sender">The sender.</param>
-        /// <param name="args">The <see cref="T:System.ComponentModel.PropertyChangedEventArgs" /> instance containing the event data.</param>
-        protected override void OnTriggerPropertyChanged(object sender, PropertyChangedEventArgs args)
-        {
-            Key = _selector(Item);
-        }
-
-        /// <summary>
         /// Occurs when the item's key changes.
         /// </summary>
         public event EventHandler KeyChanged;
@@ -86,6 +72,11 @@ namespace Neuronic.CollectionModel.Collections.Containers
         protected virtual void OnKeyChanged()
         {
             KeyChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        protected override void OnValueChanged(TKey value)
+        {
+            Key = value;
         }
     }
 }

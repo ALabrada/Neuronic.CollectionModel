@@ -15,7 +15,6 @@ namespace Neuronic.CollectionModel.Collections
     internal abstract class
         GroupingContainerList<TSource, TKey> : ObservableCollection<GroupedItemContainer<TSource, TKey>>
     {
-        private readonly string[] _triggers;
         private bool _includeImplicitGroups;
 
         /// <summary>
@@ -24,15 +23,12 @@ namespace Neuronic.CollectionModel.Collections
         /// <param name="owner">The owner.</param>
         /// <param name="collection">The initial container collection.</param>
         /// <param name="keyComparer">The key comparer.</param>
-        /// <param name="triggers">The triggers.</param>
         /// <param name="groups">The initial groups.</param>
         /// <exception cref="System.ArgumentException">At least one of the explicit groups is already in use.</exception>
         protected GroupingContainerList(IReadOnlyObservableCollection<ReadOnlyObservableGroup<TSource, TKey>> owner,
             IEnumerable<GroupedItemContainer<TSource, TKey>> collection, IEqualityComparer<TKey> keyComparer,
-            string[] triggers,
             IReadOnlyObservableCollection<ReadOnlyObservableGroup<TSource, TKey>> groups) : base(collection)
         {
-            _triggers = triggers;
             KeyComparer = keyComparer;
             Groups = groups;
             Owner = owner;
@@ -50,7 +46,6 @@ namespace Neuronic.CollectionModel.Collections
                 container.SourceIndex = i;
                 container.GroupIndex = -1;
                 container.Group = null;
-                container.AttachTriggers(_triggers);
                 container.KeyChanged += ContainerOnKeyChanged;
             }
         }
@@ -286,7 +281,6 @@ namespace Neuronic.CollectionModel.Collections
                 group.InternalItems.Insert(container.GroupIndex, container.Item);
             }
             UpdateIndexesFrom(container);
-            container.AttachTriggers(_triggers);
             container.KeyChanged += ContainerOnKeyChanged;
         }
 
@@ -314,7 +308,7 @@ namespace Neuronic.CollectionModel.Collections
             var group = container.Group;
             var groupIndex = container.GroupIndex;
 
-            container.DetachTriggers(_triggers);
+            container.Dispose();
             container.KeyChanged -= ContainerOnKeyChanged;
 
             base.RemoveItem(index);
@@ -343,7 +337,7 @@ namespace Neuronic.CollectionModel.Collections
             var oldGroup = oldContainer.Group;
             var oldGroupIndex = oldContainer.GroupIndex;
 
-            oldContainer.DetachTriggers(_triggers);
+            oldContainer.Dispose();
             oldContainer.KeyChanged -= ContainerOnKeyChanged;
 
             base.SetItem(index, container);
@@ -383,7 +377,6 @@ namespace Neuronic.CollectionModel.Collections
                 }
             }
             UpdateIndexesFrom(container);
-            container.AttachTriggers(_triggers);
             container.KeyChanged += ContainerOnKeyChanged;
         }
 
@@ -394,7 +387,7 @@ namespace Neuronic.CollectionModel.Collections
         {
             foreach (var container in Items)
             {
-                container.DetachTriggers(_triggers);
+                container.Dispose();
                 container.KeyChanged -= ContainerOnKeyChanged;
                 container.Group = null;
                 container.GroupIndex = -1;
