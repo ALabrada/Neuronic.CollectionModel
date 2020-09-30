@@ -77,6 +77,7 @@
     <Compile Include="GroupingReadOnlyObservableListSourceTest.cs" />
     <Compile Include="Notify.cs" />
     <Compile Include="ObjectPropertyResultTest.cs" />
+    <Compile Include="Observable.cs" />
     <Compile Include="ObservableDictionaryTest.cs" />
     <Compile Include="ObserverTest.cs" />
     <Compile Include="Person.cs" />

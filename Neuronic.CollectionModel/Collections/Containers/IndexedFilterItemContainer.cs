@@ -10,11 +10,11 @@ namespace Neuronic.CollectionModel.Collections.Containers
     public class IndexedFilterItemContainer<T> : FilterItemContainer<T>
     {
         /// <summary>
-        ///     Initializes a new instance of the <see cref="IndexedFilterItemContainer{T}" /> class.
+        /// Initializes a new instance of the <see cref="IndexedFilterItemContainer{T}"/> class.
         /// </summary>
         /// <param name="item">The item.</param>
-        /// <param name="filter">The filter.</param>
-        public IndexedFilterItemContainer(T item, Predicate<T> filter) : base(item, filter)
+        /// <param name="observable">The observable.</param>
+        public IndexedFilterItemContainer(T item, IObservable<bool> observable) : base(item, observable)
         {
         }
 

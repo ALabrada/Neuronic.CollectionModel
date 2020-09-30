@@ -59,6 +59,28 @@ namespace Neuronic.CollectionModel.Collections
         }
 
         /// <summary>
+        ///     Initializes a new instance of the <see cref="FilteredReadOnlyObservableList{T}" /> class.
+        /// </summary>
+        /// <param name="source">The source collection.</param>
+        /// <param name="filter">The filter predicate.</param>
+        /// <param name="itemComparer">The equality comparer for the items, in case <paramref name="source"/> is an index-less collection.</param>
+        public FilteredReadOnlyObservableList(IEnumerable<T> source, Func<T, IObservable<bool>> filter,
+            IEqualityComparer<T> itemComparer = null)
+            : base(
+                source as IReadOnlyObservableCollection<T> ??
+                new ReadOnlyObservableList<T>(source as ObservableCollection<T> ?? new ObservableCollection<T>(source)),
+                filter, itemComparer)
+        {
+            UpdateIndexes(0, Items.Count);
+            FilteredItems =
+                new ObservableCollection<T>(from container in Items where container.IsIncluded select container.Item);
+
+            Items.CollectionChanged += ItemsOnCollectionChanged;
+            FilteredItems.CollectionChanged += (sender, args) => OnCollectionChanged(args);
+            ((INotifyPropertyChanged)FilteredItems).PropertyChanged += (sender, args) => OnPropertyChanged(args);
+        }
+
+        /// <summary>
         ///     Gets the filtered items.
         /// </summary>
         /// <value>
@@ -130,9 +152,8 @@ namespace Neuronic.CollectionModel.Collections
         /// </returns>
         protected override IndexedFilterItemContainer<T> CreateContainer(T item)
         {
-            var container = new IndexedFilterItemContainer<T>(item, Filter);
+            var container = new IndexedFilterItemContainer<T>(item, Filter(item));
             container.IsIncludedChanged += ContainerOnIsIncludedChanged;
-            container.AttachTriggers(Triggers);
             return container;
         }
 
@@ -142,7 +163,7 @@ namespace Neuronic.CollectionModel.Collections
         /// <param name="container">The container.</param>
         protected override void DestroyContainer(IndexedFilterItemContainer<T> container)
         {
-            container.DetachTriggers(Triggers);
+            container.Dispose();
             container.IsIncludedChanged -= ContainerOnIsIncludedChanged;
         }
 

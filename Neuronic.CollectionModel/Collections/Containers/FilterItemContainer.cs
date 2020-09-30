@@ -7,19 +7,15 @@ namespace Neuronic.CollectionModel.Collections.Containers
     ///     Stores an item and it's meta-data in a filtered collection.
     /// </summary>
     /// <typeparam name="TItem">The type of the item.</typeparam>
-    public class FilterItemContainer<TItem> : TriggeredItemContainer<TItem>
+    public class FilterItemContainer<TItem> : ObservableItemContainer<TItem, bool>
     {
-        private readonly Predicate<TItem> _filter;
-
         /// <summary>
-        ///     Initializes a new instance of the <see cref="FilterItemContainer{TItem}" /> class.
+        /// Initializes a new instance of the <see cref="FilterItemContainer{TItem}"/> class.
         /// </summary>
         /// <param name="item">The item.</param>
-        /// <param name="filter">The filter.</param>
-        public FilterItemContainer(TItem item, Predicate<TItem> filter) : base (item)
+        /// <param name="observable">The observable.</param>
+        public FilterItemContainer(TItem item, IObservable<bool> observable) : base(item, observable)
         {
-            _filter = filter;
-            IsIncluded = _filter(Item);
         }
 
         /// <summary>
@@ -31,14 +27,13 @@ namespace Neuronic.CollectionModel.Collections.Containers
         public bool IsIncluded { get; private set; }
 
         /// <summary>
-        /// Called when the value of any of the trigger property changes for this item.
+        ///     Called when the observed value changes.
         /// </summary>
-        /// <param name="sender">The sender.</param>
-        /// <param name="args">The <see cref="T:System.ComponentModel.PropertyChangedEventArgs" /> instance containing the event data.</param>
-        protected override void OnTriggerPropertyChanged(object sender, PropertyChangedEventArgs args)
+        /// <param name="value">The value.</param>
+        protected override void OnValueChanged(bool value)
         {
             var wasIncluded = IsIncluded;
-            IsIncluded = _filter(Item);
+            IsIncluded = value;
             if (IsIncluded != wasIncluded)
                 IsIncludedChanged?.Invoke(this, EventArgs.Empty);
         }

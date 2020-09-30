@@ -1,6 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Linq;
+using System.Reactive.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neuronic.CollectionModel.Collections;
 
@@ -23,6 +26,10 @@ namespace Neuronic.CollectionModel.Testing
 
             FilteredReadOnlyObservableCollection<int> frooc = new FilteredReadOnlyObservableCollection<int>(rool, i => i % 2 == 0);
             Assert.AreEqual(frooc.Count, 5);
+            (rool as INotifyCollectionChanged).CollectionChanged += (sender, args) =>
+            {
+                Console.WriteLine("FUCK");
+            };
             
             observableCollection.Add(11);
             observableCollection.Add(12);
@@ -156,6 +163,42 @@ namespace Neuronic.CollectionModel.Testing
 
             int i = 0;
             foreach (var result in frooc.Zip(collection.Where(c => c.Prop % 2 == 0), (actual, expected) => new {actual, expected}))
+            {
+                Assert.AreEqual(result.expected, result.actual);
+                i++;
+            }
+            Assert.AreEqual(i, 2);
+            observableCollection[1].Prop = 5;
+
+            Assert.AreEqual(frooc.Count, 1);
+            i = 0;
+            foreach (var result in frooc.Zip(collection.Where(c => c.Prop % 2 == 0), (actual, expected) => new { actual, expected }))
+            {
+                Assert.AreEqual(result.expected, result.actual);
+                i++;
+            }
+            Assert.AreEqual(i, 1);
+        }
+
+        /// <summary>
+        /// Testing PropertyChanged event.
+        /// </summary>
+        [TestMethod]
+        public void ObservableFilterTest()
+        {
+            var collection = new List<Observable>() { new Observable(), new Observable(), new Observable(), new Observable() };
+            var observableCollection = new ObservableCollection<Observable>(collection);
+            observableCollection[0].Prop = 1;
+            observableCollection[1].Prop = 2;
+            observableCollection[2].Prop = 3;
+            observableCollection[3].Prop = 4;
+            var rool = new ReadOnlyObservableList<Observable>(observableCollection);
+
+            FilteredReadOnlyObservableCollection<Observable> frooc = new FilteredReadOnlyObservableCollection<Observable>(rool, notify => notify.Subject.Select(x => x % 2 == 0));
+            Assert.AreEqual(frooc.Count, 2);
+
+            int i = 0;
+            foreach (var result in frooc.Zip(collection.Where(c => c.Prop % 2 == 0), (actual, expected) => new { actual, expected }))
             {
                 Assert.AreEqual(result.expected, result.actual);
                 i++;

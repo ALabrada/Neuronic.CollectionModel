@@ -53,6 +53,19 @@ namespace Neuronic.CollectionModel.Collections
         }
 
         /// <summary>
+        ///     Initializes a new instance of the <see cref="FilteredReadOnlyObservableCollection{T}" /> class.
+        /// </summary>
+        /// <param name="source">The source collection.</param>
+        /// <param name="filter">The filter predicate.</param>
+        /// <param name="itemComparer">The equality comparer for the items, in case <paramref name="source"/> is an index-less collection.</param>
+        public FilteredReadOnlyObservableCollection(IReadOnlyObservableCollection<T> source, Func<T, IObservable<bool>> filter,
+            IEqualityComparer<T> itemComparer = null) : base(source, filter, itemComparer)
+        {
+            Items.CollectionChanged += ItemsOnCollectionChanged;
+            _count = Items.Count(c => c.IsIncluded);
+        }
+
+        /// <summary>
         ///     Gets the number of elements contained in the <see cref="T:System.Collections.Generic.ICollection`1" />.
         /// </summary>
         public override int Count => _count;
@@ -139,9 +152,8 @@ namespace Neuronic.CollectionModel.Collections
         /// </returns>
         protected override FilterItemContainer<T> CreateContainer(T item)
         {
-            var container = new FilterItemContainer<T>(item, Filter);
+            var container = new FilterItemContainer<T>(item, Filter(item));
             container.IsIncludedChanged += ContainerOnIsIncludedChanged;
-            container.AttachTriggers(Triggers);
             return container;
         }
 
@@ -151,7 +163,7 @@ namespace Neuronic.CollectionModel.Collections
         /// <param name="container">The container.</param>
         protected override void DestroyContainer(FilterItemContainer<T> container)
         {
-            container.DetachTriggers(Triggers);
+            container.Dispose();
             container.IsIncludedChanged -= ContainerOnIsIncludedChanged;
         }
 

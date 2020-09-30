@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Windows;
 using Neuronic.CollectionModel.Collections;
 using Neuronic.CollectionModel.Collections.Containers;
@@ -433,19 +434,7 @@ namespace Neuronic.CollectionModel
         {
             return new SingleItemObservableList<T>(item);
         }
-
-        /// <summary>
-        ///     Creates an <see cref="IObserver{T}"/> that generated an event every time one of the specified properties changes.
-        /// </summary>
-        /// <typeparam name="T">The type of the observed item.</typeparam>
-        /// <param name="item">The item.</param>
-        /// <param name="properties">The properties.</param>
-        /// <returns>The observable.</returns>
-        public static IObservable<T> Observe<T>(this T item, params string[] properties) where T: INotifyPropertyChanged
-        {
-            return new NotifyObservable<T>(item, properties);
-        }
-
+        
         /// <summary>
         ///     Creates an observable list that contains a single item.
         /// </summary>
@@ -836,6 +825,7 @@ namespace Neuronic.CollectionModel
             return new CollectionUpdater<TSource, TTarget>(collection, selector, composite);
         }
 
+        #region Where
         /// <summary>
         ///     Creates an observable view by filtering a sequence of values based on a predicate.
         /// </summary>
@@ -855,6 +845,43 @@ namespace Neuronic.CollectionModel
         {
             return new FilteredReadOnlyObservableList<T>(items, predicate, triggers);
         }
+
+        /// <summary>
+        ///     Creates an observable view by filtering a sequence of values based on an observable predicate.
+        /// </summary>
+        /// <typeparam name="T">The type of the sequence items.</typeparam>
+        /// <param name="items">The source collection.</param>
+        /// <param name="predicate">The observable predicate.</param>
+        /// <param name="comparer">The equality comparer for the items, in case <paramref name="items"/> is an index-less collection.</param>
+        /// <returns>
+        ///     An observable list that always contains the elements from <paramref name="items" />
+        ///     that satisfy <paramref name="predicate" />.
+        /// </returns>
+        public static IReadOnlyObservableList<T> ListWhere<T>(this IEnumerable<T> items, Func<T, IObservable<bool>> predicate,
+            IEqualityComparer<T> comparer = null)
+        {
+            return new FilteredReadOnlyObservableList<T>(items, predicate, comparer);
+        }
+
+        /// <summary>
+        ///     Creates an observable view by filtering a sequence of values based on a predicate.
+        ///     The method automatically obtains the properties of <typeparam name="T" /> that can affect the predicate's outcome.
+        /// </summary>
+        /// <typeparam name="T">The type of the sequence items.</typeparam>
+        /// <param name="items">The source collection.</param>
+        /// <param name="predicate">The predicate.</param>
+        /// <param name="comparer">The equality comparer for the items, in case <paramref name="items"/> is an index-less collection.</param>
+        /// <returns>
+        ///     An observable list that always contains the elements from <paramref name="items" />
+        ///     that satisfy <paramref name="predicate" />.
+        /// </returns>
+        /// <see cref="ObservableExtensions.Observe{T}"/>
+        public static IReadOnlyObservableList<T> ListWhereAuto<T>(this IEnumerable<T> items, Expression<Func<T, bool>> predicate,
+            IEqualityComparer<T> comparer = null) where T: INotifyPropertyChanged
+        {
+            return new FilteredReadOnlyObservableList<T>(items, item => item.Observe(predicate), comparer);
+        }
+        #endregion
 
         #region GroupBy
         /// <summary>

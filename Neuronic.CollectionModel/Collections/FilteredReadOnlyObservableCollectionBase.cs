@@ -29,7 +29,7 @@ namespace Neuronic.CollectionModel.Collections
         /// <summary>
         ///     The filter.
         /// </summary>
-        protected readonly Predicate<TItem> Filter;
+        protected readonly Func<TItem, IObservable<bool>> Filter;
 
         /// <summary>
         ///     The source collection.
@@ -37,9 +37,24 @@ namespace Neuronic.CollectionModel.Collections
         protected readonly IReadOnlyObservableCollection<TItem> Source;
 
         /// <summary>
-        ///     The trigger properties.
+        ///     Initializes a new instance of the <see cref="FilteredReadOnlyObservableCollectionBase{TItem, TContainer}"/> class.
         /// </summary>
-        protected readonly string[] Triggers;
+        /// <param name="items">The collection of item containers.</param>
+        /// <param name="source">The source collection.</param>
+        /// <param name="filter">The filter predicate.</param>
+        /// <param name="itemComparer">The equality comparer for the items, in case <paramref name="source"/> is an index-less collection.</param>
+        protected FilteredReadOnlyObservableCollectionBase(ObservableCollection<TContainer> items,
+            IReadOnlyObservableCollection<TItem> source, Func<TItem, IObservable<bool>> filter, IEqualityComparer<TItem> itemComparer)
+        {
+            Source = source;
+            Filter = filter;
+            Items = items;
+            ContainerComparer = new ContainerEqualityComparer<TItem, TContainer>(itemComparer);
+
+            CollectionChangedEventManager.AddListener(Source, this);
+            foreach (var item in source)
+                Items.Add(CreateContainer(item));
+        }
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="FilteredReadOnlyObservableCollectionBase{TItem, TContainer}" /> class.
@@ -54,16 +69,8 @@ namespace Neuronic.CollectionModel.Collections
         /// </param>
         protected FilteredReadOnlyObservableCollectionBase(ObservableCollection<TContainer> items,
             IReadOnlyObservableCollection<TItem> source, Predicate<TItem> filter, IEqualityComparer<TItem> itemComparer, params string[] triggers)
+            : this (items, source, x => new FunctionObservable<TItem,bool>(x, b => filter(b), triggers), itemComparer)
         {
-            Source = source;
-            Filter = filter;
-            Items = items;
-            Triggers = triggers;
-            ContainerComparer = new ContainerEqualityComparer<TItem, TContainer>(itemComparer);
-
-            CollectionChangedEventManager.AddListener(Source, this);
-            foreach (var item in source)
-                Items.Add(CreateContainer(item));
         }
 
         /// <summary>
@@ -79,6 +86,17 @@ namespace Neuronic.CollectionModel.Collections
         protected FilteredReadOnlyObservableCollectionBase(IReadOnlyObservableCollection<TItem> source,
             Predicate<TItem> filter, IEqualityComparer<TItem> itemComparer, params string[] triggers)
             : this(new ObservableCollection<TContainer>(), source, filter, itemComparer, triggers)
+        {
+        }
+
+        /// <summary>
+        ///     Initializes a new instance of the <see cref="FilteredReadOnlyObservableCollectionBase{TItem, TContainer}" /> class.
+        /// </summary>
+        /// <param name="source">The source collection.</param>
+        /// <param name="filter">The filter predicate.</param>
+        /// <param name="itemComparer">The equality comparer for the items, in case <paramref name="source"/> is an index-less collection.</param> 
+        protected FilteredReadOnlyObservableCollectionBase(IReadOnlyObservableCollection<TItem> source, Func<TItem, IObservable<bool>> filter, IEqualityComparer<TItem> itemComparer)
+            : this(new ObservableCollection<TContainer>(), source, filter, itemComparer)
         {
         }
 
