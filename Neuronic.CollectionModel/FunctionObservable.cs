@@ -32,66 +32,9 @@ namespace Neuronic.CollectionModel
 
         public static string[] FindTriggersIn(Expression<Func<TItem, TResult>> expression)
         {
-            var parameter = expression.Parameters[0];
-
-            IEnumerable<string> FindMembers(System.Linq.Expressions.Expression e)
-            {
-                switch (e)
-                {
-                    case BinaryExpression bin:
-                        return FindMembers(bin.Left).Concat(FindMembers(bin.Right));
-                    case BlockExpression block:
-                        return block.Expressions.SelectMany(FindMembers);
-                    case ConditionalExpression cond:
-                        return FindMembers(cond.Test)
-                            .Concat(FindMembers(cond.IfTrue))
-                            .Concat(FindMembers(cond.IfFalse));
-                    case IndexExpression ind when ind.Object.Equals(parameter):
-                        return Enumerable.Repeat("Item[]", 1)
-                            .Concat(FindMembers(ind.Object))
-                            .Concat(ind.Arguments.SelectMany(FindMembers)); 
-                    case IndexExpression ind:
-                        return FindMembers(ind.Object).Concat(ind.Arguments.SelectMany(FindMembers));
-                    case InvocationExpression inv:
-                        return inv.Arguments.SelectMany(FindMembers).Concat(FindMembers(inv.Expression));
-                    case LambdaExpression lam:
-                        return FindMembers(lam.Body);
-                    case ListInitExpression lin:
-                        return FindMembers(lin.NewExpression)
-                            .Concat(lin.Initializers.SelectMany(i => i.Arguments).SelectMany(FindMembers));
-                    case LoopExpression loop:
-                        return FindMembers(loop.Body);
-                    case MemberExpression mem when mem.Expression.Equals(parameter):
-                        return Enumerable.Repeat(mem.Member.Name, 1);
-                    case MemberExpression mem when mem.Expression.Equals(parameter):
-                        return FindMembers(mem.Expression);
-                    case MemberInitExpression init:
-                        return FindMembers(init.NewExpression);
-                    case MethodCallExpression call:
-                        return FindMembers(call.Object).Concat(call.Arguments.SelectMany(FindMembers));
-                    case NewArrayExpression arr:
-                        return arr.Expressions.SelectMany(FindMembers);
-                    case NewExpression nexp:
-                        return nexp.Arguments.SelectMany(FindMembers);
-                    case SwitchExpression swt:
-                        return FindMembers(swt.SwitchValue)
-                            .Concat(swt.Cases.SelectMany(c => FindMembers(c.Body).Concat(c.TestValues.SelectMany(FindMembers))))
-                            .Concat(FindMembers(swt.DefaultBody));
-                    case TryExpression trye:
-                        return FindMembers(trye.Body)
-                            .Concat(trye.Handlers.SelectMany(c => FindMembers(c.Filter).Concat(FindMembers(c.Body))))
-                            .Concat(FindMembers(trye.Fault))
-                            .Concat(FindMembers(trye.Finally));
-                    case TypeBinaryExpression tyb:
-                        return FindMembers(tyb.Expression);
-                    case UnaryExpression un:
-                        return FindMembers(un.Operand);
-                    default:
-                        return Enumerable.Empty<string>();
-                }
-            }
-
-            return FindMembers(expression.Body).Distinct().ToArray();
+            var detector = new TriggerDetector { Parameters = { expression.Parameters[0] } };
+            detector.Visit(expression);
+            return detector.Triggers.ToArray();
         }
 
         public IDisposable Subscribe(IObserver<TResult> observer)
