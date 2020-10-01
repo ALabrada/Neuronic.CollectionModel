@@ -12,6 +12,7 @@ namespace Neuronic.CollectionModel.Results
     /// <typeparam name="TSecond">The type of the second operand.</typeparam>
     /// <typeparam name="TResult">The type of the operation's result.</typeparam>
     /// <seealso cref="ObservableResult{T}" />
+    [Obsolete("Use System.Reactive extensions instead.")]
     public class CompositeObservableResult<TFirst, TSecond, TResult> : ObservableResult<TResult>, IWeakEventListener
     {
         private readonly IObservableResult<TFirst> _first;

@@ -8,6 +8,7 @@ namespace Neuronic.CollectionModel.Results
     /// <summary>
     /// An utility class that enables the use of boolean operators.
     /// </summary>
+    [Obsolete("Use System.Reactive extensions instead.")]
     public class BooleanObservableResult : ObservableResult<bool>, IWeakEventListener
     {
         private readonly IObservableResult<bool> _result;

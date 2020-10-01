@@ -14,6 +14,7 @@ namespace Neuronic.CollectionModel.Results
     /// <typeparam name="TProperty">The type of the property.</typeparam>
     /// <seealso cref="Neuronic.CollectionModel.Results.ObservableResult{TProperty}" />
     /// <seealso cref="System.Windows.IWeakEventListener" />
+    [Obsolete("Use ObservableExtensions.Observe instead.")]
     public class ObjectPropertyResult<TObject, TProperty> : ObservableResult<TProperty>, IWeakEventListener
         where TObject : INotifyPropertyChanged
     {

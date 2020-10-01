@@ -209,7 +209,7 @@ namespace Neuronic.CollectionModel
                 onRemove?.Invoke(oldItem);
                 thereIsOldItems = oldItemsEnumerator.MoveNext();
             }
-        } 
+        }
         #endregion
 
         /// <summary>
@@ -217,160 +217,10 @@ namespace Neuronic.CollectionModel
         /// </summary>
         /// <param name="result">The source operation result.</param>
         /// <returns>The casted operation result.</returns>
+        [Obsolete("Use System.Reactive extensions instead.")]
         public static BooleanObservableResult Cast(this IObservableResult<bool> result)
         {
             return result as BooleanObservableResult ?? new BooleanObservableResult(result);
-        }
-
-        /// <summary>
-        ///     Creates a new item sequence by appending a sequence after a single-item sequence.
-        /// </summary>
-        /// <typeparam name="T">The type of the sequence items.</typeparam>
-        /// <param name="item">The item contained in the single-item sequence: <strong>a</strong>.</param>
-        /// <param name="others">The sequence of items: <strong>(b1, b2, ..., bm)</strong>.</param>
-        /// <returns>The sequence <strong>(a, b1, b2, ..., bm)</strong>.</returns>
-        public static IEnumerable<T> Chain<T>(this T item, IEnumerable<T> others)
-        {
-            yield return item;
-            foreach (var other in others)
-                yield return other;
-        }
-
-        /// <summary>
-        ///     Creates a new item sequence by appending some items after an item sequence.
-        /// </summary>
-        /// <typeparam name="T">The type of the sequence items.</typeparam>
-        /// <param name="items">The item sequence: <strong>(a1, a2, ..., an)</strong>.</param>
-        /// <param name="others">The items to append: <strong>(b1, b2, ..., bm)</strong>.</param>
-        /// <returns>The sequence <strong>(a1, a2, ..., an, b1, b2, ..., bm)</strong>.</returns>
-        public static IEnumerable<T> Append<T>(this IEnumerable<T> items, params T[] others)
-        {
-            return items.Concat(others);
-        }
-
-        /// <summary>
-        ///     Returns the minimum value of a sequence or a default value if it is empty.
-        /// </summary>
-        /// <typeparam name="T">The type of the elements in the sequence.</typeparam>
-        /// <param name="items">The sequence.</param>
-        /// <param name="comparer">The comparison function.</param>
-        /// <param name="defaultValue">The default value.</param>
-        /// <returns>
-        ///     <paramref name="defaultValue" /> if <paramref name="items" /> is empty; otherwise,
-        ///     the minimum value in <paramref name="items" /> according to <paramref name="comparer" />.
-        /// </returns>
-        public static T MinOrDefault<T>(this IEnumerable<T> items, Comparison<T> comparer = null,
-            T defaultValue = default(T))
-        {
-            comparer = comparer ?? Comparer<T>.Default.Compare;
-            using (var enumerator = items.GetEnumerator())
-            {
-                if (!enumerator.MoveNext())
-                    return defaultValue;
-                var result = enumerator.Current;
-                while (enumerator.MoveNext())
-                {
-                    var current = enumerator.Current;
-                    var cmp = comparer(current, result);
-                    if (cmp < 0)
-                        result = current;
-                }
-                return result;
-            }
-        }
-
-        /// <summary>
-        ///     Returns the maximum value of a sequence or a default value if it is empty.
-        /// </summary>
-        /// <typeparam name="T">The type of the elements in the sequence.</typeparam>
-        /// <param name="items">The sequence.</param>
-        /// <param name="comparer">The comparison function.</param>
-        /// <param name="defaultValue">The default value.</param>
-        /// <returns>
-        ///     <paramref name="defaultValue" /> if <paramref name="items" /> is empty; otherwise,
-        ///     the maximum value in <paramref name="items" /> according to <paramref name="comparer" />.
-        /// </returns>
-        public static T MaxOrDefault<T>(this IEnumerable<T> items, Comparison<T> comparer = null,
-            T defaultValue = default(T))
-        {
-            comparer = comparer ?? Comparer<T>.Default.Compare;
-            using (var enumerator = items.GetEnumerator())
-            {
-                if (!enumerator.MoveNext())
-                    return defaultValue;
-                var result = enumerator.Current;
-                while (enumerator.MoveNext())
-                {
-                    var current = enumerator.Current;
-                    var cmp = comparer(current, result);
-                    if (cmp > 0)
-                        result = current;
-                }
-                return result;
-            }
-        }
-
-        /// <summary>
-        ///     Swaps the specified items in the given list.
-        /// </summary>
-        /// <typeparam name="T">The type of the list items.</typeparam>
-        /// <param name="list">The list.</param>
-        /// <param name="oldIndex">The index of the first item in <paramref name="list" />.</param>
-        /// <param name="newIndex">The index of the second item in <paramref name="list" />.</param>
-        public static void Swap<T>(this IList<T> list, int oldIndex, int newIndex)
-        {
-            var temp = list[oldIndex];
-            list[oldIndex] = list[newIndex];
-            list[newIndex] = temp;
-        }
-
-        /// <summary>
-        ///     Obtains the index of an item in a sequence.
-        /// </summary>
-        /// <typeparam name="T">The type of the sequence items.</typeparam>
-        /// <param name="items">The sequence.</param>
-        /// <param name="item">The item.</param>
-        /// <param name="comparer">The comparer to use.</param>
-        /// <returns>
-        ///     The index of <paramref name="item" /> in <paramref name="items" />
-        ///     or <strong>-1</strong> if it is not in the sequence.
-        /// </returns>
-        public static int IndexOf<T>(this IEnumerable<T> items, T item, IEqualityComparer<T> comparer = null)
-        {
-            var list = items as IList;
-            if (list != null)
-                return list.IndexOf(item);
-
-            comparer = comparer ?? EqualityComparer<T>.Default;
-            using (var enumerator = items.GetEnumerator())
-            {
-                var count = 0;
-                while (enumerator.MoveNext())
-                {
-                    if (comparer.Equals(enumerator.Current, item))
-                        return count;
-                    count++;
-                }
-                return -1; 
-            }
-        }
-
-        /// <summary>
-        ///     Copies a sequence of items to an array.
-        /// </summary>
-        /// <typeparam name="T">Type of the sequence items.</typeparam>
-        /// <param name="items">The sequence.</param>
-        /// <param name="array">The array.</param>
-        /// <param name="start">The index in <paramref name="array" /> where to start copying.</param>
-        /// <param name="count">The maximum number of items to copy.</param>
-        public static void CopyTo<T>(this IEnumerable<T> items, T[] array, int start, int count)
-        {
-            using (var enumerator = items.GetEnumerator())
-            {
-                var last = Math.Min(start + count, array.Length);
-                for (var i = start; (i < last) && enumerator.MoveNext(); i++)
-                    array[i] = enumerator.Current; 
-            }
         }
 
         /// <summary>
@@ -430,7 +280,7 @@ namespace Neuronic.CollectionModel
         /// <typeparam name="T">Type type of the collection's element.</typeparam>
         /// <param name="item">The single item.</param>
         /// <returns>An observable list that contains only <paramref name="item"/>.</returns>
-        public static IReadOnlyObservableList<T> ObservableAsList<T>(this IObservableResult<T> item)
+        public static IReadOnlyObservableList<T> ObservableAsList<T>(this IObservable<T> item)
         {
             return new SingleItemObservableList<T>(item);
         }
@@ -1544,6 +1394,7 @@ namespace Neuronic.CollectionModel
             return new ContainsObservableResult<T>(items, value, comparer);
         }
 
+        #region FirstOrDefault
         /// <summary>
         ///     Creates an observable query that stores the first element of a collection.
         /// </summary>
@@ -1577,6 +1428,43 @@ namespace Neuronic.CollectionModel
         }
 
         /// <summary>
+        ///     Creates an observable query the stores the first element that satisfies a condition in a sequence.
+        /// </summary>
+        /// <typeparam name="T">The type of the sequence's elements.</typeparam>
+        /// <param name="items">The source sequence.</param>
+        /// <param name="predicate">The predicate that represents the condition.</param>
+        /// <param name="defaultValue">The optional default value.</param>
+        /// <param name="comparer">The equality comparer for the items, in case <paramref name="items"/> is an index-less collection.</param>
+        /// <returns>The first element of the sequence that satisfies <paramref name="predicate" />.</returns>
+        public static IObservableResult<T> ObservableFirstOrDefault<T>(this IEnumerable<T> items,
+            Func<T, IObservable<bool>> predicate, IEqualityComparer<T> comparer = null,
+            T defaultValue = default(T))
+        {
+            var filter = new FilteredReadOnlyObservableList<T>(items, predicate, comparer);
+            return new SimpleQueryObservableResult<T, T>(filter, collection => collection.Count == 0 ? defaultValue : collection.First());
+        }
+
+        /// <summary>
+        ///     Creates an observable query the stores the first element that satisfies a condition in a sequence.
+        /// </summary>
+        /// <typeparam name="T">The type of the sequence's elements.</typeparam>
+        /// <param name="items">The source sequence.</param>
+        /// <param name="defaultValue">The optional default value.</param>
+        /// <param name="predicate">The predicate that represents the condition.</param>
+        /// <param name="comparer">The equality comparer for the items, in case <paramref name="items"/> is an index-less collection.</param>
+        /// <returns>The first element of the sequence that satisfies <paramref name="predicate" />.</returns>
+        /// <seealso cref="ObservableExtensions.Observe{T}"/>
+        public static IObservableResult<T> ObservableFirstOrDefaultAuto<T>(this IEnumerable<T> items,
+            Expression<Func<T, bool>> predicate, IEqualityComparer<T> comparer = null,
+            T defaultValue = default(T)) where T: INotifyPropertyChanged
+        {
+            var filter = new FilteredReadOnlyObservableList<T>(items, item => item.Observe(predicate), comparer);
+            return new SimpleQueryObservableResult<T, T>(filter, collection => collection.Count == 0 ? defaultValue : collection.First());
+        }
+        #endregion
+
+        #region LastOrDefault
+        /// <summary>
         ///     Creates an observable query that stores the last element of a collection.
         /// </summary>
         /// <typeparam name="T">The type of the collection's elements.</typeparam>
@@ -1591,7 +1479,7 @@ namespace Neuronic.CollectionModel
                     collection =>
                         collection.Count == 0
                             ? defaultValue
-                            : ((IReadOnlyObservableList<T>) collection)[collection.Count - 1]);
+                            : ((IReadOnlyObservableList<T>)collection)[collection.Count - 1]);
             return new LastElementQueryResult<T>(items, defaultValue);
         }
 
@@ -1615,9 +1503,57 @@ namespace Neuronic.CollectionModel
                     collection =>
                         collection.Count == 0
                             ? default(T)
-                            : ((IReadOnlyObservableList<T>) collection)[collection.Count - 1]);
+                            : ((IReadOnlyObservableList<T>)collection)[collection.Count - 1]);
             return new LastElementQueryResult<T>(filter);
         }
+
+        /// <summary>
+        ///     Creates an observable query the stores the last element that satisfies a condition in a sequence.
+        /// </summary>
+        /// <typeparam name="T">The type of the sequence's elements.</typeparam>
+        /// <param name="items">The source sequence.</param>
+        /// <param name="predicate">The predicate that represents the condition.</param>
+        /// <param name="defaultValue">The optional default value.</param>
+        /// <param name="comparer">The equality comparer for the items, in case <paramref name="items"/> is an index-less collection.</param>
+        /// <returns>The last element of the sequence that satisfies <paramref name="predicate" />.</returns>
+        public static IObservableResult<T> ObservableLastOrDefault<T>(this IEnumerable<T> items,
+            Func<T, IObservable<bool>> predicate, IEqualityComparer<T> comparer = null,
+            T defaultValue = default(T))
+        {
+            var filter = new FilteredReadOnlyObservableList<T>(items, predicate, comparer);
+            if (items is IReadOnlyObservableList<T>)
+                return new SimpleQueryObservableResult<T, T>(filter,
+                    collection =>
+                        collection.Count == 0
+                            ? defaultValue
+                            : ((IReadOnlyObservableList<T>)collection)[collection.Count - 1]);
+            return new LastElementQueryResult<T>(filter, defaultValue);
+        }
+
+        /// <summary>
+        ///     Creates an observable query the stores the last element that satisfies a condition in a sequence.
+        /// </summary>
+        /// <typeparam name="T">The type of the sequence's elements.</typeparam>
+        /// <param name="items">The source sequence.</param>
+        /// <param name="predicate">The predicate that represents the condition.</param>
+        /// <param name="defaultValue">The optional default value.</param>
+        /// <param name="comparer">The equality comparer for the items, in case <paramref name="items"/> is an index-less collection.</param>
+        /// <returns>The last element of the sequence that satisfies <paramref name="predicate" />.</returns>
+        /// <seealso cref="ObservableExtensions.Observe{T}"/>
+        public static IObservableResult<T> ObservableLastOrDefaultAuto<T>(this IEnumerable<T> items,
+            Expression<Func<T, bool>> predicate, IEqualityComparer<T> comparer = null,
+            T defaultValue = default(T)) where T: INotifyPropertyChanged
+        {
+            var filter = new FilteredReadOnlyObservableList<T>(items, item => item.Observe(predicate), comparer);
+            if (items is IReadOnlyObservableList<T>)
+                return new SimpleQueryObservableResult<T, T>(filter,
+                    collection =>
+                        collection.Count == 0
+                            ? defaultValue
+                            : ((IReadOnlyObservableList<T>)collection)[collection.Count - 1]);
+            return new LastElementQueryResult<T>(filter, defaultValue);
+        }
+        #endregion
 
         /// <summary>
         ///     Creates an observable query that stores the element at the specified index in a collection.
@@ -1651,6 +1587,7 @@ namespace Neuronic.CollectionModel
         /// An <see cref="IObservableResult{T}"/> that points to the 
         /// <see cref="IReadOnlyCollection{T}.Count"/> property of <paramref name="items"/>.
         /// </returns>
+        [Obsolete("Use ObservableExtensions.Observe instead.")]
         public static IObservableResult<int> ObservableCount<T>(this IReadOnlyObservableCollection<T> items)
         {
             return new ObjectPropertyResult<IReadOnlyObservableCollection<T>, int>(items, x => x.Count);
@@ -1674,7 +1611,7 @@ namespace Neuronic.CollectionModel
         /// changes, the list will update it's content and notify it's clients.
         /// </para>
         /// </remarks>
-        public static IReadOnlyObservableList<T> ListBasedOnCondition<T>(this IObservableResult<bool> condition,
+        public static IReadOnlyObservableList<T> ListBasedOnCondition<T>(this IObservable<bool> condition,
             IReadOnlyObservableList<T> positiveSource, IReadOnlyObservableList<T> negativeSource)
         {
             return new ConditionalSwitchableListSource<T>(condition, positiveSource, negativeSource);
@@ -1699,7 +1636,7 @@ namespace Neuronic.CollectionModel
         /// </para>
         /// </remarks>
         public static IReadOnlyObservableCollection<T> CollectionBasedOnCondition<T>(
-            this IObservableResult<bool> condition,
+            this IObservable<bool> condition,
             IReadOnlyObservableCollection<T> positiveSource, IReadOnlyObservableCollection<T> negativeSource)
         {
             return new ConditionalSwitchableCollectionSource<T>(condition, positiveSource, negativeSource);

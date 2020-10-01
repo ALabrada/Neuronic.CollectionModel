@@ -10,12 +10,12 @@ namespace Neuronic.CollectionModel.Extras
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <seealso cref="Neuronic.CollectionModel.Extras.SwitchableListSource{T}" />
-    /// <seealso cref="System.Windows.IWeakEventListener" />
-    public class ConditionalSwitchableListSource<T> : SwitchableListSource<T>, IWeakEventListener
+    public class ConditionalSwitchableListSource<T> : SwitchableListSource<T>, IObserver<bool>
     {
-        private readonly IObservableResult<bool> _condition;
+        private readonly IObservable<bool> _condition;
         private readonly IReadOnlyObservableList<T> _positiveSource;
         private readonly IReadOnlyObservableList<T> _negativeSource;
+        private readonly IDisposable _subscription;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ConditionalSwitchableListSource{T}"/> class.
@@ -23,24 +23,27 @@ namespace Neuronic.CollectionModel.Extras
         /// <param name="condition">The condition.</param>
         /// <param name="positiveSource">The positive source.</param>
         /// <param name="negativeSource">The negative source.</param>
-        public ConditionalSwitchableListSource(IObservableResult<bool> condition,
+        public ConditionalSwitchableListSource(IObservable<bool> condition,
             IReadOnlyObservableList<T> positiveSource, IReadOnlyObservableList<T> negativeSource)
         {
             _condition = condition ?? throw new ArgumentNullException(nameof(condition));
             _positiveSource = positiveSource;
             _negativeSource = negativeSource;
 
-            PropertyChangedEventManager.AddListener(_condition, this, nameof(IObservableResult<bool>.CurrentValue));
-
-            Source = _condition.CurrentValue ? _positiveSource : _negativeSource;
+            _subscription = condition.Subscribe(this);
         }
 
-        bool IWeakEventListener.ReceiveWeakEvent(Type managerType, object sender, EventArgs e)
+        public void OnCompleted()
         {
-            if (!ReferenceEquals(_condition, sender))
-                return false;
-            Source = _condition.CurrentValue ? _positiveSource : _negativeSource;
-            return true;
+        }
+
+        public void OnError(Exception error)
+        {
+        }
+
+        public void OnNext(bool value)
+        {
+            Source = value ? _positiveSource : _negativeSource;
         }
     }
 }

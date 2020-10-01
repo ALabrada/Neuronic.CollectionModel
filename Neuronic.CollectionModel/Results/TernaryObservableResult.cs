@@ -17,6 +17,8 @@ namespace Neuronic.CollectionModel.Results
     /// </summary>
     /// <typeparam name="TResult">The type of the result.</typeparam>
     /// <seealso cref="Neuronic.CollectionModel.Results.ObservableResult{TResult}" />
+    /// 
+    [Obsolete("Use System.Reactive extensions instead.")]
     public class TernaryObservableResult<TResult> : ObservableResult<TResult>, IWeakEventListener
     {
         /// <summary>
