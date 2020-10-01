@@ -75,6 +75,7 @@
     <Compile Include="FilteredReadOnlyObservableListTest.cs" />
     <Compile Include="GroupingReadOnlyObservableCollectionSourceTest.cs" />
     <Compile Include="GroupingReadOnlyObservableListSourceTest.cs" />
+    <Compile Include="KeySortedReadOnlyObservableListTest.cs" />
     <Compile Include="Notify.cs" />
     <Compile Include="ObjectPropertyResultTest.cs" />
     <Compile Include="Observable.cs" />

@@ -601,6 +601,7 @@ namespace Neuronic.CollectionModel
             return new CastingReadOnlyObservableList<TSource, TTarget>(filter);
         }
 
+        #region OrderBy
         /// <summary>
         ///     Creates a sorted view of an observable collection.
         /// </summary>
@@ -632,6 +633,91 @@ namespace Neuronic.CollectionModel
         {
             return new SortedReadOnlyObservableList<T>(collection, comparison, eqComparer, triggers);
         }
+
+        /// <summary>
+        ///     Creates an ordered view of an observable collection using key-based ordering.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the collection items.</typeparam>
+        /// <typeparam name="TKey">The type of the sorting keys.</typeparam>
+        /// <param name="collection">The source collection.</param>
+        /// <param name="keySelector">The key function.</param>
+        /// <param name="comparison">The comparison function.</param>
+        /// <param name="triggers">The name of the properties of <typeparamref name="TSource" /> that the collection's order depends on.</param>
+        /// <returns>Sorted observable list.</returns>
+        public static IReadOnlyObservableList<TSource> ListOrderBy<TSource, TKey>(this IReadOnlyObservableCollection<TSource> collection,
+            Func<TSource, TKey> keySelector,
+            Comparison<TKey> comparison, params string[] triggers)
+        {
+            return new KeySortedReadOnlyObservableList<TSource, TKey>(collection,
+                item => new FunctionObservable<TSource, TKey>(item, keySelector, triggers),
+                comparison, null);
+        }
+
+        /// <summary>
+        ///     Creates an ordered view of an observable collection using key-based ordering.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the collection items.</typeparam>
+        /// <typeparam name="TKey">The type of the sorting keys.</typeparam>
+        /// <param name="collection">The source collection.</param>
+        /// <param name="keySelector">The key function.</param>
+        /// <param name="comparison">The comparison function.</param>
+        /// <param name="eqComparer">
+        /// A comparer for the list items. This is only used if the source collection is not a list 
+        /// and does not provide index information in its <see cref="NotifyCollectionChangedEventArgs"/> events.
+        /// </param>
+        /// <param name="triggers">The name of the properties of <typeparamref name="TSource" /> that the collection's order depends on.</param>
+        /// <returns>Sorted observable list.</returns>
+        public static IReadOnlyObservableList<TSource> ListOrderBy<TSource, TKey>(this IReadOnlyObservableCollection<TSource> collection, 
+            Func<TSource, TKey> keySelector,
+            Comparison<TKey> comparison, IEqualityComparer<TSource> eqComparer, params string[] triggers)
+        {
+            return new KeySortedReadOnlyObservableList<TSource, TKey>(collection, 
+                item => new FunctionObservable<TSource,TKey>(item, keySelector, triggers), 
+                comparison, eqComparer);
+        }
+
+        /// <summary>
+        ///     Creates an ordered view of an observable collection using key-based ordering.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the collection items.</typeparam>
+        /// <typeparam name="TKey">The type of the sorting keys.</typeparam>
+        /// <param name="collection">The source collection.</param>
+        /// <param name="keySelector">The key function.</param>
+        /// <param name="comparison">The comparison function.</param>
+        /// <param name="eqComparer">
+        /// A comparer for the list items. This is only used if the source collection is not a list 
+        /// and does not provide index information in its <see cref="NotifyCollectionChangedEventArgs"/> events.
+        /// </param>
+        /// <returns>Sorted observable list.</returns>
+        public static IReadOnlyObservableList<TSource> ListOrderBy<TSource, TKey>(this IReadOnlyObservableCollection<TSource> collection,
+            Func<TSource, IObservable<TKey>> keySelector, Comparison<TKey> comparison = null, 
+            IEqualityComparer<TSource> eqComparer = null)
+        {
+            return new KeySortedReadOnlyObservableList<TSource, TKey>(collection, keySelector, comparison, eqComparer);
+        }
+
+        /// <summary>
+        ///     Creates an ordered view of an observable collection using key-based ordering. 
+        ///     The method automatically obtains the properties of <typeparam name="TSource" /> that can affect the predicate's outcome.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the collection items.</typeparam>
+        /// <typeparam name="TKey">The type of the sorting keys.</typeparam>
+        /// <param name="collection">The source collection.</param>
+        /// <param name="keySelector">The key function.</param>
+        /// <param name="comparison">The comparison function.</param>
+        /// <param name="eqComparer">
+        /// A comparer for the list items. This is only used if the source collection is not a list 
+        /// and does not provide index information in its <see cref="NotifyCollectionChangedEventArgs"/> events.
+        /// </param>
+        /// <returns>Sorted observable list.</returns>
+        /// <seealso cref="ObservableExtensions.Observe{T}"/>
+        public static IReadOnlyObservableList<TSource> ListOrderByAuto<TSource, TKey>(this IReadOnlyObservableCollection<TSource> collection,
+            Expression<Func<TSource, TKey>> keySelector, Comparison<TKey> comparison = null,
+            IEqualityComparer<TSource> eqComparer = null) where TSource: INotifyPropertyChanged
+        {
+            return new KeySortedReadOnlyObservableList<TSource, TKey>(collection, item => item.Observe(keySelector), comparison, eqComparer);
+        }
+        #endregion
 
         /// <summary>
         ///     Creates an observable view of a collection by applying a transformation to each item in the corresponding order.
