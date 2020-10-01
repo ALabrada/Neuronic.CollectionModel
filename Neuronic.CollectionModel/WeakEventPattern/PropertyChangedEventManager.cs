@@ -86,7 +86,7 @@ namespace Neuronic.CollectionModel.WeakEventPattern
         protected override bool OnChooseListener(ListenerInfo listener, EventArgs eventArgs)
         {
             var sourcePropName = (eventArgs as PropertyChangedEventArgs)?.PropertyName;
-            return base.OnChooseListener(listener, eventArgs) && sourcePropName == string.Empty ||
+            return base.OnChooseListener(listener, eventArgs) && ((PropertyListenerInfo)listener).PropertyName.Length == 0 ||
                    string.Equals(sourcePropName, ((PropertyListenerInfo)listener).PropertyName,
                        StringComparison.Ordinal);
         }
