@@ -28,7 +28,14 @@ namespace Neuronic.CollectionModel.Results
         {
             if (!ReferenceEquals(Source, sender) || managerType != typeof(CollectionChangedEventManager))
                 return false;
-            OnSourceChanged(sender, (NotifyCollectionChangedEventArgs)e);
+            try
+            {
+                OnSourceChanged(sender, (NotifyCollectionChangedEventArgs)e);
+            }
+            catch (Exception error)
+            {
+                OnError(new ErrorEventArgs(error));
+            }
             return true;
         }
 
