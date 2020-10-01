@@ -51,7 +51,7 @@ namespace Neuronic.CollectionModel.Collections
         {
             UpdateIndexes(0, Items.Count);
             FilteredItems =
-                new ObservableCollection<T>(from container in Items where container.IsIncluded select container.Item);
+                new ObservableCollection<T>(from container in Items where container.Value select container.Item);
 
             Items.CollectionChanged += ItemsOnCollectionChanged;
             FilteredItems.CollectionChanged += (sender, args) => OnCollectionChanged(args);
@@ -73,7 +73,7 @@ namespace Neuronic.CollectionModel.Collections
         {
             UpdateIndexes(0, Items.Count);
             FilteredItems =
-                new ObservableCollection<T>(from container in Items where container.IsIncluded select container.Item);
+                new ObservableCollection<T>(from container in Items where container.Value select container.Item);
 
             Items.CollectionChanged += ItemsOnCollectionChanged;
             FilteredItems.CollectionChanged += (sender, args) => OnCollectionChanged(args);
@@ -153,7 +153,7 @@ namespace Neuronic.CollectionModel.Collections
         protected override IndexedFilterItemContainer<T> CreateContainer(T item)
         {
             var container = new IndexedFilterItemContainer<T>(item, Filter(item));
-            container.IsIncludedChanged += ContainerOnIsIncludedChanged;
+            container.ValueChanged += ContainerOnIsIncludedChanged;
             return container;
         }
 
@@ -164,13 +164,13 @@ namespace Neuronic.CollectionModel.Collections
         protected override void DestroyContainer(IndexedFilterItemContainer<T> container)
         {
             container.Dispose();
-            container.IsIncludedChanged -= ContainerOnIsIncludedChanged;
+            container.ValueChanged -= ContainerOnIsIncludedChanged;
         }
 
         private void ContainerOnIsIncludedChanged(object sender, EventArgs eventArgs)
         {
             var container = (IndexedFilterItemContainer<T>) sender;
-            if (container.IsIncluded)
+            if (container.Value)
             {
                 UpdateIndexes(container.GlobalIndex, Items.Count);
                 FilteredItems.Insert(container.LocalIndex - 1, container.Item);
@@ -221,12 +221,12 @@ namespace Neuronic.CollectionModel.Collections
             IndexedFilterItemContainer<T> oldItem,
             int index)
         {
-            if (newItem.IsIncluded && !oldItem.IsIncluded)
+            if (newItem.Value && !oldItem.Value)
             {
                 UpdateIndexes(index, Items.Count);
                 FilteredItems.Insert(newItem.LocalIndex - 1, newItem.Item);
             }
-            else if (oldItem.IsIncluded && !newItem.IsIncluded)
+            else if (oldItem.Value && !newItem.Value)
             {
                 UpdateIndexes(index, Items.Count);
                 FilteredItems.RemoveAt(oldItem.LocalIndex - 1);
@@ -235,7 +235,7 @@ namespace Neuronic.CollectionModel.Collections
             {
                 newItem.GlobalIndex = oldItem.GlobalIndex;
                 newItem.LocalIndex = oldItem.LocalIndex;
-                if (newItem.IsIncluded)
+                if (newItem.Value)
                     FilteredItems[newItem.LocalIndex - 1] = newItem.Item;
             }
             oldItem.GlobalIndex = int.MinValue;
@@ -251,14 +251,14 @@ namespace Neuronic.CollectionModel.Collections
                 UpdateIndexes(oldIndex, newIndex + 1);
             var newLocalIndex = item.LocalIndex - 1;
 
-            if (item.IsIncluded)
+            if (item.Value)
                 FilteredItems.Move(oldLocalIndex, newLocalIndex);
         }
 
         private void OnContainerRemovedFromItems(IndexedFilterItemContainer<T> item, int index)
         {
             UpdateIndexes(index, Items.Count);
-            if (item.IsIncluded)
+            if (item.Value)
                 FilteredItems.RemoveAt(item.LocalIndex - 1);
             item.LocalIndex = item.GlobalIndex = int.MinValue;
         }
@@ -266,7 +266,7 @@ namespace Neuronic.CollectionModel.Collections
         private void OnContainerAddedToItems(IndexedFilterItemContainer<T> item, int index)
         {
             UpdateIndexes(index, Items.Count);
-            if (item.IsIncluded)
+            if (item.Value)
                 FilteredItems.Insert(item.LocalIndex - 1, item.Item);
         }
 
@@ -276,7 +276,7 @@ namespace Neuronic.CollectionModel.Collections
             for (var i = start; i < end; i++)
             {
                 Items[i].GlobalIndex = i;
-                nextLocal = Items[i].LocalIndex = Items[i].IsIncluded ? nextLocal + 1 : nextLocal;
+                nextLocal = Items[i].LocalIndex = Items[i].Value ? nextLocal + 1 : nextLocal;
                 // The index that should occupy next item.
             }
         }

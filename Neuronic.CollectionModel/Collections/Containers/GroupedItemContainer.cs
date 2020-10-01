@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 
 namespace Neuronic.CollectionModel.Collections.Containers
@@ -11,30 +12,12 @@ namespace Neuronic.CollectionModel.Collections.Containers
     /// <seealso cref="ItemContainer{TItem}" />
     public class GroupedItemContainer<TSource, TKey> : ObservableItemContainer<TSource, TKey>
     {
-        private TKey _key;
-
-        public GroupedItemContainer(TSource item, Func<TSource, IObservable<TKey>> selector) : this (item, selector(item))
+        public GroupedItemContainer(TSource item, Func<TSource, IObservable<TKey>> selector, IEqualityComparer<TKey> keyComparer) : this (item, selector(item), keyComparer)
         {
         }
 
-        public GroupedItemContainer(TSource item, IObservable<TKey> observable) : base(item, observable)
+        public GroupedItemContainer(TSource item, IObservable<TKey> observable, IEqualityComparer<TKey> keyComparer) : base(item, observable, keyComparer)
         {
-        }
-
-        /// <summary>
-        /// Gets or sets the grouping key that represents the item.
-        /// </summary>
-        /// <value>
-        /// The key.
-        /// </value>
-        public TKey Key
-        {
-            get { return _key; }
-            protected set
-            {
-                _key = value;
-                OnKeyChanged();
-            }
         }
 
         /// <summary>
@@ -60,23 +43,5 @@ namespace Neuronic.CollectionModel.Collections.Containers
         /// The item's index in its group.
         /// </value>
         public int GroupIndex { get; set; } = -1;
-
-        /// <summary>
-        /// Occurs when the item's key changes.
-        /// </summary>
-        public event EventHandler KeyChanged;
-
-        /// <summary>
-        /// Called when the item's key changes.
-        /// </summary>
-        protected virtual void OnKeyChanged()
-        {
-            KeyChanged?.Invoke(this, EventArgs.Empty);
-        }
-
-        protected override void OnValueChanged(TKey value)
-        {
-            Key = value;
-        }
     }
 }

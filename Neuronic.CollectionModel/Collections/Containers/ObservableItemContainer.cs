@@ -1,4 +1,6 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace Neuronic.CollectionModel.Collections.Containers
 {
@@ -9,7 +11,7 @@ namespace Neuronic.CollectionModel.Collections.Containers
     /// <typeparam name="TResult">The type of the result.</typeparam>
     /// <seealso cref="Neuronic.CollectionModel.Collections.Containers.ItemContainer{TItem}" />
     /// <seealso cref="System.IObserver{TResult}" />
-    public abstract class ObservableItemContainer<TItem, TResult> : ItemContainer<TItem>, IObserver<TResult>, IDisposable
+    public class ObservableItemContainer<TItem, TResult> : ItemContainer<TItem>, IObserver<TResult>, IDisposable
     {
         private readonly IDisposable _subscription;
 
@@ -18,9 +20,12 @@ namespace Neuronic.CollectionModel.Collections.Containers
         /// </summary>
         /// <param name="item">The item.</param>
         /// <param name="observable">The observable.</param>
-        protected ObservableItemContainer(TItem item, IObservable<TResult> observable) : base(item)
+        /// <param name="valueComparer">The value comparer.</param>
+        public ObservableItemContainer(TItem item, IObservable<TResult> observable, 
+            IEqualityComparer<TResult> valueComparer = null) : base(item)
         {
             Observable = observable;
+            ValueComparer = valueComparer ?? EqualityComparer<TResult>.Default;
             _subscription = Observable?.Subscribe(this);
         }
 
@@ -32,15 +37,28 @@ namespace Neuronic.CollectionModel.Collections.Containers
         /// </value>
         public IObservable<TResult> Observable { get; }
 
+        public IEqualityComparer<TResult> ValueComparer { get; }
+
+        public TResult Value { get; private set; }
+
         /// <summary>
         /// Called when the observed value changes.
         /// </summary>
         /// <param name="value">The value.</param>
-        protected abstract void OnValueChanged(TResult value);
+        protected virtual void OnNewValue(TResult value)
+        {
+            if (ValueComparer.Equals(Value, value))
+                return;
+            var oldValue = Value;
+            Value = value;
+            OnValueChanged(new ValueChangedEventArgs<TResult>(oldValue, value));
+        }
+
+        public event EventHandler<ValueChangedEventArgs<TResult>> ValueChanged;
 
         void IObserver<TResult>.OnNext(TResult value)
         {
-            OnValueChanged(value);
+            OnNewValue(value);
         }
 
         void IObserver<TResult>.OnError(Exception error)
@@ -55,5 +73,23 @@ namespace Neuronic.CollectionModel.Collections.Containers
         {
             _subscription?.Dispose();
         }
+
+        protected virtual void OnValueChanged(ValueChangedEventArgs<TResult> eventArgs)
+        {
+            ValueChanged?.Invoke(this, eventArgs);
+        }
+    }
+
+    public class ValueChangedEventArgs<T> : EventArgs
+    {
+        public ValueChangedEventArgs(T oldValue, T newValue)
+        {
+            OldValue = oldValue;
+            NewValue = newValue;
+        }
+
+        public T OldValue { get; }
+
+        public T NewValue { get; }
     }
 }

@@ -49,7 +49,7 @@ namespace Neuronic.CollectionModel.Collections
             IEqualityComparer<T> itemComparer, params string[] triggers) : base(source, filter, itemComparer, triggers)
         {
             Items.CollectionChanged += ItemsOnCollectionChanged;
-            _count = Items.Count(c => c.IsIncluded);
+            _count = Items.Count(c => c.Value);
         }
 
         /// <summary>
@@ -62,7 +62,7 @@ namespace Neuronic.CollectionModel.Collections
             IEqualityComparer<T> itemComparer = null) : base(source, filter, itemComparer)
         {
             Items.CollectionChanged += ItemsOnCollectionChanged;
-            _count = Items.Count(c => c.IsIncluded);
+            _count = Items.Count(c => c.Value);
         }
 
         /// <summary>
@@ -79,7 +79,7 @@ namespace Neuronic.CollectionModel.Collections
                 case NotifyCollectionChangedAction.Add:
                     Debug.Assert(e.NewItems.Count == 1);
                     newContainer = (FilterItemContainer<T>) e.NewItems[0];
-                    if (newContainer.IsIncluded)
+                    if (newContainer.Value)
                     {
                         SetCount(Count + 1);
                         newArgs = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add,
@@ -89,7 +89,7 @@ namespace Neuronic.CollectionModel.Collections
                 case NotifyCollectionChangedAction.Remove:
                     Debug.Assert(e.OldItems.Count == 1);
                     oldContainer = (FilterItemContainer<T>) e.OldItems[0];
-                    if (oldContainer.IsIncluded)
+                    if (oldContainer.Value)
                     {
                         SetCount(Count - 1);
                         newArgs = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove,
@@ -100,16 +100,16 @@ namespace Neuronic.CollectionModel.Collections
                     Debug.Assert(e.OldItems.Count == 1 && e.NewItems.Count == 1);
                     newContainer = (FilterItemContainer<T>) e.NewItems[0];
                     oldContainer = (FilterItemContainer<T>) e.OldItems[0];
-                    if (newContainer.IsIncluded && oldContainer.IsIncluded)
+                    if (newContainer.Value && oldContainer.Value)
                         newArgs = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace,
                             newContainer.Item, oldContainer.Item);
-                    else if (newContainer.IsIncluded)
+                    else if (newContainer.Value)
                     {
                         SetCount(Count + 1);
                         newArgs = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add,
                             newContainer.Item);
                     }
-                    else if (oldContainer.IsIncluded)
+                    else if (oldContainer.Value)
                     {
                         SetCount(Count - 1);
                         newArgs = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove,
@@ -117,7 +117,7 @@ namespace Neuronic.CollectionModel.Collections
                     }
                     break;
                 case NotifyCollectionChangedAction.Reset:
-                    SetCount(Items.Count(c => c.IsIncluded));
+                    SetCount(Items.Count(c => c.Value));
                     newArgs = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset);
                     break;
             }
@@ -133,7 +133,7 @@ namespace Neuronic.CollectionModel.Collections
         /// </returns>
         public override IEnumerator<T> GetEnumerator()
         {
-            return (from container in Items where container.IsIncluded select container.Item).GetEnumerator();
+            return (from container in Items where container.Value select container.Item).GetEnumerator();
         }
 
         private void SetCount(int value)
@@ -153,7 +153,7 @@ namespace Neuronic.CollectionModel.Collections
         protected override FilterItemContainer<T> CreateContainer(T item)
         {
             var container = new FilterItemContainer<T>(item, Filter(item));
-            container.IsIncludedChanged += ContainerOnIsIncludedChanged;
+            container.ValueChanged += ContainerOnIsIncludedChanged;
             return container;
         }
 
@@ -164,14 +164,14 @@ namespace Neuronic.CollectionModel.Collections
         protected override void DestroyContainer(FilterItemContainer<T> container)
         {
             container.Dispose();
-            container.IsIncludedChanged -= ContainerOnIsIncludedChanged;
+            container.ValueChanged -= ContainerOnIsIncludedChanged;
         }
 
         private void ContainerOnIsIncludedChanged(object sender, EventArgs e)
         {
             var container = (FilterItemContainer<T>) sender;
             NotifyCollectionChangedAction action;
-            if (container.IsIncluded)
+            if (container.Value)
             {
                 action = NotifyCollectionChangedAction.Add;
                 SetCount(Count + 1);

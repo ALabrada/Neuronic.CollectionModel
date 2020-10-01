@@ -26,6 +26,7 @@ namespace Neuronic.CollectionModel.Collections
     {
         private readonly ContainerList _containers;
         private readonly Func<TSource, IObservable<TKey>> _keySelector;
+        private readonly IEqualityComparer<TKey> _keyComparer;
         private readonly IEqualityComparer<GroupedItemContainer<TSource, TKey>> _sourceComparer;
         private readonly INotifyCollectionChanged _source;
 
@@ -137,10 +138,10 @@ namespace Neuronic.CollectionModel.Collections
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
             _keySelector = keySelector;
+            _keyComparer = keyComparer ?? EqualityComparer<TKey>.Default;
             _sourceComparer = new ContainerEqualityComparer<TSource, GroupedItemContainer<TSource, TKey>>(sourceComparer);
-            keyComparer = keyComparer ?? EqualityComparer<TKey>.Default;
-            var initialContainers = source.Select(i => new GroupedItemContainer<TSource, TKey>(i, _keySelector));
-            _containers = new ContainerList(this, initialContainers, keyComparer, groups);
+            var initialContainers = source.Select(i => new GroupedItemContainer<TSource, TKey>(i, _keySelector, _keyComparer));
+            _containers = new ContainerList(this, initialContainers, _keyComparer, groups);
             _source = source as INotifyCollectionChanged;
             if (_source != null)
                 CollectionChangedEventManager.AddListener(_source, this);
@@ -170,7 +171,7 @@ namespace Neuronic.CollectionModel.Collections
         private void OnSourceChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             _containers.UpdateCollection((IEnumerable<TSource>) sender, e,
-                o => new GroupedItemContainer<TSource, TKey>((TSource) o, _keySelector), comparer: _sourceComparer);
+                o => new GroupedItemContainer<TSource, TKey>((TSource) o, _keySelector, _keyComparer), comparer: _sourceComparer);
         }
 
         /// <summary>

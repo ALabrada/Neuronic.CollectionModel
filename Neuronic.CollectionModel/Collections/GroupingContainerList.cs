@@ -46,7 +46,7 @@ namespace Neuronic.CollectionModel.Collections
                 container.SourceIndex = i;
                 container.GroupIndex = -1;
                 container.Group = null;
-                container.KeyChanged += ContainerOnKeyChanged;
+                container.ValueChanged += ContainerOnKeyChanged;
             }
         }
 
@@ -139,13 +139,13 @@ namespace Neuronic.CollectionModel.Collections
         protected virtual void ContainerOnKeyChanged(GroupedItemContainer<TSource, TKey> container)
         {
             var oldGroup = container.Group;
-            if (oldGroup != null && KeyComparer.Equals(oldGroup.Key, container.Key))
+            if (oldGroup != null && KeyComparer.Equals(oldGroup.Key, container.Value))
                 return;
 
-            var group = FindGroup(container.Key);
+            var group = FindGroup(container.Value);
             if (group == null && IncludeImplicitGroups)
             {
-                group = new ReadOnlyObservableGroup<TSource, TKey>(container.Key, false) {Owner = Owner};
+                group = new ReadOnlyObservableGroup<TSource, TKey>(container.Value, false) {Owner = Owner};
                 AddGroup(group);
             }
 
@@ -241,13 +241,13 @@ namespace Neuronic.CollectionModel.Collections
                 var group = container.Group;
                 if (group == null)
                 {
-                    group = FindGroup(container.Key);
+                    group = FindGroup(container.Value);
                     if (group == null)
                     {
                         if (!IncludeImplicitGroups)
                             continue;
                         AddGroup(group =
-                            new ReadOnlyObservableGroup<TSource, TKey>(container.Key, false) {Owner = Owner});
+                            new ReadOnlyObservableGroup<TSource, TKey>(container.Value, false) {Owner = Owner});
                     }
                     container.Group = group;
                     container.GroupIndex = group.Count;
@@ -265,10 +265,10 @@ namespace Neuronic.CollectionModel.Collections
         {
             base.InsertItem(index, container);
 
-            var group = FindGroup(container.Key);
+            var group = FindGroup(container.Value);
             if (group == null && IncludeImplicitGroups)
             {
-                group = new ReadOnlyObservableGroup<TSource, TKey>(container.Key, false) {Owner = Owner};
+                group = new ReadOnlyObservableGroup<TSource, TKey>(container.Value, false) {Owner = Owner};
                 AddGroup(group);
             }
 
@@ -281,7 +281,7 @@ namespace Neuronic.CollectionModel.Collections
                 group.InternalItems.Insert(container.GroupIndex, container.Item);
             }
             UpdateIndexesFrom(container);
-            container.KeyChanged += ContainerOnKeyChanged;
+            container.ValueChanged += ContainerOnKeyChanged;
         }
 
         /// <summary>
@@ -309,7 +309,7 @@ namespace Neuronic.CollectionModel.Collections
             var groupIndex = container.GroupIndex;
 
             container.Dispose();
-            container.KeyChanged -= ContainerOnKeyChanged;
+            container.ValueChanged -= ContainerOnKeyChanged;
 
             base.RemoveItem(index);
 
@@ -338,7 +338,7 @@ namespace Neuronic.CollectionModel.Collections
             var oldGroupIndex = oldContainer.GroupIndex;
 
             oldContainer.Dispose();
-            oldContainer.KeyChanged -= ContainerOnKeyChanged;
+            oldContainer.ValueChanged -= ContainerOnKeyChanged;
 
             base.SetItem(index, container);
 
@@ -347,10 +347,10 @@ namespace Neuronic.CollectionModel.Collections
             oldContainer.GroupIndex = -1;
             oldContainer.SourceIndex = -1;
 
-            var group = FindGroup(container.Key);
+            var group = FindGroup(container.Value);
             if (group == null && IncludeImplicitGroups)
             {
-                group = new ReadOnlyObservableGroup<TSource, TKey>(container.Key, false) {Owner = Owner};
+                group = new ReadOnlyObservableGroup<TSource, TKey>(container.Value, false) {Owner = Owner};
                 AddGroup(group);
             }
             container.SourceIndex = index;
@@ -377,7 +377,7 @@ namespace Neuronic.CollectionModel.Collections
                 }
             }
             UpdateIndexesFrom(container);
-            container.KeyChanged += ContainerOnKeyChanged;
+            container.ValueChanged += ContainerOnKeyChanged;
         }
 
         /// <summary>
@@ -388,7 +388,7 @@ namespace Neuronic.CollectionModel.Collections
             foreach (var container in Items)
             {
                 container.Dispose();
-                container.KeyChanged -= ContainerOnKeyChanged;
+                container.ValueChanged -= ContainerOnKeyChanged;
                 container.Group = null;
                 container.GroupIndex = -1;
                 container.SourceIndex = -1;

@@ -719,6 +719,7 @@ namespace Neuronic.CollectionModel
         }
         #endregion
 
+        #region Select
         /// <summary>
         ///     Creates an observable view of a collection by applying a transformation to each item in the corresponding order.
         /// </summary>
@@ -738,8 +739,58 @@ namespace Neuronic.CollectionModel
             this IReadOnlyObservableCollection<TSource> collection, Func<TSource, TTarget> selector,
             Action<TTarget> onRemove = null, IEqualityComparer<TTarget> targetComparer = null)
         {
-            return new TransformingReadOnlyObservableList<TSource, TTarget>(collection, selector, onRemove);
+            return new TransformingReadOnlyObservableList<TSource, TTarget>(collection, selector, onRemove, targetComparer);
         }
+
+        /// <summary>
+        ///     Creates an observable view of a collection by applying a transformation to each item in the corresponding order.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the source collection.</typeparam>
+        /// <typeparam name="TTarget">The type of the target view.</typeparam>
+        /// <param name="collection">The source collection.</param>
+        /// <param name="selector">The transforming function.</param>
+        /// <param name="onRemove">The optional callback used to destroy the created <typeparamref name="TTarget" /> instances.</param>
+        /// <param name="onChange">The optional callback executed with <paramref name="selector"/> modifies a transformed value.</param>
+        /// <param name="sourceComparer">
+        /// A comparer for the list items. This is only used if the source collection is not a list 
+        /// and does not provide index information in its <see cref="NotifyCollectionChangedEventArgs"/> events.
+        /// </param>
+        /// <returns>
+        /// A list with the projections of the source elements.
+        /// </returns>
+        public static IReadOnlyObservableList<TTarget> ListSelect<TSource, TTarget>(
+            this IReadOnlyObservableCollection<TSource> collection, Func<TSource, IObservable<TTarget>> selector,
+            Action<TTarget> onRemove = null, Action<TTarget, TTarget> onChange = null,
+            IEqualityComparer<TSource> sourceComparer = null)
+        {
+            return new DynamicTransformingReadOnlyObservableList<TSource, TTarget>(collection, selector, onRemove, onChange, sourceComparer);
+        }
+
+        /// <summary>
+        ///     Creates an observable view of a collection by applying a transformation to each item in the corresponding order.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the source collection.</typeparam>
+        /// <typeparam name="TTarget">The type of the target view.</typeparam>
+        /// <param name="collection">The source collection.</param>
+        /// <param name="selector">The transforming function.</param>
+        /// <param name="onRemove">The optional callback used to destroy the created <typeparamref name="TTarget" /> instances.</param>
+        /// <param name="onChange">The optional callback executed with <paramref name="selector"/> modifies a transformed value.</param>
+        /// <param name="sourceComparer">
+        /// A comparer for the list items. This is only used if the source collection is not a list 
+        /// and does not provide index information in its <see cref="NotifyCollectionChangedEventArgs"/> events.
+        /// </param>
+        /// <returns>
+        /// A list with the projections of the source elements.
+        /// </returns>
+        /// <seealso cref="ObservableExtensions.Observe{T}"/>
+        public static IReadOnlyObservableList<TTarget> ListSelectAuto<TSource, TTarget>(
+            this IReadOnlyObservableCollection<TSource> collection, Expression<Func<TSource, TTarget>> selector,
+            Action<TTarget> onRemove = null, Action<TTarget, TTarget> onChange = null,
+            IEqualityComparer<TSource> sourceComparer = null) where TSource: INotifyPropertyChanged
+        {
+            return new DynamicTransformingReadOnlyObservableList<TSource, TTarget>(collection, item => item.Observe(selector), onRemove, onChange, sourceComparer);
+        }
+        #endregion
 
         /// <summary>
         ///     Creates an observable list by concatenating two or more collections.

@@ -140,7 +140,7 @@ namespace Neuronic.CollectionModel.Collections
                 _sortedItems.AddRange(Items);
                 foreach (var item in Items)
                 {
-                    item.TriggerPropertyChanged += ItemOnTriggerPropertyChanged;
+                    item.ValueChanged += ItemOnTriggerPropertyChanged;
                 }
                 UpdateItems(0, Count);
                 _sortedItems.Sort(_comparer);
@@ -166,7 +166,7 @@ namespace Neuronic.CollectionModel.Collections
                 sortedIndex = ~sortedIndex;
                 _sortedItems.Insert(sortedIndex, item);
 
-                item.TriggerPropertyChanged += ItemOnTriggerPropertyChanged;
+                item.ValueChanged += ItemOnTriggerPropertyChanged;
 
                 OnSortedCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add,
                     item.Item, sortedIndex));
@@ -195,7 +195,7 @@ namespace Neuronic.CollectionModel.Collections
             {
                 var item = Items[index];
                 item.Dispose();
-                item.TriggerPropertyChanged -= ItemOnTriggerPropertyChanged;
+                item.ValueChanged -= ItemOnTriggerPropertyChanged;
 
                 var oldSortedIndex = _sortedItems.BinarySearch(item, _comparer);
                 Debug.Assert(oldSortedIndex >= 0);
@@ -213,7 +213,7 @@ namespace Neuronic.CollectionModel.Collections
             {
                 var oldItem = Items[index];
                 oldItem.Dispose();
-                oldItem.TriggerPropertyChanged -= ItemOnTriggerPropertyChanged;
+                oldItem.ValueChanged -= ItemOnTriggerPropertyChanged;
 
                 var oldSortedIndex = _sortedItems.BinarySearch(oldItem, _comparer);
                 Debug.Assert(oldSortedIndex >= 0);
@@ -228,7 +228,7 @@ namespace Neuronic.CollectionModel.Collections
                 newSortedIndex = ~newSortedIndex;
                 _sortedItems.Insert(newSortedIndex, newItem);
 
-                newItem.TriggerPropertyChanged += ItemOnTriggerPropertyChanged;
+                newItem.ValueChanged += ItemOnTriggerPropertyChanged;
 
                 if (oldSortedIndex == newSortedIndex)
                     OnSortedCollectionChanged(new NotifyCollectionChangedEventArgs(
@@ -247,7 +247,7 @@ namespace Neuronic.CollectionModel.Collections
                 foreach (var item in Items)
                 {
                     item.Dispose();
-                    item.TriggerPropertyChanged -= ItemOnTriggerPropertyChanged;
+                    item.ValueChanged -= ItemOnTriggerPropertyChanged;
                     item.SourceIndex = -1;
                 }
 
@@ -297,10 +297,6 @@ namespace Neuronic.CollectionModel.Collections
 
             public int SourceIndex { get; set; }
 
-            public TKey Key { get; private set; }
-
-            public event EventHandler TriggerPropertyChanged;
-
             public override bool Equals(object obj)
             {
                 return obj is Container x && x.SourceIndex == SourceIndex;
@@ -311,11 +307,6 @@ namespace Neuronic.CollectionModel.Collections
                 return 0;
             }
 
-            protected override void OnValueChanged(TKey value)
-            {
-                Key = value;
-                TriggerPropertyChanged?.Invoke(this, EventArgs.Empty);
-            }
         }
 
         private class ContainerComparer : IComparer<Container>
@@ -329,7 +320,7 @@ namespace Neuronic.CollectionModel.Collections
 
             public int Compare(Container x, Container y)
             {
-                var cmp = _comparison(x.Key, y.Key);
+                var cmp = _comparison(x.Value, y.Value);
                 return cmp == 0 ? x.SourceIndex.CompareTo(y.SourceIndex) : cmp;
             }
         }
