@@ -244,7 +244,7 @@ namespace Neuronic.CollectionModel.Testing
             Assert.IsTrue(new HashSet<int>(people.Select(x => x.Prop)).SetEquals(transfList));
             Assert.IsTrue(new HashSet<int>(people.Select(x => x.Prop)).SetEquals(copy));
         }
-        
+
         private IObservable<int> Selector(double item)
         {
             return ((int)item).AsObservable();

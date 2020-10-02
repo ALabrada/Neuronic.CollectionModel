@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Windows;
 using Neuronic.CollectionModel.Collections.Containers;
 using Neuronic.CollectionModel.WeakEventPattern;
@@ -82,6 +83,29 @@ namespace Neuronic.CollectionModel.Collections
                 source, item => new FunctionObservable<TSource, TKey>(item, keySelector, triggers), 
                 keyComparer, sourceComparer, 
                 new ObservableCollection<ReadOnlyObservableGroup<TSource, TKey>>(explicitGroups))
+        {
+        }
+
+        /// <summary>
+        ///     Initializes a new instance of the <see cref="GroupingReadOnlyObservableListSource{TSource, TKey}" /> class.
+        /// </summary>
+        /// <param name="source">The source sequence.</param>
+        /// <param name="keySelector">The function used to obtain keys that represent the items.</param>
+        /// <param name="keyComparer">
+        ///     The comparer used for key comparison. Specify <c>null</c> to use the default comparer for
+        ///     <typeparamref name="TKey" />.
+        /// </param>
+        /// <param name="sourceComparer">
+        ///     A comparer for the source items. This is only used if the source collection is not a list
+        ///     and does not provide index information in its <see cref="NotifyCollectionChangedEventArgs" /> events.
+        /// </param>
+        public GroupingReadOnlyObservableListSource(IEnumerable<TSource> source,
+            Expression<Func<TSource, TKey>> keySelector, IEqualityComparer<TKey> keyComparer,
+            IEqualityComparer<TSource> sourceComparer)
+            : this(
+                source, item => new FunctionObservable<TSource, TKey>(item, keySelector),
+                keyComparer, sourceComparer,
+                new ObservableCollection<ReadOnlyObservableGroup<TSource, TKey>>())
         {
         }
 

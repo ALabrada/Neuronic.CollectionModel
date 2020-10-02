@@ -29,7 +29,7 @@ namespace Neuronic.CollectionModel.Collections
         private readonly Action<TTarget, TTarget> _onChange;
         private readonly IEqualityComparer<Container> _sourceComparer;
         private readonly Func<TSource, IObservable<TTarget>> _selector;
-        private readonly IReadOnlyObservableCollection<TSource> _source;
+        private readonly IEnumerable<TSource> _source;
         private readonly ObservableCollection<Container> _items;
 
         /// <summary>
@@ -43,7 +43,7 @@ namespace Neuronic.CollectionModel.Collections
         /// A comparer for the list items. This is only used if the source collection is not a list 
         /// and does not provide index information in its <see cref="NotifyCollectionChangedEventArgs"/> events.
         /// </param>
-        public DynamicTransformingReadOnlyObservableList(IReadOnlyObservableCollection<TSource> source,
+        public DynamicTransformingReadOnlyObservableList(IEnumerable<TSource> source,
             Func<TSource, IObservable<TTarget>> selector, Action<TTarget> onRemove = null, 
             Action<TTarget, TTarget> onChange = null, IEqualityComparer<TSource> sourceComparer = null)
         {
@@ -57,7 +57,8 @@ namespace Neuronic.CollectionModel.Collections
             _items.CollectionChanged += ItemsOnCollectionChanged;
             (_items as INotifyPropertyChanged).PropertyChanged += ItemsOnPropertyChanged;
 
-            CollectionChangedEventManager.AddListener(source, this);
+            if (_source is INotifyCollectionChanged notifier)
+                CollectionChangedEventManager.AddListener(notifier, this);
         }
 
         public int Count => _items.Count;

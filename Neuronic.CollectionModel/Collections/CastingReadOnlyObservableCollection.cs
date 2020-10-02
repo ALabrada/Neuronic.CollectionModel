@@ -12,7 +12,7 @@ namespace Neuronic.CollectionModel.Collections
     /// <typeparam name="TTarget">The target subtype of <typeparamref name="TSource"/>.</typeparam>
     /// <seealso cref="Neuronic.CollectionModel.IReadOnlyObservableCollection{TTarget}" />
     /// <seealso cref="System.Collections.Generic.ICollection{TTarget}" />
-    public class CastingReadOnlyObservableCollection<TSource, TTarget> : EventSource, IReadOnlyObservableCollection<TTarget>, ICollection<TTarget> where TTarget : TSource
+    public class CastingReadOnlyObservableCollection<TSource, TTarget> : EventSource, IReadOnlyObservableCollection<TTarget>, ICollection<TTarget>
     {
         private IReadOnlyObservableCollection<TSource> Source { get; }
 
@@ -83,7 +83,7 @@ namespace Neuronic.CollectionModel.Collections
         /// </returns>
         public bool Contains(TTarget item)
         {
-            return Source.Contains(item);
+            return Source.Contains((TSource)(object)item);
         }
 
         /// <summary>

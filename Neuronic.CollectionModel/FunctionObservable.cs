@@ -26,7 +26,8 @@ namespace Neuronic.CollectionModel
         }
 
         public FunctionObservable(TItem item, Expression<Func<TItem, TResult>> expression) 
-            : this (item, expression.Compile(), FindTriggersIn(expression))
+            : this (item, expression.Compile(), 
+                item is INotifyPropertyChanged ? FindTriggersIn(expression) : new string[0])
         {
         }
 

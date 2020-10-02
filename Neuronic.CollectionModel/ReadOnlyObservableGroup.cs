@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Linq;
 using Neuronic.CollectionModel.Collections;
 
 namespace Neuronic.CollectionModel
@@ -9,7 +10,7 @@ namespace Neuronic.CollectionModel
     /// <typeparam name="TSource">The type of the source items.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <seealso cref="ReadOnlyObservableList{T}" />
-    public class ReadOnlyObservableGroup<TSource, TKey> : ReadOnlyObservableList<TSource>
+    public class ReadOnlyObservableGroup<TSource, TKey> : ReadOnlyObservableList<TSource>, IGrouping<TKey, TSource>
     {
         private ReadOnlyObservableGroup(ObservableCollection<TSource> items, TKey key, bool isExplicit) : base(items)
         {

@@ -12,7 +12,7 @@ namespace Neuronic.CollectionModel.Collections
     /// <seealso cref="CastingReadOnlyObservableCollection{TSource,TTarget}" />
     /// <seealso cref="Neuronic.CollectionModel.IReadOnlyObservableList{TTarget}" />
     /// <seealso cref="System.Collections.Generic.IList{TTarget}" />
-    public class CastingReadOnlyObservableList<TSource, TTarget> : CastingReadOnlyObservableCollection<TSource, TTarget>, IReadOnlyObservableList<TTarget>, IList<TTarget> where TTarget : TSource
+    public class CastingReadOnlyObservableList<TSource, TTarget> : CastingReadOnlyObservableCollection<TSource, TTarget>, IReadOnlyObservableList<TTarget>, IList<TTarget>
     {
         private readonly IReadOnlyObservableList<TSource> _source;
 
@@ -33,7 +33,7 @@ namespace Neuronic.CollectionModel.Collections
         /// </value>
         /// <param name="index">The index.</param>
         /// <returns></returns>
-        public TTarget this[int index] => (TTarget) _source[index];
+        public TTarget this[int index] => (TTarget)(object) _source[index];
 
         /// <summary>
         /// Gets or sets the <typeparamref name="TTarget"/> at the specified index.
@@ -63,7 +63,7 @@ namespace Neuronic.CollectionModel.Collections
         /// </returns>
         public int IndexOf(TTarget item)
         {
-            return _source.IndexOf(item);
+            return _source.IndexOf((TSource)(object)item);
         }
 
         /// <summary>

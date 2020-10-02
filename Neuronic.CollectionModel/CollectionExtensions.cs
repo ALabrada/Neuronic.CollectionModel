@@ -241,6 +241,19 @@ namespace Neuronic.CollectionModel
         }
 
         /// <summary>
+        ///     Treats the collection as an <see cref="IQueryable{T}"/> whose LINQ extension methods
+        ///     have the same effects as their counterpart collection extensions defined in this
+        ///     class.
+        /// </summary>
+        /// <typeparam name="T">The type of the collection.</typeparam>
+        /// <param name="items">The items.</param>
+        /// <returns>The LINQ queryable.</returns>
+        public static IQueryable<T> AsQueryableCollection<T>(this IReadOnlyObservableCollection<T> items)
+        {
+            return new QueryableCollection<T>(items);
+        }
+
+        /// <summary>
         ///     Creates an observable view of a normal read-only list.
         /// </summary>
         /// <typeparam name="T">The type of the list's elements.</typeparam>
@@ -248,13 +261,19 @@ namespace Neuronic.CollectionModel
         /// <returns></returns>
         public static IReadOnlyObservableList<T> ListAsObservable<T>(this IEnumerable<T> items)
         {
-            var observableCollection = items as ObservableCollection<T>;
-            if (observableCollection != null)
-                return new ReadOnlyObservableList<T>(observableCollection);
-            var list = items as IReadOnlyList<T>;
-            if (list != null)    
-                return new CustomReadOnlyObservableList<T>(list);
-            return new ListWrapper<T>(items);
+            switch (items)
+            {
+                case IReadOnlyObservableList<T> self:
+                    return self;
+                case QueryableCollection<T> queryable:
+                    return queryable.Source.ListAsObservable();
+                case ObservableCollection<T> observableCollection:
+                    return new ReadOnlyObservableList<T>(observableCollection);
+                case IReadOnlyList<T> list:
+                    return new CustomReadOnlyObservableList<T>(list);
+                default:
+                    return new ListWrapper<T>(items);
+            }
         }
 
         /// <summary>
@@ -265,13 +284,19 @@ namespace Neuronic.CollectionModel
         /// <returns></returns>
         public static IReadOnlyObservableCollection<T> CollectionAsObservable<T>(this IEnumerable<T> items)
         {
-            var observableCollection = items as ObservableCollection<T>;
-            if (observableCollection != null)
-                return new ReadOnlyObservableList<T>(observableCollection);
-            var collection = items as IReadOnlyCollection<T>;
-            if (collection != null)
-                return new CustomReadOnlyObservableCollection<T>(collection);
-            return new CollectionWrapper<T>(items);
+            switch (items)
+            {
+                case IReadOnlyObservableCollection<T> self:
+                    return self;
+                case QueryableCollection<T> queryable:
+                    return queryable.Source;
+                case ObservableCollection<T> observableCollection:
+                    return new ReadOnlyObservableList<T>(observableCollection);
+                case IReadOnlyCollection<T> collection:
+                    return new CustomReadOnlyObservableCollection<T>(collection);
+                default:
+                    return new CollectionWrapper<T>(items);
+            }
         }
 
         /// <summary>
@@ -608,8 +633,8 @@ namespace Neuronic.CollectionModel
         /// <returns>
         /// A list with the projections of the source elements.
         /// </returns>
-        public static IReadOnlyObservableList<TTarget> ListSelect<TSource, TTarget>(
-            this IReadOnlyObservableCollection<TSource> collection, Func<TSource, IObservable<TTarget>> selector,
+        public static IReadOnlyObservableList<TTarget> ListSelectObservable<TSource, TTarget>(
+            this IEnumerable<TSource> collection, Func<TSource, IObservable<TTarget>> selector,
             Action<TTarget> onRemove = null, Action<TTarget, TTarget> onChange = null,
             IEqualityComparer<TSource> sourceComparer = null)
         {
@@ -634,7 +659,7 @@ namespace Neuronic.CollectionModel
         /// </returns>
         /// <seealso cref="ObservableExtensions.Observe{T}"/>
         public static IReadOnlyObservableList<TTarget> ListSelectAuto<TSource, TTarget>(
-            this IReadOnlyObservableCollection<TSource> collection, Expression<Func<TSource, TTarget>> selector,
+            this IEnumerable<TSource> collection, Expression<Func<TSource, TTarget>> selector,
             Action<TTarget> onRemove = null, Action<TTarget, TTarget> onChange = null,
             IEqualityComparer<TSource> sourceComparer = null) where TSource: INotifyPropertyChanged
         {
@@ -844,7 +869,7 @@ namespace Neuronic.CollectionModel
         ///     An observable list that always contains the elements from <paramref name="items" />
         ///     that satisfy <paramref name="predicate" />.
         /// </returns>
-        public static IReadOnlyObservableList<T> ListWhere<T>(this IEnumerable<T> items, Func<T, IObservable<bool>> predicate,
+        public static IReadOnlyObservableList<T> ListWhereObservable<T>(this IEnumerable<T> items, Func<T, IObservable<bool>> predicate,
             IEqualityComparer<T> comparer = null)
         {
             return new FilteredReadOnlyObservableList<T>(items, predicate, comparer);
@@ -1642,7 +1667,7 @@ namespace Neuronic.CollectionModel
             return new ConditionalSwitchableCollectionSource<T>(condition, positiveSource, negativeSource);
         }
 
-        private abstract class CollectionUpdaterBase<TSource, TTarget> : IReadOnlyObservableCollection<TTarget>, IWeakEventListener
+        private abstract class CollectionUpdaterBase<TSource, TTarget> : QueryableCollectionBase<TTarget>, IReadOnlyObservableCollection<TTarget>, IWeakEventListener
         {
             private readonly CompositeReadOnlyObservableCollectionSourceBase<TTarget> _composite;
             private readonly Func<TSource, IEnumerable<TTarget>> _selector;
