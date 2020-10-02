@@ -1,10 +1,9 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neuronic.CollectionModel.Collections;
 
-namespace Neuronic.CollectionModel.Testing
+namespace Neuronic.CollectionModel.Testing.NetCore
 {
     [TestClass]
     public class QueryableTest
@@ -12,7 +11,7 @@ namespace Neuronic.CollectionModel.Testing
         [TestMethod]
         public void SelectTest()
         {
-            var source = Enumerable.Range(0, 20).Select(x => new Notify {Prop = x});
+            var source = Enumerable.Range(0, 20).Select(x => new Notify { Prop = x });
             var result = from item in source.ListAsObservable().AsQueryableCollection() select item.Prop;
             Assert.IsTrue(result.CollectionAsObservable() is DynamicTransformingReadOnlyObservableList<Notify, int>);
         }

@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <ProjectGuid>{388C0806-1701-4486-B3E5-D1F3D9934918}</ProjectGuid>
-    <TargetFrameworks>netstandard1.1;net46;net45;net40</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;netstandard1.1;net46;net45;net40</TargetFrameworks>
     <SignAssembly>False</SignAssembly>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Authors>Alexei Labrada</Authors>
@@ -22,6 +22,9 @@
   <PropertyGroup Condition="'$(TargetFramework)'=='netstandard1.1'">
     <DefineConstants>NETSTD</DefineConstants>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
+    <DefineConstants>NETSTD</DefineConstants>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <Optimize>False</Optimize>
   </PropertyGroup>
@@ -29,8 +32,14 @@
     <PackageReference Include="System.Dynamic.Runtime" Version="4.3.0" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="WindowsBase" Condition="'$(TargetFramework)'!='netstandard1.1'">
+    <Reference Include="WindowsBase" Condition="'$(TargetFramework)'=='net46'">
       <HintPath>C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6\WindowsBase.dll</HintPath>
+    </Reference>
+    <Reference Include="WindowsBase" Condition="'$(TargetFramework)'=='net45'">
+      <HintPath>C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\WindowsBase.dll</HintPath>
+    </Reference>
+    <Reference Include="WindowsBase" Condition="'$(TargetFramework)'=='net40'">
+      <HintPath>C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0\WindowsBase.dll</HintPath>
     </Reference>
   </ItemGroup>    
 </Project>

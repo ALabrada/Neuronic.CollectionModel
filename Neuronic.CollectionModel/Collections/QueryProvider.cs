@@ -14,6 +14,8 @@ namespace Neuronic.CollectionModel.Collections
         {
             var updater = new QueryModifier();
             expression = updater.Visit(expression);
+            if (updater.Source == null)
+                throw new InvalidOperationException();
             var result = updater.Source.Provider.CreateQuery(expression);
             return result;
         }
@@ -109,6 +111,8 @@ namespace Neuronic.CollectionModel.Collections
                 default:
                     var updater = new QueryModifier();
                     expression = updater.Visit(expression);
+                    if (updater.Source == null)
+                        throw new InvalidOperationException();
                     var result = updater.Source.Provider.CreateQuery<TElement>(expression);
                     return result;
             }
@@ -159,6 +163,8 @@ namespace Neuronic.CollectionModel.Collections
         {
             var updater = new QueryModifier();
             expression = updater.Visit(expression);
+            if (updater.Source == null)
+                throw new InvalidOperationException();
             var result = updater.Source.Provider.Execute(expression);
             return result;
         }
@@ -167,6 +173,8 @@ namespace Neuronic.CollectionModel.Collections
         {
             var updater = new QueryModifier();
             expression = updater.Visit(expression);
+            if (updater.Source == null)
+                throw new InvalidOperationException();
             var result = updater.Source.Provider.Execute<TResult>(expression);
             return result;
         }
@@ -218,12 +226,12 @@ namespace Neuronic.CollectionModel.Collections
 
             protected override Expression VisitConstant(ConstantExpression node)
             {
-                if (Source == null && node.Value is QueryableCollection<TSource> source)
+                if (Source == null && node.Value is IQueryable<TSource> source)
                 {
-#if NETSTD
+#if NETSTANDARD1_1
                     throw new NotSupportedException("Cannot execute this operation directly in IQueryable<>. Convert to IEnumerable<> first.");
 #else
-                    Source = source.Source.AsQueryableCollection();
+                    Source = (source as QueryableCollection<TSource>)?.Source.AsQueryable() ?? source;
                     return Expression.Constant(Source);
 #endif
                 }
