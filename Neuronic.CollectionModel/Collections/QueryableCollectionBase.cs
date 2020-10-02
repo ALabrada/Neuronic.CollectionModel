@@ -17,12 +17,12 @@ namespace Neuronic.CollectionModel.Collections
 
     class QueryableCollection<T> : QueryableCollectionBase<T>, IOrderedQueryable<T>
     {
-        public QueryableCollection(IReadOnlyObservableCollection<T> source)
+        public QueryableCollection(IEnumerable<T> source)
         {
             Source = source ?? throw new ArgumentNullException(nameof(source));
         }
 
-        public IReadOnlyObservableCollection<T> Source { get; }
+        public IEnumerable<T> Source { get; }
 
         public IEnumerator<T> GetEnumerator()
         {

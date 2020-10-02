@@ -12,30 +12,37 @@ namespace Neuronic.CollectionModel.Collections
     {
         public IQueryable CreateQuery(Expression expression)
         {
-            throw new NotImplementedException();
+            var updater = new QueryModifier();
+            expression = updater.Visit(expression);
+            var result = updater.Source.Provider.CreateQuery(expression);
+            return result;
         }
 
         public virtual IQueryable<TElement> CreateQuery<TElement>(Expression expression)
         {
             if (!(expression is MethodCallExpression mc))
                 throw new ArgumentException("Invalid expression", nameof(expression));
-            var queryable = (mc.Arguments[0] as ConstantExpression)?.Value as QueryableCollection<TSource>;
-            var source = queryable.Source;
+            var queryable = ConstantFinder<IQueryable<TSource>>.FindIn(mc.Arguments[0]);
+            if (queryable == null)
+                throw new InvalidOperationException("Cannot find source.");
+            var source = (queryable as QueryableCollection<TSource>)?.Source ?? queryable;
+            var collection = source as IReadOnlyObservableCollection<TSource>;
             var list = source as IReadOnlyObservableList<TSource>;
+
             Expression<Func<TSource, bool>> predicate;
             switch (mc.Method.Name)
             {
                 case "Where" when mc.Arguments.Count == 2 && typeof(TElement) == typeof(TSource):
                     predicate = LambdaFinder.FindIn(mc.Arguments[1]) as Expression<Func<TSource, bool>>;
                     return (IQueryable<TElement>)source.ListWhereObservable(item => new FunctionObservable<TSource, bool>(item, predicate)).AsQueryableCollection();
-                case "OfType" when mc.Arguments.Count == 1:
+                case "OfType" when mc.Arguments.Count == 1 && collection != null:
                     return list != null 
                         ? new CastingReadOnlyObservableList<TSource,TElement>(list.ListWhere(x => x is TElement)).AsQueryableCollection() 
                         : new CastingReadOnlyObservableCollection<TSource, TElement>(source.ListWhere(x => x is TElement)).AsQueryableCollection();
-                case "Cast" when mc.Arguments.Count == 1:
+                case "Cast" when mc.Arguments.Count == 1 && collection != null:
                     return list != null 
                         ? new CastingReadOnlyObservableList<TSource, TElement>(list).AsQueryableCollection() 
-                        : new CastingReadOnlyObservableCollection<TSource, TElement>(source).AsQueryableCollection();
+                        : new CastingReadOnlyObservableCollection<TSource, TElement>(collection).AsQueryableCollection();
                 case "Select" when mc.Arguments.Count == 2:
                     var selector = LambdaFinder.FindIn(mc.Arguments[1]) as Expression<Func<TSource, TElement>>;
                     return source.ListSelectObservable(item => new FunctionObservable<TSource, TElement>(item, selector))
@@ -72,8 +79,8 @@ namespace Neuronic.CollectionModel.Collections
                     return (IQueryable<TElement>) GroupBy(source,
                         LambdaFinder.FindIn(mc.Arguments[1]),
                         mc.Arguments.Count > 2 ? mc.Arguments[2] : null);
-                case "Distinct":
-                    return (IQueryable<TElement>) source.CollectionDistinct(
+                case "Distinct" when collection != null:
+                    return (IQueryable<TElement>) collection.CollectionDistinct(
                         mc.Arguments.Count > 1 ? ConstantFinder<IEqualityComparer<TSource>>.FindIn(mc.Arguments[1]) : null)
                         .AsQueryableCollection();
                 case "Concat":

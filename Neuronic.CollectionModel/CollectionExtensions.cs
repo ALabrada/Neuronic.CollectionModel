@@ -248,7 +248,7 @@ namespace Neuronic.CollectionModel
         /// <typeparam name="T">The type of the collection.</typeparam>
         /// <param name="items">The items.</param>
         /// <returns>The LINQ queryable.</returns>
-        public static IQueryable<T> AsQueryableCollection<T>(this IReadOnlyObservableCollection<T> items)
+        public static IQueryable<T> AsQueryableCollection<T>(this IEnumerable<T> items)
         {
             return new QueryableCollection<T>(items);
         }
@@ -289,7 +289,7 @@ namespace Neuronic.CollectionModel
                 case IReadOnlyObservableCollection<T> self:
                     return self;
                 case QueryableCollection<T> queryable:
-                    return queryable.Source;
+                    return queryable.Source.CollectionAsObservable();
                 case ObservableCollection<T> observableCollection:
                     return new ReadOnlyObservableList<T>(observableCollection);
                 case IReadOnlyCollection<T> collection:
