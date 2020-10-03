@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Linq;
+using Neuronic.CollectionModel.Extras;
 
 namespace Neuronic.CollectionModel.Collections.Containers
 {
@@ -45,10 +47,45 @@ namespace Neuronic.CollectionModel.Collections.Containers
         /// <value>
         /// The collection.
         /// </value>
-        public IReadOnlyCollection<T> Collection { get; }
+        public virtual IReadOnlyCollection<T> Collection { get; }
 
         internal int Index { get; set; } = -1;
 
         internal int Offset { get; set; } = -1;
+    }
+
+    class MutableCollectionContainer<T> : CollectionContainer<T>, IObserver<IEnumerable<T>>, IDisposable
+    {
+        private readonly IDisposable _subscription;
+        private readonly SwitchableCollectionSource<T> _switcher;
+
+        private MutableCollectionContainer(SwitchableCollectionSource<T> switcher, IObservable<IEnumerable<T>> collection) : base (switcher)
+        {
+            _switcher = switcher;
+            _subscription = collection.Subscribe(this);
+        }
+
+        public MutableCollectionContainer(IObservable<IEnumerable<T>> collection) : this (new SwitchableCollectionSource<T>(), collection)
+        {
+
+        }
+
+        public void OnNext(IEnumerable<T> value)
+        {
+            _switcher.Source = value as IReadOnlyCollection<T> ?? new CollectionWrapper<T>(value);
+        }
+
+        public void OnError(Exception error)
+        {
+        }
+
+        public void OnCompleted()
+        {
+        }
+
+        public void Dispose()
+        {
+            _subscription.Dispose();
+        }
     }
 }

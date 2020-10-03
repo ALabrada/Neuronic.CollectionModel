@@ -789,6 +789,7 @@ namespace Neuronic.CollectionModel
             return new SetIntersectionReadOnlyObservableCollection<T>(first, second, comparer);
         }
 
+        #region SelectMany
         /// <summary>
         ///     Projects each element of a sequence to a <see cref="IEnumerable{T}" /> and flattens the resulting
         ///     collections
@@ -807,7 +808,7 @@ namespace Neuronic.CollectionModel
         {
             var collection = items as IReadOnlyObservableCollection<TSource>;
             var composite = new CompositeReadOnlyObservableListSource<TTarget>(from item in items
-                select new CollectionContainer<TTarget>(selector(item)));
+                                                                               select new CollectionContainer<TTarget>(selector(item)));
             if (collection == null)
                 return composite.View;
             return new ListUpdater<TSource, TTarget>(collection, selector, composite);
@@ -831,11 +832,116 @@ namespace Neuronic.CollectionModel
         {
             var collection = items as IReadOnlyObservableCollection<TSource>;
             var composite = new CompositeReadOnlyObservableCollectionSource<TTarget>(from item in items
-                select new CollectionContainer<TTarget>(selector(item)));
+                                                                                     select new CollectionContainer<TTarget>(selector(item)));
             if (collection == null)
                 return composite.View;
             return new CollectionUpdater<TSource, TTarget>(collection, selector, composite);
         }
+
+        /// <summary>
+        ///     Projects each element of a sequence to a <see cref="IEnumerable{T}" /> and flattens the resulting
+        ///     collections
+        ///     into one list.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the source collection items.</typeparam>
+        /// <typeparam name="TTarget">The type of the target collection items.</typeparam>
+        /// <param name="items">The source collection.</param>
+        /// <param name="selector">A transform function to apply to each element.</param>
+        /// <returns>
+        ///     The observable list obtained by applying <paramref name="selector" /> to each element of
+        ///     <paramref name="items" /> and then concatenating the results.
+        /// </returns>
+        public static IReadOnlyObservableList<TTarget> ListSelectManyObservable<TSource, TTarget>(
+            this IEnumerable<TSource> items, Func<TSource, IObservable<IEnumerable<TTarget>>> selector)
+        {
+            var collection = items as IReadOnlyObservableCollection<TSource>;
+            var composite = new CompositeReadOnlyObservableListSource<TTarget>(
+                from item in items
+                select new MutableCollectionContainer<TTarget>(selector(item)));
+            if (collection == null)
+                return composite.View;
+            return new ListUpdater<TSource, TTarget>(collection, selector, composite);
+        }
+
+        /// <summary>
+        ///     Projects each element of a sequence to a <see cref="IEnumerable{T}" /> and flattens the resulting
+        ///     collections
+        ///     into one collection.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the source collection items.</typeparam>
+        /// <typeparam name="TTarget">The type of the target collection items.</typeparam>
+        /// <param name="items">The source collection.</param>
+        /// <param name="selector">A transform function to apply to each element.</param>
+        /// <returns>
+        ///     The observable collection obtained by applying <paramref name="selector" /> to each element of
+        ///     <paramref name="items" /> and then concatenating the results.
+        /// </returns>
+        public static IReadOnlyObservableCollection<TTarget> CollectionSelectManyObservable<TSource, TTarget>(
+            this IEnumerable<TSource> items, Func<TSource, IObservable<IEnumerable<TTarget>>> selector)
+        {
+            var collection = items as IReadOnlyObservableCollection<TSource>;
+            var composite = new CompositeReadOnlyObservableCollectionSource<TTarget>(
+                from item in items
+                select new MutableCollectionContainer<TTarget>(selector(item)));
+            if (collection == null)
+                return composite.View;
+            return new CollectionUpdater<TSource, TTarget>(collection, selector, composite);
+        }
+
+        /// <summary>
+        ///     Projects each element of a sequence to a <see cref="IEnumerable{T}" /> and flattens the resulting
+        ///     collections
+        ///     into one list.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the source collection items.</typeparam>
+        /// <typeparam name="TTarget">The type of the target collection items.</typeparam>
+        /// <param name="items">The source collection.</param>
+        /// <param name="selector">A transform function to apply to each element.</param>
+        /// <returns>
+        ///     The observable list obtained by applying <paramref name="selector" /> to each element of
+        ///     <paramref name="items" /> and then concatenating the results.
+        /// </returns>
+        public static IReadOnlyObservableList<TTarget> ListSelectManyAuto<TSource, TTarget>(
+            this IEnumerable<TSource> items, Expression<Func<TSource, IEnumerable<TTarget>>> selector)
+            where TSource: INotifyPropertyChanged
+        {
+            var collection = items as IReadOnlyObservableCollection<TSource>;
+            var newSelector = new Func<TSource, IObservable<IEnumerable<TTarget>>>(item => item.Observe(selector));
+            var composite = new CompositeReadOnlyObservableListSource<TTarget>(
+                from item in items
+                select new MutableCollectionContainer<TTarget>(newSelector(item)));
+            if (collection == null)
+                return composite.View;
+            return new ListUpdater<TSource, TTarget>(collection, newSelector, composite);
+        }
+
+        /// <summary>
+        ///     Projects each element of a sequence to a <see cref="IEnumerable{T}" /> and flattens the resulting
+        ///     collections
+        ///     into one collection.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the source collection items.</typeparam>
+        /// <typeparam name="TTarget">The type of the target collection items.</typeparam>
+        /// <param name="items">The source collection.</param>
+        /// <param name="selector">A transform function to apply to each element.</param>
+        /// <returns>
+        ///     The observable collection obtained by applying <paramref name="selector" /> to each element of
+        ///     <paramref name="items" /> and then concatenating the results.
+        /// </returns>
+        public static IReadOnlyObservableCollection<TTarget> CollectionSelectManyAuto<TSource, TTarget>(
+            this IEnumerable<TSource> items, Expression<Func<TSource, IEnumerable<TTarget>>> selector) 
+            where TSource : INotifyPropertyChanged
+        {
+            var collection = items as IReadOnlyObservableCollection<TSource>;
+            var newSelector = new Func<TSource, IObservable<IEnumerable<TTarget>>>(item => item.Observe(selector));
+            var composite = new CompositeReadOnlyObservableCollectionSource<TTarget>(
+                from item in items
+                select new MutableCollectionContainer<TTarget>(newSelector(item)));
+            if (collection == null)
+                return composite.View;
+            return new CollectionUpdater<TSource, TTarget>(collection, newSelector, composite);
+        }
+        #endregion
 
         #region Where
         /// <summary>
@@ -1681,14 +1787,14 @@ namespace Neuronic.CollectionModel
             return new ConditionalSwitchableCollectionSource<T>(condition, positiveSource, negativeSource);
         }
 
-        private abstract class CollectionUpdaterBase<TSource, TTarget> : QueryableCollectionBase<TTarget>, IReadOnlyObservableCollection<TTarget>, IWeakEventListener
+        private abstract class CollectionUpdaterBase<TSource, TTarget> : IReadOnlyObservableCollection<TTarget>, IWeakEventListener
         {
             private readonly CompositeReadOnlyObservableCollectionSourceBase<TTarget> _composite;
-            private readonly Func<TSource, IEnumerable<TTarget>> _selector;
+            private readonly Func<TSource, IObservable<IEnumerable<TTarget>>> _selector;
             private readonly IReadOnlyObservableCollection<TSource> _source;
 
             protected CollectionUpdaterBase(IReadOnlyObservableCollection<TSource> source,
-                Func<TSource, IEnumerable<TTarget>> selector,
+                Func<TSource, IObservable<IEnumerable<TTarget>>> selector,
                 CompositeReadOnlyObservableCollectionSourceBase<TTarget> composite)
             {
                 _source = source;
@@ -1725,7 +1831,8 @@ namespace Neuronic.CollectionModel
                 if (!Equals(_source, sender) || managerType != typeof(CollectionChangedEventManager))
                     return false;
                 UpdateCollection(_composite, _source, (NotifyCollectionChangedEventArgs) e,
-                    o => new CollectionContainer<TTarget>(_selector((TSource) o)));
+                    o => new MutableCollectionContainer<TTarget>(_selector((TSource) o)), 
+                    onRemove: o => (o as IDisposable)?.Dispose());
                 return true;
             }
         }
@@ -1735,7 +1842,7 @@ namespace Neuronic.CollectionModel
             private readonly CompositeReadOnlyObservableCollectionSource<TTarget> _composite;
 
             public CollectionUpdater(IReadOnlyObservableCollection<TSource> source,
-                Func<TSource, IEnumerable<TTarget>> selector,
+                Func<TSource, IObservable<IEnumerable<TTarget>>> selector,
                 CompositeReadOnlyObservableCollectionSource<TTarget> composite) : base(source, selector, composite)
             {
                 _composite = composite;
@@ -1744,11 +1851,22 @@ namespace Neuronic.CollectionModel
             }
 
             public CollectionUpdater(IReadOnlyObservableCollection<TSource> source,
-                Func<TSource, IEnumerable<TTarget>> selector)
+                Func<TSource, IEnumerable<TTarget>> selector,
+                CompositeReadOnlyObservableCollectionSource<TTarget> composite,
+                params string[] triggers) : base(source, 
+                item => new FunctionObservable<TSource, IEnumerable<TTarget>>(item, selector, triggers), composite)
+            {
+                _composite = composite;
+                CollectionChangedEventManager.AddListener(_composite.View, this);
+                PropertyChangedEventManager.AddListener(_composite.View, this, string.Empty);
+            }
+
+            public CollectionUpdater(IReadOnlyObservableCollection<TSource> source,
+                Func<TSource, IObservable<IEnumerable<TTarget>>> selector)
                 : this(
                     source, selector,
                     new CompositeReadOnlyObservableCollectionSource<TTarget>(from item in source
-                        select new CollectionContainer<TTarget>(selector(item))))
+                        select new MutableCollectionContainer<TTarget>(selector(item))))
             {
             }
 
@@ -1777,7 +1895,7 @@ namespace Neuronic.CollectionModel
             private readonly CompositeReadOnlyObservableListSource<TTarget> _composite;
 
             public ListUpdater(IReadOnlyObservableCollection<TSource> source,
-                Func<TSource, IEnumerable<TTarget>> selector,
+                Func<TSource, IObservable<IEnumerable<TTarget>>> selector,
                 CompositeReadOnlyObservableListSource<TTarget> composite) : base(source, selector, composite)
             {
                 _composite = composite;
@@ -1786,11 +1904,23 @@ namespace Neuronic.CollectionModel
             }
 
             public ListUpdater(IReadOnlyObservableCollection<TSource> source,
-                Func<TSource, IEnumerable<TTarget>> selector)
+                Func<TSource, IEnumerable<TTarget>> selector,
+                CompositeReadOnlyObservableListSource<TTarget> composite,
+                params string[] triggers) : base(source, 
+                item => new FunctionObservable<TSource, IEnumerable<TTarget>>(item, selector, triggers),
+                composite)
+            {
+                _composite = composite;
+                CollectionChangedEventManager.AddListener(_composite.View, this);
+                PropertyChangedEventManager.AddListener(_composite.View, this, string.Empty);
+            }
+
+            public ListUpdater(IReadOnlyObservableCollection<TSource> source,
+                Func<TSource, IObservable<IEnumerable<TTarget>>> selector)
                 : this(
                     source, selector,
                     new CompositeReadOnlyObservableListSource<TTarget>(from item in source
-                        select new CollectionContainer<TTarget>(selector(item))))
+                        select new MutableCollectionContainer<TTarget>(selector(item))))
             {
             }
 

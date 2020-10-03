@@ -55,7 +55,7 @@ namespace Neuronic.CollectionModel.Collections
                 case "SelectMany" when mc.Arguments.Count == 2:
                     var collectionSelector = LambdaFinder.FindIn(mc.Arguments[1]) as Expression<Func<TSource, IEnumerable<TElement>>>;
                     if (collectionSelector == null) break;
-                    return source.Value.ListSelectMany(collectionSelector.Compile()) // TODO: observe this
+                    return source.Value.ListSelectManyObservable(item => new FunctionObservable<TSource, IEnumerable<TElement>>(item, collectionSelector))
                         .AsQueryableCollection();
                 case "OrderBy":
                     keySelector = LambdaFinder.FindIn(mc.Arguments[1]);

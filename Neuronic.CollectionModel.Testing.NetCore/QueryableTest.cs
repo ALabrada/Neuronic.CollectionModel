@@ -18,6 +18,15 @@ namespace Neuronic.CollectionModel.Testing.NetCore
         }
 
         [TestMethod]
+        public void SelectManyTest()
+        {
+            var source = Enumerable.Range(0, 20).Select(x => new Notify { Prop = x });
+            var result = source.ListAsObservable()
+                .ListSelectMany(item => Enumerable.Range(0, 5).Select(i => 100 * i + item.Prop));
+            Assert.IsFalse(result.CollectionAsObservable() is EventSource);
+        }
+
+        [TestMethod]
         public void WhereTest()
         {
             var source = Enumerable.Range(0, 20).Select(x => new Notify { Prop = x });
