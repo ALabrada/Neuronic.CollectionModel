@@ -48,7 +48,7 @@ namespace Neuronic.CollectionModel.Testing
             var result = source.ListAsObservable().AsQueryableCollection().OrderBy(x => x.Prop, Comparer<int>.Default);
             var result2 = result.ThenBy(x => x.Prop * 2);
             Assert.IsTrue(result.CollectionAsObservable() is KeySortedReadOnlyObservableList<Notify, int>);
-            Assert.IsTrue(result2.CollectionAsObservable() is KeySortedReadOnlyObservableList<Notify, CompositeKey>);
+            Assert.IsTrue(result2.CollectionAsObservable() is KeySortedReadOnlyObservableList<Notify, IList>);
         }
 
         [TestMethod]
@@ -58,7 +58,7 @@ namespace Neuronic.CollectionModel.Testing
             var result = source.ListAsObservable().AsQueryableCollection().OrderByDescending(x => x.Prop, Comparer<int>.Default);
             var result2 = result.ThenByDescending(x => x.Prop * 2);
             Assert.IsTrue(result.CollectionAsObservable() is KeySortedReadOnlyObservableList<Notify, int>);
-            Assert.IsTrue(result2.CollectionAsObservable() is KeySortedReadOnlyObservableList<Notify, CompositeKey>);
+            Assert.IsTrue(result2.CollectionAsObservable() is KeySortedReadOnlyObservableList<Notify, IList>);
         }
 
         [TestMethod]

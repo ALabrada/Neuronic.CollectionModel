@@ -3,14 +3,16 @@ using System.Diagnostics;
 
 namespace Neuronic.CollectionModel.Testing.NetCore
 {
-    [DebuggerDisplay("Age = {Age}")]
+    [DebuggerDisplay("Age = {Age}, Sex = {Sex}")]
     class Person : INotifyPropertyChanged
     {
         private int _age;
+        private string _sex;
 
-        public Person(int age)
+        public Person(int age, string sex = "")
         {
             this.Age = age;
+            this.Sex = sex;
         }
 
         public int Age
@@ -22,6 +24,18 @@ namespace Neuronic.CollectionModel.Testing.NetCore
                     return;
                 _age = value;
                 OnPropertyChanged(new PropertyChangedEventArgs(nameof(Age)));
+            }
+        }
+
+        public string Sex
+        {
+            get => _sex;
+            set
+            {
+                if (Equals(_sex, value))
+                    return;
+                _sex = value;
+                OnPropertyChanged(new PropertyChangedEventArgs(nameof(Sex)));
             }
         }
 

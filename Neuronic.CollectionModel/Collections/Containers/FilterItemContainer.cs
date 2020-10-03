@@ -13,5 +13,12 @@ namespace Neuronic.CollectionModel.Collections.Containers
         public FilterItemContainer(TItem item, IObservable<bool> observable, IEqualityComparer<bool> valueComparer = null) : base(item, observable, valueComparer)
         {
         }
+
+        protected override void OnNewValue(bool value)
+        {
+            if (value == Value)
+                return;
+            base.OnNewValue(value);
+        }
     }
 }

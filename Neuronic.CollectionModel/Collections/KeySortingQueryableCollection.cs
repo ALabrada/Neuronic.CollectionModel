@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
 
 namespace Neuronic.CollectionModel.Collections
 {
@@ -102,13 +103,13 @@ namespace Neuronic.CollectionModel.Collections
                     return Definitions[0].Sort(base.Source);
 
                 var comparer = new CompositeComparer(Definitions.Select(d => d.Comparer).ToArray());
-                var keySelector = new Func<TElement, IObservable<CompositeKey>>(item =>
+                var keySelector = new Func<TElement, IObservable<IList>>(item =>
                 {
                     var observables = new List<IObservable<object>>(Definitions.Count);
                     observables.AddRange(from def in Definitions select def.KeySelector(item));
                     return new CompositeObservable(observables);
                 });
-                return new KeySortedReadOnlyObservableList<TElement,CompositeKey>(base.Source, keySelector, comparer.Compare, null);
+                return new KeySortedReadOnlyObservableList<TElement,IList>(base.Source, keySelector, comparer.Compare, null);
             }
         }
 
@@ -121,19 +122,7 @@ namespace Neuronic.CollectionModel.Collections
         }
     }
 
-    public struct CompositeKey
-    {
-        private readonly object[] _values;
-
-        public CompositeKey(params object[] values)
-        {
-            _values = values;
-        }
-
-        public IList<object> Values => _values;
-    }
-
-    struct CompositeObservable : IObservable<CompositeKey>
+    struct CompositeObservable : IObservable<IList>
     {
         private readonly IList<IObservable<object>> _values;
 
@@ -142,30 +131,29 @@ namespace Neuronic.CollectionModel.Collections
             _values = values;
         }
 
-        public IDisposable Subscribe(IObserver<CompositeKey> observer)
+        public IDisposable Subscribe(IObserver<IList> observer)
         {
             return new CompositeSubscription(_values, observer);
         }
     }
 
-    class CompositeSubscription : IDisposable, IObserver<int>
+    class CompositeSubscription : IDisposable
     {
         private readonly bool[] _isInitialized;
-        private readonly IObserver<CompositeKey> _observer;
+        private readonly IObserver<IList> _observer;
         private readonly List<IDisposable> _subscriptions;
 
-        public CompositeSubscription(IList<IObservable<object>> inputs, IObserver<CompositeKey> output)
+        public CompositeSubscription(IList<IObservable<object>> inputs, IObserver<IList> output)
         {
             var length = inputs.Count;
             _observer = output;
-            Key = new CompositeKey(new object[length]);
+            Key = new object[length];
             _isInitialized = new bool[length];
-
             _subscriptions = new List<IDisposable>(length);
             _subscriptions.AddRange(inputs.Select((v, i) => v.Subscribe(new CompositeObserver(this, i))));
         }
 
-        public CompositeKey Key { get; }
+        public IList Key { get; }
 
         public void Dispose()
         {
@@ -185,9 +173,10 @@ namespace Neuronic.CollectionModel.Collections
             Dispose();
         }
 
-        public void OnNext(int value)
+        public void UpdateValueAt(object value, int index)
         {
-            _isInitialized[value] = true;
+            Key[index] = value;
+            _isInitialized[index] = true;
             if (Array.TrueForAll(_isInitialized, x => x))
                 _observer.OnNext(Key);
         }
@@ -216,12 +205,11 @@ namespace Neuronic.CollectionModel.Collections
 
         public void OnNext(object value)
         {
-            _subscription.Key.Values[_index] = value;
-            _subscription.OnNext(_index);
+            _subscription.UpdateValueAt(value, _index);
         }
     }
 
-    class CompositeComparer : Comparer<CompositeKey>
+    class CompositeComparer : Comparer<IList>
     {
         private readonly IComparer[] _comparers;
 
@@ -230,15 +218,15 @@ namespace Neuronic.CollectionModel.Collections
             _comparers = comparers;
         }
 
-        public override int Compare(CompositeKey x, CompositeKey y)
+        public override int Compare(IList x, IList y)
         {
-            if (x.Values.Count != _comparers.Length)
+            if (x.Count != _comparers.Length)
                 throw new ArgumentException("Invalid item", nameof(x));
-            if (y.Values.Count != _comparers.Length)
+            if (y.Count != _comparers.Length)
                 throw new ArgumentException("Invalid item", nameof(y));
             for (int i = 0; i < _comparers.Length; i++)
             {
-                var result = _comparers[i].Compare(x.Values[i], y.Values[i]);
+                var result = _comparers[i].Compare(x[i], y[i]);
                 if (result != 0)
                     return result;
             }

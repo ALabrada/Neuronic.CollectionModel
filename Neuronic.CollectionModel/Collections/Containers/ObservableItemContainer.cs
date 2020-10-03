@@ -47,8 +47,6 @@ namespace Neuronic.CollectionModel.Collections.Containers
         /// <param name="value">The value.</param>
         protected virtual void OnNewValue(TResult value)
         {
-            if (ValueComparer.Equals(Value, value))
-                return;
             var oldValue = Value;
             Value = value;
             OnValueChanged(new ValueChangedEventArgs<TResult>(oldValue, value));
