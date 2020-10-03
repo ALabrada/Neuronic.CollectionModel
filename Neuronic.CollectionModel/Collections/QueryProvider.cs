@@ -8,7 +8,7 @@ using System.Reflection;
 
 namespace Neuronic.CollectionModel.Collections
 {
-    class QueryProvider<TSource>: IQueryProvider
+    struct QueryProvider<TSource>: IQueryProvider
     {
         public IQueryable CreateQuery(Expression expression)
         {
@@ -20,7 +20,7 @@ namespace Neuronic.CollectionModel.Collections
             return result;
         }
 
-        public virtual IQueryable<TElement> CreateQuery<TElement>(Expression expression)
+        public IQueryable<TElement> CreateQuery<TElement>(Expression expression)
         {
             if (!(expression is MethodCallExpression mc))
                 throw new ArgumentException("Invalid expression", nameof(expression));
@@ -32,10 +32,12 @@ namespace Neuronic.CollectionModel.Collections
             var list = new Lazy<IReadOnlyObservableList<TSource>>(() => source.Value as IReadOnlyObservableList<TSource>);
 
             Expression<Func<TSource, bool>> predicate;
+            LambdaExpression keySelector;
             switch (mc.Method.Name)
             {
                 case "Where" when mc.Arguments.Count == 2 && typeof(TElement) == typeof(TSource):
                     predicate = LambdaFinder.FindIn(mc.Arguments[1]) as Expression<Func<TSource, bool>>;
+                    if (predicate == null) break;
                     return (IQueryable<TElement>)source.Value.ListWhereObservable(item => new FunctionObservable<TSource, bool>(item, predicate)).AsQueryableCollection();
                 case "OfType" when mc.Arguments.Count == 1 && collection.Value != null:
                     return list.Value != null 
@@ -47,45 +49,50 @@ namespace Neuronic.CollectionModel.Collections
                         : new CastingReadOnlyObservableCollection<TSource, TElement>(collection.Value).AsQueryableCollection();
                 case "Select" when mc.Arguments.Count == 2:
                     var selector = LambdaFinder.FindIn(mc.Arguments[1]) as Expression<Func<TSource, TElement>>;
+                    if (selector == null) break;
                     return source.Value.ListSelectObservable(item => new FunctionObservable<TSource, TElement>(item, selector))
                         .AsQueryableCollection();
                 case "SelectMany" when mc.Arguments.Count == 2:
                     var collectionSelector = LambdaFinder.FindIn(mc.Arguments[1]) as Expression<Func<TSource, IEnumerable<TElement>>>;
+                    if (collectionSelector == null) break;
                     return source.Value.ListSelectMany(collectionSelector.Compile()) // TODO: observe this
                         .AsQueryableCollection();
                 case "OrderBy":
-                    return (IQueryable<TElement>) OrderBy(source.Value,
-                        LambdaFinder.FindIn(mc.Arguments[1]), 
+                    keySelector = LambdaFinder.FindIn(mc.Arguments[1]);
+                    if (keySelector == null) break;
+                    return (IQueryable<TElement>) OrderBy(source.Value, keySelector, 
                         mc.Arguments.Count > 2 ? mc.Arguments[2] : null
                         , false);
                 case "ThenBy":
-                    return (IQueryable<TElement>)OrderBy(queryable,
-                        LambdaFinder.FindIn(mc.Arguments[1]),
+                    keySelector = LambdaFinder.FindIn(mc.Arguments[1]);
+                    if (keySelector == null) break;
+                    return (IQueryable<TElement>)OrderBy(queryable, keySelector,
                         mc.Arguments.Count > 2 ? mc.Arguments[2] : null
                         , false);
                 case "OrderByDescending":
-                    return (IQueryable<TElement>) OrderBy(source.Value,
-                        LambdaFinder.FindIn(mc.Arguments[1]),
+                    keySelector = LambdaFinder.FindIn(mc.Arguments[1]);
+                    if (keySelector == null) break;
+                    return (IQueryable<TElement>) OrderBy(source.Value, keySelector,
                         mc.Arguments.Count > 2 ? mc.Arguments[2] : null,
                         true);
                 case "ThenByDescending":
-                    return (IQueryable<TElement>)OrderBy(queryable,
-                        LambdaFinder.FindIn(mc.Arguments[1]),
+                    keySelector = LambdaFinder.FindIn(mc.Arguments[1]);
+                    if (keySelector == null) break;
+                    return (IQueryable<TElement>)OrderBy(queryable, keySelector,
                         mc.Arguments.Count > 2 ? mc.Arguments[2] : null,
                         true);
                 case "Take" when list.Value != null:
                     return (IQueryable<TElement>)list.Value.ListTake(ConstantFinder<int>.FindIn(mc.Arguments[1]))
                         .AsQueryableCollection();
-                case "TakeWhile":
-                    throw new NotImplementedException();
+                //case "TakeWhile": // TODO
                 case "Skip" when list.Value != null:
                     return (IQueryable<TElement>)list.Value.ListSkip(ConstantFinder<int>.FindIn(mc.Arguments[1]))
                         .AsQueryableCollection();
-                case "SkipWhile":
-                    throw new NotImplementedException();
+                //case "SkipWhile": // TODO
                 case "GroupBy" when mc.Method.GetGenericArguments().Length == 2: // TODO: Handle group selector
-                    return (IQueryable<TElement>) GroupBy(source.Value,
-                        LambdaFinder.FindIn(mc.Arguments[1]),
+                    keySelector = LambdaFinder.FindIn(mc.Arguments[1]);
+                    if (keySelector == null) break;
+                    return (IQueryable<TElement>) GroupBy(source.Value, keySelector,
                         mc.Arguments.Count > 2 ? mc.Arguments[2] : null);
                 case "Distinct" when collection.Value != null:
                     return (IQueryable<TElement>) collection.Value.CollectionDistinct(
@@ -95,8 +102,7 @@ namespace Neuronic.CollectionModel.Collections
                     return (IQueryable<TElement>) source.Value.ListConcat(
                         ConstantFinder<IEnumerable<TSource>>.FindIn(mc.Arguments[1]))
                         .AsQueryableCollection();
-                case "Zip":
-                    throw new NotImplementedException();
+                //case "Zip": // TODO
                 case "Union":
                     return (IQueryable<TElement>)source.Value.CollectionUnion(
                         mc.Arguments.Count > 2 ? ConstantFinder<IEqualityComparer<TSource>>.FindIn(mc.Arguments[2]) : null,
@@ -112,16 +118,16 @@ namespace Neuronic.CollectionModel.Collections
                         ConstantFinder<IEnumerable<TSource>>.FindIn(mc.Arguments[1]),
                         mc.Arguments.Count > 2 ? ConstantFinder<IEqualityComparer<TSource>>.FindIn(mc.Arguments[2]) : null)
                         .AsQueryableCollection();
-                case "Reverse":
-                    throw new NotImplementedException();
-                default:
-                    var updater = new QueryModifier();
-                    expression = updater.Visit(expression);
-                    if (updater.Source == null)
-                        throw new InvalidOperationException();
-                    var result = updater.Source.Provider.CreateQuery<TElement>(expression);
-                    return result;
+                case "Reverse" when list.Value != null:
+                    return (IQueryable<TElement>) list.Value.ListReverse().AsQueryableCollection();
             }
+
+            var updater = new QueryModifier();
+            expression = updater.Visit(expression);
+            if (updater.Source == null)
+                throw new InvalidOperationException();
+            var result = updater.Source.Provider.CreateQuery<TElement>(expression);
+            return result;
         }
 
         private static object OrderBy(IEnumerable<TSource> source, Expression sortKeySelector, Expression comparer, bool invert)
@@ -178,6 +184,26 @@ namespace Neuronic.CollectionModel.Collections
 
         public TResult Execute<TResult>(Expression expression)
         {
+            if (expression is MethodCallExpression mc)
+            {
+                var queryable = ConstantFinder<IQueryable<TSource>>.FindIn(mc.Arguments[0]);
+                var source = new Lazy<IEnumerable<TSource>>(() => (queryable as QueryableCollection<TSource>)?.Source ?? queryable);
+                var collection = new Lazy<IReadOnlyObservableCollection<TSource>>(() => source.Value as IReadOnlyObservableCollection<TSource>);
+                var list = new Lazy<IReadOnlyObservableList<TSource>>(() => source.Value as IReadOnlyObservableList<TSource>);
+                if (queryable != null)
+                {
+                    switch (mc.Method.Name)
+                    {
+                        case "Count" when mc.Arguments.Count == 1 && collection.Value != null:
+                            return (TResult)(object) collection.Value.Count;
+                        case "Last" when mc.Arguments.Count == 1 && list.Value != null && list.Value.Count > 0:
+                            return (TResult)(object) list.Value[list.Value.Count - 1];
+                        case "LastOrDefault" when mc.Arguments.Count == 1 && list.Value != null && list.Value.Count > 0:
+                            return (TResult)(object)list.Value[list.Value.Count - 1];
+                    }
+                }
+            }
+
             var updater = new QueryModifier();
             expression = updater.Visit(expression);
             if (updater.Source == null)

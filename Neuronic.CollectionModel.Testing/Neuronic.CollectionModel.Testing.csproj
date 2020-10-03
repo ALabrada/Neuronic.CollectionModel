@@ -96,6 +96,7 @@
     <Compile Include="ContainsObservableResultTest.cs" />
     <Compile Include="SetIntersectionReadOnlyObservableCollectionTest.cs" />
     <Compile Include="DynamicTransformingReadOnlyObservableListTest.cs" />
+    <Compile Include="ReversedReadOnlyObservableListTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Neuronic.CollectionModel\Neuronic.CollectionModel.csproj">

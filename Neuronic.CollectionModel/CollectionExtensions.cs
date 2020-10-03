@@ -1359,6 +1359,20 @@ namespace Neuronic.CollectionModel
         }
 
         /// <summary>
+        ///     Creates an observable list from another by reversing it's order.
+        /// </summary>
+        /// <typeparam name="T">The type of the list elements.</typeparam>
+        /// <param name="items">The source list.</param>
+        /// <returns>
+        ///     An observable list that contains the elements in <paramref name="items"/>
+        ///     in reversed order. This operation is O(1), as it only changes the index mapping.
+        /// </returns>
+        public static IReadOnlyObservableList<T> ListReverse<T>(this IReadOnlyObservableList<T> items)
+        {
+            return new ReversedReadOnlyObservableList<T>(items);
+        }
+
+        /// <summary>
         ///     Creates an observable query that determines if the observable collection has any elements.
         /// </summary>
         /// <typeparam name="T">The type of the collection's elements.</typeparam>

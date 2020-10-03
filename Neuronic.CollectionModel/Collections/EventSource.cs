@@ -26,7 +26,7 @@ namespace Neuronic.CollectionModel.Collections
         /// </param>
         public EventSource(object source, params string[] propertyNames)
         {
-            _source = source;
+            _source = source ?? throw new ArgumentNullException(nameof(source));
 
             var propSource = source as INotifyPropertyChanged;
             if (propSource != null)
