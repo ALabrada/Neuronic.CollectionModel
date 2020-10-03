@@ -523,9 +523,9 @@ namespace Neuronic.CollectionModel
             Func<TSource, TKey> keySelector,
             Comparison<TKey> comparison, params string[] triggers)
         {
+            var observableFactory = new PropertyObservableFactory<TSource, TKey>(keySelector, triggers);
             return new KeySortedReadOnlyObservableList<TSource, TKey>(collection,
-                item => new FunctionObservable<TSource, TKey>(item, keySelector, triggers),
-                comparison, null);
+                item => observableFactory.Observe(item), comparison, null);
         }
 
         /// <summary>
@@ -590,7 +590,8 @@ namespace Neuronic.CollectionModel
             Expression<Func<TSource, TKey>> keySelector, Comparison<TKey> comparison = null,
             IEqualityComparer<TSource> eqComparer = null) where TSource: INotifyPropertyChanged
         {
-            return new KeySortedReadOnlyObservableList<TSource, TKey>(collection, item => item.Observe(keySelector), comparison, eqComparer);
+            var factory = keySelector.FindProperties();
+            return new KeySortedReadOnlyObservableList<TSource, TKey>(collection, item => factory.Observe(item), comparison, eqComparer);
         }
         #endregion
 
@@ -663,7 +664,8 @@ namespace Neuronic.CollectionModel
             Action<TTarget> onRemove = null, Action<TTarget, TTarget> onChange = null,
             IEqualityComparer<TSource> sourceComparer = null) where TSource: INotifyPropertyChanged
         {
-            return new DynamicTransformingReadOnlyObservableList<TSource, TTarget>(collection, item => item.Observe(selector), onRemove, onChange, sourceComparer);
+            var factory = selector.FindProperties();
+            return new DynamicTransformingReadOnlyObservableList<TSource, TTarget>(collection, item => factory.Observe(item), onRemove, onChange, sourceComparer);
         }
         #endregion
 
@@ -906,7 +908,8 @@ namespace Neuronic.CollectionModel
             where TSource: INotifyPropertyChanged
         {
             var collection = items as IReadOnlyObservableCollection<TSource>;
-            var newSelector = new Func<TSource, IObservable<IEnumerable<TTarget>>>(item => item.Observe(selector));
+            var factory = selector.FindProperties();
+            var newSelector = new Func<TSource, IObservable<IEnumerable<TTarget>>>(item => factory.Observe(item));
             var composite = new CompositeReadOnlyObservableListSource<TTarget>(
                 from item in items
                 select new MutableCollectionContainer<TTarget>(newSelector(item)));
@@ -933,7 +936,8 @@ namespace Neuronic.CollectionModel
             where TSource : INotifyPropertyChanged
         {
             var collection = items as IReadOnlyObservableCollection<TSource>;
-            var newSelector = new Func<TSource, IObservable<IEnumerable<TTarget>>>(item => item.Observe(selector));
+            var factory = selector.FindProperties();
+            var newSelector = new Func<TSource, IObservable<IEnumerable<TTarget>>>(item => factory.Observe(item));
             var composite = new CompositeReadOnlyObservableCollectionSource<TTarget>(
                 from item in items
                 select new MutableCollectionContainer<TTarget>(newSelector(item)));
@@ -997,7 +1001,8 @@ namespace Neuronic.CollectionModel
         public static IReadOnlyObservableList<T> ListWhereAuto<T>(this IEnumerable<T> items, Expression<Func<T, bool>> predicate,
             IEqualityComparer<T> comparer = null) where T: INotifyPropertyChanged
         {
-            return new FilteredReadOnlyObservableList<T>(items, item => item.Observe(predicate), comparer);
+            var factory = predicate.FindProperties();
+            return new FilteredReadOnlyObservableList<T>(items, item => factory.Observe(item), comparer);
         }
         #endregion
 
@@ -1603,7 +1608,8 @@ namespace Neuronic.CollectionModel
             Expression<Func<T, bool>> predicate, IEqualityComparer<T> comparer = null,
             T defaultValue = default(T)) where T: INotifyPropertyChanged
         {
-            var filter = new FilteredReadOnlyObservableList<T>(items, item => item.Observe(predicate), comparer);
+            var factory = predicate.FindProperties();
+            var filter = new FilteredReadOnlyObservableList<T>(items, item => factory.Observe(item), comparer);
             return new SimpleQueryObservableResult<T, T>(filter, collection => collection.Count == 0 ? defaultValue : collection.First());
         }
         #endregion
@@ -1689,7 +1695,8 @@ namespace Neuronic.CollectionModel
             Expression<Func<T, bool>> predicate, IEqualityComparer<T> comparer = null,
             T defaultValue = default(T)) where T: INotifyPropertyChanged
         {
-            var filter = new FilteredReadOnlyObservableList<T>(items, item => item.Observe(predicate), comparer);
+            var factory = predicate.FindProperties();
+            var filter = new FilteredReadOnlyObservableList<T>(items, item => factory.Observe(item), comparer);
             if (items is IReadOnlyObservableList<T>)
                 return new SimpleQueryObservableResult<T, T>(filter,
                     collection =>

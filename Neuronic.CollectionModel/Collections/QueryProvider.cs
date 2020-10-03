@@ -38,7 +38,8 @@ namespace Neuronic.CollectionModel.Collections
                 case "Where" when mc.Arguments.Count == 2 && typeof(TElement) == typeof(TSource):
                     predicate = LambdaFinder.FindIn(mc.Arguments[1]) as Expression<Func<TSource, bool>>;
                     if (predicate == null) break;
-                    return (IQueryable<TElement>)source.Value.ListWhereObservable(item => new FunctionObservable<TSource, bool>(item, predicate)).AsQueryableCollection();
+                    var factory = new PropertyObservableFactory<TSource, bool>(predicate);
+                    return (IQueryable<TElement>)source.Value.ListWhereObservable(item => factory.Observe(item)).AsQueryableCollection();
                 case "OfType" when mc.Arguments.Count == 1 && collection.Value != null:
                     return list.Value != null 
                         ? new CastingReadOnlyObservableList<TSource,TElement>(list.Value.ListWhere(x => x is TElement)).AsQueryableCollection() 
@@ -50,12 +51,14 @@ namespace Neuronic.CollectionModel.Collections
                 case "Select" when mc.Arguments.Count == 2:
                     var selector = LambdaFinder.FindIn(mc.Arguments[1]) as Expression<Func<TSource, TElement>>;
                     if (selector == null) break;
-                    return source.Value.ListSelectObservable(item => new FunctionObservable<TSource, TElement>(item, selector))
+                    var factory2 = new PropertyObservableFactory<TSource, TElement>(selector);
+                    return source.Value.ListSelectObservable(item => factory2.Observe(item))
                         .AsQueryableCollection();
                 case "SelectMany" when mc.Arguments.Count == 2:
                     var collectionSelector = LambdaFinder.FindIn(mc.Arguments[1]) as Expression<Func<TSource, IEnumerable<TElement>>>;
                     if (collectionSelector == null) break;
-                    return source.Value.ListSelectManyObservable(item => new FunctionObservable<TSource, IEnumerable<TElement>>(item, collectionSelector))
+                    var factory3 = new PropertyObservableFactory<TSource, IEnumerable<TElement>>(collectionSelector);
+                    return source.Value.ListSelectManyObservable(item => factory3.Observe(item))
                         .AsQueryableCollection();
                 case "OrderBy":
                     keySelector = LambdaFinder.FindIn(mc.Arguments[1]);

@@ -5,7 +5,7 @@ using Neuronic.CollectionModel.WeakEventPattern;
 
 namespace Neuronic.CollectionModel
 {
-    class NotifyObservable<T>: IObservable<T>
+    struct NotifyObservable<T>: IObservable<T>
     {
         private readonly T _item;
         private readonly string[] _triggers;

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Linq.Expressions;
 
 namespace Neuronic.CollectionModel
 {
@@ -17,6 +18,12 @@ namespace Neuronic.CollectionModel
         public static IObservable<T> AsObservable<T>(this T item)
         {
             return new NotifyObservable<T>(item);
+        }
+
+        public static PropertyObservableFactory<TItem, TResult> FindProperties<TItem, TResult>(
+            this Expression<Func<TItem, TResult>> function) where TItem : INotifyPropertyChanged
+        {
+            return new PropertyObservableFactory<TItem, TResult>(function);
         }
 
         /// <summary>

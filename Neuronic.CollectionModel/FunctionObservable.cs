@@ -10,37 +10,65 @@ using System.Reflection;
 
 namespace Neuronic.CollectionModel
 {
-    class FunctionObservable<TItem, TResult> : IObservable<TResult>
+    public class PropertyObservableFactory<TItem, TResult>
     {
-        private readonly TItem _item;
-        private readonly Func<TItem, TResult> _function;
-        private readonly string[] _triggers;
+        internal Func<TItem, TResult> Function { get; }
+        internal string[] Triggers { get; }
 
-        public FunctionObservable(TItem item, Func<TItem, TResult> function, params string[] triggers)
+        public PropertyObservableFactory(Func<TItem, TResult> function, params string[] triggers)
         {
-            if (!(item is INotifyPropertyChanged) && triggers.Length > 0)
-                throw new ArgumentException("The instance should implement INotifyPropertyChanged in order to be observed.", nameof(item));
-            _item = item;
-            _function = function ?? throw new ArgumentNullException(nameof(function));
-            _triggers = triggers ?? throw new ArgumentNullException(nameof(triggers));
+            Function = function ?? throw new ArgumentNullException(nameof(function));
+            Triggers = triggers ?? new string[0];
+            if (!CanNotify && Triggers.Length > 0)
+                throw new ArgumentException("The instance should implement INotifyPropertyChanged in order to be observed.", nameof(triggers));
         }
 
-        public FunctionObservable(TItem item, Expression<Func<TItem, TResult>> expression) 
-            : this (item, expression.Compile(), 
-                item is INotifyPropertyChanged ? FindTriggersIn(expression) : new string[0])
+        public PropertyObservableFactory(Expression<Func<TItem, TResult>> expression) : this (
+            expression.Compile(), CanNotify ? FindTriggersIn(expression) : new string[0])
         {
         }
 
-        public static string[] FindTriggersIn(Expression<Func<TItem, TResult>> expression)
+        private static bool CanNotify =>
+#if NETSTANDARD1_1
+            typeof(INotifyPropertyChanged).GetTypeInfo().IsAssignableFrom(typeof(TItem).GetTypeInfo());
+#else
+            typeof(INotifyPropertyChanged).IsAssignableFrom(typeof(TItem));
+#endif
+
+        internal static string[] FindTriggersIn(Expression<Func<TItem, TResult>> expression)
         {
             var detector = new TriggerDetector { Parameters = { expression.Parameters[0] } };
             detector.Visit(expression);
             return detector.Triggers.ToArray();
         }
 
+        public IObservable<TResult> Observe(TItem item) => new FunctionObservable<TItem, TResult>(item, this);
+    }
+
+    struct FunctionObservable<TItem, TResult> : IObservable<TResult>
+    {
+        private readonly TItem _item;
+        private readonly PropertyObservableFactory<TItem, TResult> _factory;
+
+        public FunctionObservable(TItem item, PropertyObservableFactory<TItem, TResult> factory)
+        {
+            _item = item;
+            _factory = factory;
+        }
+
+        public FunctionObservable(TItem item, Func<TItem, TResult> function, params string[] triggers)
+            : this(item, new PropertyObservableFactory<TItem, TResult>(function, triggers))
+        {
+        }
+
+        public FunctionObservable(TItem item, Expression<Func<TItem, TResult>> expression)
+            : this(item, new PropertyObservableFactory<TItem, TResult>(expression))
+        {
+        }
+
         public IDisposable Subscribe(IObserver<TResult> observer)
         {
-            return new Subscription(_item, _triggers, observer, _function);
+            return new Subscription(_item, _factory.Function, _factory.Triggers, observer);
         }
 
         class Subscription : IDisposable, IWeakEventListener
@@ -50,16 +78,17 @@ namespace Neuronic.CollectionModel
             private readonly string[] _triggers;
             private readonly IObserver<TResult> _observer;
 
-            public Subscription(TItem item, string[] triggers, IObserver<TResult> observer, Func<TItem, TResult> function)
+            public Subscription(TItem item, Func<TItem, TResult> function, string[] triggers,
+                IObserver<TResult> observer)
             {
                 _item = item;
-                _triggers = triggers ?? throw new ArgumentNullException(nameof(triggers));
                 _observer = observer ?? throw new ArgumentNullException(nameof(observer));
                 _function = function ?? throw new ArgumentNullException(nameof(function));
 
                 _observer.OnNext(_function(_item));
                 if (item is INotifyPropertyChanged notifier)
                 {
+                    _triggers = triggers ?? throw new ArgumentNullException(nameof(triggers));
                     foreach (var trigger in _triggers)
                         PropertyChangedEventManager.AddListener(notifier, this, trigger);
                 }
