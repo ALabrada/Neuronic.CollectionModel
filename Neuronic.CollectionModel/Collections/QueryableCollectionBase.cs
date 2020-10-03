@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Runtime.InteropServices;
 
 namespace Neuronic.CollectionModel.Collections
 {
@@ -15,14 +16,14 @@ namespace Neuronic.CollectionModel.Collections
         public virtual IQueryProvider Provider => new QueryProvider<T>();
     }
 
-    class QueryableCollection<T> : QueryableCollectionBase<T>, IOrderedQueryable<T>
+    class QueryableCollection<T> : QueryableCollectionBase<T>, IQueryable<T>
     {
         public QueryableCollection(IEnumerable<T> source)
         {
             Source = source ?? throw new ArgumentNullException(nameof(source));
         }
 
-        public IEnumerable<T> Source { get; }
+        public virtual IEnumerable<T> Source { get; }
 
         public IEnumerator<T> GetEnumerator()
         {

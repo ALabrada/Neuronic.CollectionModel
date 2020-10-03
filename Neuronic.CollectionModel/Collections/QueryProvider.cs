@@ -27,82 +27,88 @@ namespace Neuronic.CollectionModel.Collections
             var queryable = ConstantFinder<IQueryable<TSource>>.FindIn(mc.Arguments[0]);
             if (queryable == null)
                 throw new InvalidOperationException("Cannot find source.");
-            var source = (queryable as QueryableCollection<TSource>)?.Source ?? queryable;
-            var collection = source as IReadOnlyObservableCollection<TSource>;
-            var list = source as IReadOnlyObservableList<TSource>;
+            var source = new Lazy<IEnumerable<TSource>>(() => (queryable as QueryableCollection<TSource>)?.Source ?? queryable);
+            var collection = new Lazy<IReadOnlyObservableCollection<TSource>>(() => source.Value as IReadOnlyObservableCollection<TSource>);
+            var list = new Lazy<IReadOnlyObservableList<TSource>>(() => source.Value as IReadOnlyObservableList<TSource>);
 
             Expression<Func<TSource, bool>> predicate;
             switch (mc.Method.Name)
             {
                 case "Where" when mc.Arguments.Count == 2 && typeof(TElement) == typeof(TSource):
                     predicate = LambdaFinder.FindIn(mc.Arguments[1]) as Expression<Func<TSource, bool>>;
-                    return (IQueryable<TElement>)source.ListWhereObservable(item => new FunctionObservable<TSource, bool>(item, predicate)).AsQueryableCollection();
-                case "OfType" when mc.Arguments.Count == 1 && collection != null:
-                    return list != null 
-                        ? new CastingReadOnlyObservableList<TSource,TElement>(list.ListWhere(x => x is TElement)).AsQueryableCollection() 
-                        : new CastingReadOnlyObservableCollection<TSource, TElement>(source.ListWhere(x => x is TElement)).AsQueryableCollection();
-                case "Cast" when mc.Arguments.Count == 1 && collection != null:
-                    return list != null 
-                        ? new CastingReadOnlyObservableList<TSource, TElement>(list).AsQueryableCollection() 
-                        : new CastingReadOnlyObservableCollection<TSource, TElement>(collection).AsQueryableCollection();
+                    return (IQueryable<TElement>)source.Value.ListWhereObservable(item => new FunctionObservable<TSource, bool>(item, predicate)).AsQueryableCollection();
+                case "OfType" when mc.Arguments.Count == 1 && collection.Value != null:
+                    return list.Value != null 
+                        ? new CastingReadOnlyObservableList<TSource,TElement>(list.Value.ListWhere(x => x is TElement)).AsQueryableCollection() 
+                        : new CastingReadOnlyObservableCollection<TSource, TElement>(source.Value.ListWhere(x => x is TElement)).AsQueryableCollection();
+                case "Cast" when mc.Arguments.Count == 1 && collection.Value != null:
+                    return list.Value != null 
+                        ? new CastingReadOnlyObservableList<TSource, TElement>(list.Value).AsQueryableCollection() 
+                        : new CastingReadOnlyObservableCollection<TSource, TElement>(collection.Value).AsQueryableCollection();
                 case "Select" when mc.Arguments.Count == 2:
                     var selector = LambdaFinder.FindIn(mc.Arguments[1]) as Expression<Func<TSource, TElement>>;
-                    return source.ListSelectObservable(item => new FunctionObservable<TSource, TElement>(item, selector))
+                    return source.Value.ListSelectObservable(item => new FunctionObservable<TSource, TElement>(item, selector))
                         .AsQueryableCollection();
                 case "SelectMany" when mc.Arguments.Count == 2:
                     var collectionSelector = LambdaFinder.FindIn(mc.Arguments[1]) as Expression<Func<TSource, IEnumerable<TElement>>>;
-                    return source.ListSelectMany(collectionSelector.Compile()) // TODO: observe this
+                    return source.Value.ListSelectMany(collectionSelector.Compile()) // TODO: observe this
                         .AsQueryableCollection();
                 case "OrderBy":
-                    return (IQueryable<TElement>) OrderBy(source,
+                    return (IQueryable<TElement>) OrderBy(source.Value,
                         LambdaFinder.FindIn(mc.Arguments[1]), 
                         mc.Arguments.Count > 2 ? mc.Arguments[2] : null
                         , false);
                 case "ThenBy":
-                    throw new NotImplementedException();
+                    return (IQueryable<TElement>)OrderBy(queryable,
+                        LambdaFinder.FindIn(mc.Arguments[1]),
+                        mc.Arguments.Count > 2 ? mc.Arguments[2] : null
+                        , false);
                 case "OrderByDescending":
-                    return (IQueryable<TElement>) OrderBy(source,
+                    return (IQueryable<TElement>) OrderBy(source.Value,
                         LambdaFinder.FindIn(mc.Arguments[1]),
                         mc.Arguments.Count > 2 ? mc.Arguments[2] : null,
                         true);
                 case "ThenByDescending":
-                    throw new NotImplementedException();
-                case "Take":
-                    return (IQueryable<TElement>)list?.ListTake(ConstantFinder<int>.FindIn(mc.Arguments[1]))
+                    return (IQueryable<TElement>)OrderBy(queryable,
+                        LambdaFinder.FindIn(mc.Arguments[1]),
+                        mc.Arguments.Count > 2 ? mc.Arguments[2] : null,
+                        true);
+                case "Take" when list.Value != null:
+                    return (IQueryable<TElement>)list.Value.ListTake(ConstantFinder<int>.FindIn(mc.Arguments[1]))
                         .AsQueryableCollection();
                 case "TakeWhile":
                     throw new NotImplementedException();
-                case "Skip":
-                    return (IQueryable<TElement>)list?.ListSkip(ConstantFinder<int>.FindIn(mc.Arguments[1]))
+                case "Skip" when list.Value != null:
+                    return (IQueryable<TElement>)list.Value.ListSkip(ConstantFinder<int>.FindIn(mc.Arguments[1]))
                         .AsQueryableCollection();
                 case "SkipWhile":
                     throw new NotImplementedException();
                 case "GroupBy" when mc.Method.GetGenericArguments().Length == 2: // TODO: Handle group selector
-                    return (IQueryable<TElement>) GroupBy(source,
+                    return (IQueryable<TElement>) GroupBy(source.Value,
                         LambdaFinder.FindIn(mc.Arguments[1]),
                         mc.Arguments.Count > 2 ? mc.Arguments[2] : null);
-                case "Distinct" when collection != null:
-                    return (IQueryable<TElement>) collection.CollectionDistinct(
+                case "Distinct" when collection.Value != null:
+                    return (IQueryable<TElement>) collection.Value.CollectionDistinct(
                         mc.Arguments.Count > 1 ? ConstantFinder<IEqualityComparer<TSource>>.FindIn(mc.Arguments[1]) : null)
                         .AsQueryableCollection();
                 case "Concat":
-                    return (IQueryable<TElement>) source.ListConcat(
+                    return (IQueryable<TElement>) source.Value.ListConcat(
                         ConstantFinder<IEnumerable<TSource>>.FindIn(mc.Arguments[1]))
                         .AsQueryableCollection();
                 case "Zip":
                     throw new NotImplementedException();
                 case "Union":
-                    return (IQueryable<TElement>)source.CollectionUnion(
+                    return (IQueryable<TElement>)source.Value.CollectionUnion(
                         mc.Arguments.Count > 2 ? ConstantFinder<IEqualityComparer<TSource>>.FindIn(mc.Arguments[2]) : null,
                         ConstantFinder<IEnumerable<TSource>>.FindIn(mc.Arguments[1]))
                         .AsQueryableCollection();
                 case "Intersect":
-                    return (IQueryable<TElement>)source.CollectionIntersect(
+                    return (IQueryable<TElement>)source.Value.CollectionIntersect(
                         ConstantFinder<IEnumerable<TSource>>.FindIn(mc.Arguments[1]),
                         mc.Arguments.Count > 2 ? ConstantFinder<IEqualityComparer<TSource>>.FindIn(mc.Arguments[2]) : null)
                         .AsQueryableCollection();
                 case "Except":
-                    return (IQueryable<TElement>)source.CollectionExcept(
+                    return (IQueryable<TElement>)source.Value.CollectionExcept(
                         ConstantFinder<IEnumerable<TSource>>.FindIn(mc.Arguments[1]),
                         mc.Arguments.Count > 2 ? ConstantFinder<IEqualityComparer<TSource>>.FindIn(mc.Arguments[2]) : null)
                         .AsQueryableCollection();
@@ -127,17 +133,18 @@ namespace Neuronic.CollectionModel.Collections
             var delegateType = sortKeySelector.GetType().GetTypeInfo().GenericTypeArguments[0];
             var keyType = delegateType.GetTypeInfo().GenericTypeArguments[1];
 #endif
-            var targetType = typeof(KeySortedReadOnlyObservableList<,>).MakeGenericType(typeof(TSource), keyType);
 
             var actualComparer = ConstantFinder<object>.FindIn(comparer);
-            if (invert && !(actualComparer is null))
+            if (invert)
             {
                 var comparerType = typeof(InvertedComparer<>).MakeGenericType(keyType);
                 actualComparer = Activator.CreateInstance(comparerType, actualComparer);
             }
 
-            var result = Activator.CreateInstance(targetType, source, sortKeySelector, actualComparer);
-            return new QueryableCollection<TSource>((IReadOnlyObservableList<TSource>) result);
+            var definitionType = typeof(Definition<,>).MakeGenericType(typeof(TSource), keyType);
+            var definition = (IDefinition<TSource>) Activator.CreateInstance(definitionType, sortKeySelector, actualComparer);
+
+            return new KeySortingQueryableCollection<TSource>(source, definition);
         }
 
         private static object GroupBy(IEnumerable<TSource> source, Expression sortKeySelector, Expression comparer)
@@ -241,16 +248,16 @@ namespace Neuronic.CollectionModel.Collections
         }
     }
 
-    class InvertedComparer<T> : IComparer<T>
+    class InvertedComparer<T> : Comparer<T>
     {
-        private readonly IComparer<T> _other;
+        private readonly Comparer<T> _other;
 
-        public InvertedComparer(IComparer<T> other)
+        public InvertedComparer(Comparer<T> other)
         {
             _other = other ?? Comparer<T>.Default;
         }
 
-        public int Compare(T x, T y)
+        public override int Compare(T x, T y)
         {
             return -_other.Compare(x, y);
         }

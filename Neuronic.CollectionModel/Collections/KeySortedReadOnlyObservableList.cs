@@ -23,7 +23,7 @@ namespace Neuronic.CollectionModel.Collections
         IReadOnlyObservableList<TSource>, IWeakEventListener
     {
         private readonly ContainerCollection _items;
-        private readonly IReadOnlyObservableCollection<TSource> _source;
+        private readonly IEnumerable<TSource> _source;
         private readonly Func<TSource, IObservable<TKey>> _keySelector;
         private readonly IEqualityComparer<Container> _eqComparer;
 
@@ -37,7 +37,7 @@ namespace Neuronic.CollectionModel.Collections
         /// A comparer for the list items. This is only used if the source collection is not a list 
         /// and does not provide index information in its <see cref="NotifyCollectionChangedEventArgs"/> events.
         /// </param>
-        public KeySortedReadOnlyObservableList(IReadOnlyObservableCollection<TSource> source, Func<TSource, IObservable<TKey>> keySelector, 
+        public KeySortedReadOnlyObservableList(IEnumerable<TSource> source, Func<TSource, IObservable<TKey>> keySelector, 
             Comparison<TKey> comparison, IEqualityComparer<TSource> comparer)
         {
             _source = source ?? throw new ArgumentNullException(nameof(source));
@@ -46,7 +46,9 @@ namespace Neuronic.CollectionModel.Collections
             _items = new ContainerCollection(from item in source select new Container(item, keySelector(item)),
                 new ContainerComparer(comparison));
             _items.SortedCollectionChanged += (sender, args) => RaiseEvents(args);
-            CollectionChangedEventManager.AddListener(_source, this);
+            
+            if (_source is INotifyCollectionChanged notifier)
+                CollectionChangedEventManager.AddListener(notifier, this);
         }
 
         /// <summary>
@@ -55,7 +57,7 @@ namespace Neuronic.CollectionModel.Collections
         /// <param name="source">The source collection.</param>
         /// <param name="keySelector">The key generator.</param>
         /// <param name="comparer">The comparison used to establish the order of elements (and keys).</param>
-        public KeySortedReadOnlyObservableList(IReadOnlyObservableCollection<TSource> source, Expression<Func<TSource, TKey>> keySelector,
+        public KeySortedReadOnlyObservableList(IEnumerable<TSource> source, Expression<Func<TSource, TKey>> keySelector,
             IComparer<TKey> comparer) : this (source, 
             item => new FunctionObservable<TSource, TKey>(item, keySelector), 
             comparer == null ? null as Comparison<TKey> : comparer.Compare,
