@@ -10,6 +10,7 @@ using System.Windows;
 using Neuronic.CollectionModel.Collections;
 using Neuronic.CollectionModel.Collections.Containers;
 using Neuronic.CollectionModel.Extras;
+using Neuronic.CollectionModel.Observables;
 using Neuronic.CollectionModel.Results;
 using Neuronic.CollectionModel.WeakEventPattern;
 

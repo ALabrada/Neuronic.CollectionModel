@@ -1,14 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Windows;
 using Neuronic.CollectionModel.WeakEventPattern;
-using System.Linq.Expressions;
-using System.Reflection;
 
-namespace Neuronic.CollectionModel
+namespace Neuronic.CollectionModel.Observables
 {
     public class PropertyObservableFactory<TItem, TResult>
     {

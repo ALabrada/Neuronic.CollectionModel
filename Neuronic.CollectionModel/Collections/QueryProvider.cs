@@ -6,6 +6,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using Neuronic.CollectionModel.Collections.Containers;
+using Neuronic.CollectionModel.Observables;
 
 namespace Neuronic.CollectionModel.Collections
 {

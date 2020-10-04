@@ -6,6 +6,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Windows;
 using Neuronic.CollectionModel.Collections.Containers;
+using Neuronic.CollectionModel.Observables;
 using Neuronic.CollectionModel.WeakEventPattern;
 
 namespace Neuronic.CollectionModel.Collections
