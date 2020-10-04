@@ -36,7 +36,7 @@ namespace Neuronic.CollectionModel.Collections
             item =>
             {
                 var key = KeySelector(item);
-                return key as IObservable<object> ?? new ContravariantObservable(key);
+                return key as IObservable<object> ?? key.Select(x => (object) x);
             };
 
         IComparer IDefinition<TElement>.Comparer => Comparer;
@@ -44,38 +44,6 @@ namespace Neuronic.CollectionModel.Collections
         public IReadOnlyObservableList<TElement> Sort(IEnumerable<TElement> source)
         {
             return new KeySortedReadOnlyObservableList<TElement, TKey>(source, KeySelector, Comparer.Compare, null);
-        }
-
-        class ContravariantObservable : IObservable<object>, IObserver<TKey>
-        {
-            private readonly IObservable<TKey> _other;
-            private IObserver<object> _observer;
-
-            public ContravariantObservable(IObservable<TKey> other)
-            {
-                _other = other;
-            }
-
-            public IDisposable Subscribe(IObserver<object> observer)
-            {
-                _observer = observer;
-                return _other.Subscribe(this);
-            }
-
-            public void OnCompleted()
-            {
-                _observer.OnCompleted();
-            }
-
-            public void OnError(Exception error)
-            {
-                _observer.OnError(error);
-            }
-
-            public void OnNext(TKey value)
-            {
-                _observer.OnNext(value);
-            }
         }
     }
 

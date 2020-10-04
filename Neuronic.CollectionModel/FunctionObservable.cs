@@ -23,9 +23,19 @@ namespace Neuronic.CollectionModel
                 throw new ArgumentException("The instance should implement INotifyPropertyChanged in order to be observed.", nameof(triggers));
         }
 
-        public PropertyObservableFactory(Expression<Func<TItem, TResult>> expression) : this (
-            expression.Compile(), CanNotify ? FindTriggersIn(expression) : new string[0])
+        public static PropertyObservableFactory<TItem, TResult> FindIn(Expression<Func<TItem, TResult>> expression)
         {
+            var triggers = CanNotify ? FindTriggersIn(expression) : new string[0];
+            var func = expression.Compile();
+            return new PropertyObservableFactory<TItem, TResult>(func, triggers);
+        }
+
+        public static PropertyObservableFactory<Tuple<TItem, TAux>, TResult> FindIn<TAux>(Expression<Func<TItem, TAux, TResult>> expression)
+        {
+            var triggers = CanNotify ? FindTriggersIn(expression) : new string[0];
+            var func = expression.Compile();
+            return new PropertyObservableFactory<Tuple<TItem, TAux>, TResult>(
+                t => func(t.Item1, t.Item2), triggers);
         }
 
         private static bool CanNotify =>
@@ -36,6 +46,13 @@ namespace Neuronic.CollectionModel
 #endif
 
         internal static string[] FindTriggersIn(Expression<Func<TItem, TResult>> expression)
+        {
+            var detector = new TriggerDetector { Parameters = { expression.Parameters[0] } };
+            detector.Visit(expression);
+            return detector.Triggers.ToArray();
+        }
+
+        internal static string[] FindTriggersIn<TAux>(Expression<Func<TItem, TAux, TResult>> expression)
         {
             var detector = new TriggerDetector { Parameters = { expression.Parameters[0] } };
             detector.Visit(expression);
@@ -62,7 +79,7 @@ namespace Neuronic.CollectionModel
         }
 
         public FunctionObservable(TItem item, Expression<Func<TItem, TResult>> expression)
-            : this(item, new PropertyObservableFactory<TItem, TResult>(expression))
+            : this(item, PropertyObservableFactory<TItem, TResult> .FindIn(expression))
         {
         }
 

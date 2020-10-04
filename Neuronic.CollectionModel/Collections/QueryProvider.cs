@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using Neuronic.CollectionModel.Collections.Containers;
 
 namespace Neuronic.CollectionModel.Collections
 {
@@ -31,15 +32,14 @@ namespace Neuronic.CollectionModel.Collections
             var collection = new Lazy<IReadOnlyObservableCollection<TSource>>(() => source.Value as IReadOnlyObservableCollection<TSource>);
             var list = new Lazy<IReadOnlyObservableList<TSource>>(() => source.Value as IReadOnlyObservableList<TSource>);
 
-            Expression<Func<TSource, bool>> predicate;
-            LambdaExpression keySelector;
+            LambdaExpression lambda;
             switch (mc.Method.Name)
             {
                 case "Where" when mc.Arguments.Count == 2 && typeof(TElement) == typeof(TSource):
-                    predicate = LambdaFinder.FindIn(mc.Arguments[1]) as Expression<Func<TSource, bool>>;
-                    if (predicate == null) break;
-                    var factory = new PropertyObservableFactory<TSource, bool>(predicate);
-                    return (IQueryable<TElement>)source.Value.ListWhereObservable(item => factory.Observe(item)).AsQueryableCollection();
+                    lambda = LambdaFinder.FindIn(mc.Arguments[1]);
+                    var whereQuery = Filter(source.Value, lambda);
+                    if (whereQuery != null) return (IQueryable<TElement>) whereQuery;
+                    break;
                 case "OfType" when mc.Arguments.Count == 1 && collection.Value != null:
                     return list.Value != null 
                         ? new CastingReadOnlyObservableList<TSource,TElement>(list.Value.ListWhere(x => x is TElement)).AsQueryableCollection() 
@@ -49,39 +49,37 @@ namespace Neuronic.CollectionModel.Collections
                         ? new CastingReadOnlyObservableList<TSource, TElement>(list.Value).AsQueryableCollection() 
                         : new CastingReadOnlyObservableCollection<TSource, TElement>(collection.Value).AsQueryableCollection();
                 case "Select" when mc.Arguments.Count == 2:
-                    var selector = LambdaFinder.FindIn(mc.Arguments[1]) as Expression<Func<TSource, TElement>>;
-                    if (selector == null) break;
-                    var factory2 = new PropertyObservableFactory<TSource, TElement>(selector);
-                    return source.Value.ListSelectObservable(item => factory2.Observe(item))
-                        .AsQueryableCollection();
+                    lambda = LambdaFinder.FindIn(mc.Arguments[1]);
+                    var selectQuery = Select<TElement>(source.Value, lambda);
+                    if (selectQuery != null) return selectQuery;
+                    break;
                 case "SelectMany" when mc.Arguments.Count == 2:
-                    var collectionSelector = LambdaFinder.FindIn(mc.Arguments[1]) as Expression<Func<TSource, IEnumerable<TElement>>>;
-                    if (collectionSelector == null) break;
-                    var factory3 = new PropertyObservableFactory<TSource, IEnumerable<TElement>>(collectionSelector);
-                    return source.Value.ListSelectManyObservable(item => factory3.Observe(item))
-                        .AsQueryableCollection();
+                    lambda = LambdaFinder.FindIn(mc.Arguments[1]);
+                    var selectManyQuery = SelectMany<TElement>(source.Value, lambda);
+                    if (selectManyQuery != null) return selectManyQuery;
+                    break;
                 case "OrderBy":
-                    keySelector = LambdaFinder.FindIn(mc.Arguments[1]);
-                    if (keySelector == null) break;
-                    return (IQueryable<TElement>) OrderBy(source.Value, keySelector, 
+                    lambda = LambdaFinder.FindIn(mc.Arguments[1]);
+                    if (lambda == null) break;
+                    return (IQueryable<TElement>) OrderBy(source.Value, lambda, 
                         mc.Arguments.Count > 2 ? mc.Arguments[2] : null
                         , false);
                 case "ThenBy":
-                    keySelector = LambdaFinder.FindIn(mc.Arguments[1]);
-                    if (keySelector == null) break;
-                    return (IQueryable<TElement>)OrderBy(queryable, keySelector,
+                    lambda = LambdaFinder.FindIn(mc.Arguments[1]);
+                    if (lambda == null) break;
+                    return (IQueryable<TElement>)OrderBy(queryable, lambda,
                         mc.Arguments.Count > 2 ? mc.Arguments[2] : null
                         , false);
                 case "OrderByDescending":
-                    keySelector = LambdaFinder.FindIn(mc.Arguments[1]);
-                    if (keySelector == null) break;
-                    return (IQueryable<TElement>) OrderBy(source.Value, keySelector,
+                    lambda = LambdaFinder.FindIn(mc.Arguments[1]);
+                    if (lambda == null) break;
+                    return (IQueryable<TElement>) OrderBy(source.Value, lambda,
                         mc.Arguments.Count > 2 ? mc.Arguments[2] : null,
                         true);
                 case "ThenByDescending":
-                    keySelector = LambdaFinder.FindIn(mc.Arguments[1]);
-                    if (keySelector == null) break;
-                    return (IQueryable<TElement>)OrderBy(queryable, keySelector,
+                    lambda = LambdaFinder.FindIn(mc.Arguments[1]);
+                    if (lambda == null) break;
+                    return (IQueryable<TElement>)OrderBy(queryable, lambda,
                         mc.Arguments.Count > 2 ? mc.Arguments[2] : null,
                         true);
                 case "Take" when list.Value != null:
@@ -93,9 +91,9 @@ namespace Neuronic.CollectionModel.Collections
                         .AsQueryableCollection();
                 //case "SkipWhile": // TODO
                 case "GroupBy" when mc.Method.GetGenericArguments().Length == 2: // TODO: Handle group selector
-                    keySelector = LambdaFinder.FindIn(mc.Arguments[1]);
-                    if (keySelector == null) break;
-                    return (IQueryable<TElement>) GroupBy(source.Value, keySelector,
+                    lambda = LambdaFinder.FindIn(mc.Arguments[1]);
+                    if (lambda == null) break;
+                    return (IQueryable<TElement>) GroupBy(source.Value, lambda,
                         mc.Arguments.Count > 2 ? mc.Arguments[2] : null);
                 case "Distinct" when collection.Value != null:
                     return (IQueryable<TElement>) collection.Value.CollectionDistinct(
@@ -133,7 +131,82 @@ namespace Neuronic.CollectionModel.Collections
             return result;
         }
 
-        private static object OrderBy(IEnumerable<TSource> source, Expression sortKeySelector, Expression comparer, bool invert)
+        private static IQueryable<TElement> Select<TElement>(IEnumerable<TSource> source, LambdaExpression lambda)
+        {
+            var selector = lambda as Expression<Func<TSource, TElement>>;
+            var indexedSelector = lambda as Expression<Func<TSource, int, TElement>>;
+            if (selector != null)
+            {
+                var factory = PropertyObservableFactory<TSource, TElement>.FindIn(selector);
+                return source.ListSelectObservable(item => factory.Observe(item))
+                    .AsQueryableCollection();
+            }
+
+            if (indexedSelector != null)
+            {
+                var triggers = PropertyObservableFactory<TSource, TElement>.FindTriggersIn(indexedSelector);
+                var func = indexedSelector.Compile();
+                var indexed = new IndexedTransformingReadOnlyObservableList<TSource, TSource>(source,
+                    x => new NotifyObservable<TSource>(x, triggers));
+                return indexed.ListSelectObservable(
+                        item => item.ObserveAll().Select(x => func(x.Value, x.Index)))
+                    .AsQueryableCollection();
+            }
+
+            return null;
+        }
+
+        private static IQueryable<TElement> SelectMany<TElement>(IEnumerable<TSource> source, LambdaExpression lambda)
+        {
+            var selector = lambda as Expression<Func<TSource, IEnumerable<TElement>>>;
+            var indexedSelector = lambda as Expression<Func<TSource, int, IEnumerable<TElement>>>;
+            if (selector != null)
+            {
+                var factory = PropertyObservableFactory<TSource, IEnumerable<TElement>>.FindIn(selector);
+                return source.ListSelectManyObservable(item => factory.Observe(item))
+                    .AsQueryableCollection();
+            }
+
+            if (indexedSelector != null)
+            {
+                var triggers = PropertyObservableFactory<TSource, IEnumerable<TElement>>.FindTriggersIn(indexedSelector);
+                var func = indexedSelector.Compile();
+                var indexed = new IndexedTransformingReadOnlyObservableList<TSource, TSource>(source,
+                    x => new NotifyObservable<TSource>(x, triggers));
+                return indexed.ListSelectManyObservable(
+                        item => item.ObserveAll().Select(x => func(x.Value, x.Index)))
+                    .AsQueryableCollection();
+            }
+
+            return null;
+        }
+
+        private static IQueryable Filter(IEnumerable<TSource> source, LambdaExpression lambda)
+        {
+            var predicate = lambda as Expression<Func<TSource, bool>>;
+            var indexedPredicate = lambda as Expression<Func<TSource, int, bool>>;
+            if (predicate != null)
+            {
+                var factory = PropertyObservableFactory<TSource, bool>.FindIn(predicate);
+                return source.ListWhereObservable(item => factory.Observe(item))
+                    .AsQueryableCollection();
+            }
+
+            if (indexedPredicate != null)
+            {
+                var triggers = PropertyObservableFactory<TSource, bool>.FindTriggersIn(indexedPredicate);
+                var func = indexedPredicate.Compile();
+                var indexed = new IndexedTransformingReadOnlyObservableList<TSource, TSource>(source, 
+                    x => new NotifyObservable<TSource>(x, triggers));
+                return indexed.ListWhereObservable(
+                        item => item.ObserveAll().Select(x => func(x.Value, x.Index)))
+                    .AsQueryableCollection();
+            }
+
+            return null;
+        }
+
+        private static IQueryable OrderBy(IEnumerable<TSource> source, LambdaExpression sortKeySelector, Expression comparer, bool invert)
         {
 #if NET40
             var delegateType = sortKeySelector.GetType().GetGenericArguments()[0];
@@ -156,7 +229,7 @@ namespace Neuronic.CollectionModel.Collections
             return new KeySortingQueryableCollection<TSource>(source, definition);
         }
 
-        private static object GroupBy(IEnumerable<TSource> source, Expression sortKeySelector, Expression comparer)
+        private static IQueryable GroupBy(IEnumerable<TSource> source, LambdaExpression sortKeySelector, Expression comparer)
         {
 #if NET40
             var delegateType = sortKeySelector.GetType().GetGenericArguments()[0];
@@ -172,7 +245,7 @@ namespace Neuronic.CollectionModel.Collections
 
             var resultType = typeof(IGrouping<,>).MakeGenericType(keyType, typeof(TSource));
             var queryType = typeof(QueryableCollection<>).MakeGenericType(resultType);
-            return Activator.CreateInstance(queryType, result);
+            return (IQueryable) Activator.CreateInstance(queryType, result);
         }
 
         public object Execute(Expression expression)

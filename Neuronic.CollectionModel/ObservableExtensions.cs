@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Linq.Expressions;
+using Neuronic.CollectionModel.Observables;
 
 namespace Neuronic.CollectionModel
 {
@@ -9,6 +10,18 @@ namespace Neuronic.CollectionModel
     /// </summary>
     public static class ObservableExtensions
     {
+        internal static IObservable<TResult> Select<TSource, TResult>(this IObservable<TSource> source,
+            Func<TSource, TResult> selector)
+        {
+            return new MapOperator<TSource,TResult>(source, selector);
+        }
+
+        internal static IObservable<TResult> Zip<TSource1, TSource2, TResult>(this IObservable<TSource1> first, 
+            IObservable<TSource2> second, Func<TSource1, TSource2, TResult> selector)
+        {
+            return new ZipOperator<TSource1, TSource2, TResult>(first, second, selector);
+        }
+
         /// <summary>
         ///     Creates an <see cref="System.IObserver{T}"/> that emits <paramref name="item"/> once.
         /// </summary>
@@ -23,7 +36,7 @@ namespace Neuronic.CollectionModel
         public static PropertyObservableFactory<TItem, TResult> FindProperties<TItem, TResult>(
             this Expression<Func<TItem, TResult>> function) where TItem : INotifyPropertyChanged
         {
-            return new PropertyObservableFactory<TItem, TResult>(function);
+            return PropertyObservableFactory<TItem, TResult>.FindIn(function);
         }
 
         /// <summary>
