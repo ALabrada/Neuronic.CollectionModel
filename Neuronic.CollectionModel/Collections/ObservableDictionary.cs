@@ -69,7 +69,7 @@ namespace Neuronic.CollectionModel.Collections
         /// Adds an item to the <see cref="T:System.Collections.Generic.ICollection`1" />.
         /// </summary>
         /// <param name="item">The object to add to the <see cref="T:System.Collections.Generic.ICollection`1" />.</param>
-        public void Add(KeyValuePair<TKey, TValue> item)
+        public virtual void Add(KeyValuePair<TKey, TValue> item)
         {
             Items.Add(item);
             OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, item));
@@ -79,7 +79,7 @@ namespace Neuronic.CollectionModel.Collections
         /// <summary>
         /// Removes all items from the <see cref="T:System.Collections.Generic.ICollection`1" />.
         /// </summary>
-        public void Clear()
+        public virtual void Clear()
         {
             if (Items.Count == 0)
                 return;
@@ -140,7 +140,7 @@ namespace Neuronic.CollectionModel.Collections
         /// <returns>
         /// true if the element is successfully removed; otherwise, false.  This method also returns false if <paramref name="key" /> was not found in the original <see cref="T:System.Collections.Generic.IDictionary`2" />.
         /// </returns>
-        public bool Remove(TKey key)
+        public virtual bool Remove(TKey key)
         {
             TValue value;
             if (!Items.TryGetValue(key, out value) || !Items.Remove(key))
@@ -169,7 +169,7 @@ namespace Neuronic.CollectionModel.Collections
         /// </value>
         /// <param name="key">The key.</param>
         /// <returns></returns>
-        public TValue this[TKey key]
+        public virtual TValue this[TKey key]
         {
             get { return Items[key]; }
             set

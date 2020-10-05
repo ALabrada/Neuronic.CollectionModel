@@ -128,24 +128,123 @@ namespace Neuronic.CollectionModel
             }
         }
 
-        private static void RemoveItems<T>(this IList<T> list, IEnumerable oldItems,
+        /// <summary>
+        ///     Updates the specified observable collection.
+        /// </summary>
+        /// <remarks>
+        ///     This method can be used to synchronize two observable collections, calling this
+        ///     method in the <see cref="INotifyCollectionChanged.CollectionChanged" /> event handler.
+        /// </remarks>
+        /// <typeparam name="T">The type of the collection elements.</typeparam>
+        /// <param name="collection>The collection to update.</param>
+        /// <param name="source">
+        ///     The source collection. This is usually the <strong>sender</strong>
+        ///     parameter in the <see cref="INotifyCollectionChanged.CollectionChanged" /> event handler.
+        /// </param>
+        /// <param name="e">
+        ///     The <see cref="NotifyCollectionChangedEventArgs" /> instance containing the event data,
+        ///     obtained from the <see cref="INotifyCollectionChanged.CollectionChanged" /> event handler.
+        /// </param>
+        /// <param name="select">
+        ///     A function that can be used to create new items for <paramref name="list" />
+        ///     based on the items in <paramref name="source" />. By default, the same items are used.
+        /// </param>
+        /// <param name="onRemove">
+        ///     A callback procedure that can be used to free resources when items
+        ///     are removed from <paramref name="collection" />.
+        /// </param>
+        /// <param name="comparer">
+        ///     A comparer for the list items. This is only used if the source collection is not a list
+        ///     and does not provide index information in <paramref name="e"/>. If this parameter is <c>null</c>,
+        ///     <see cref="EqualityComparer{T}.Default"/> is used.
+        /// </param>
+        public static void UpdateCollection<T>(this ICollection<T> collection, IEnumerable source,
+            NotifyCollectionChangedEventArgs e,
+            Func<object, T> select = null, Action<T> onRemove = null,
+            IEqualityComparer<T> comparer = null)
+        {
+            if (collection is ObservableCollection<T> oc)
+            {
+                UpdateCollection(oc, source, e, select, onRemove, comparer);
+                return;
+            }
+
+            select = select ?? (o => (T)o);
+            var list = collection as IList<T>;
+            // apply the change to the snapshot
+            switch (e.Action)
+            {
+                case NotifyCollectionChangedAction.Add:
+                    if (e.NewStartingIndex >= 0 && (collection.Count > e.NewStartingIndex) && list != null)
+                        for (var i = e.NewItems.Count - 1; i >= 0; --i) // insert
+                            list.Insert(e.NewStartingIndex, @select(e.NewItems[i]));
+                    else
+                        foreach (var item in e.NewItems)
+                            collection.Add(@select(item));
+                    break;
+
+                case NotifyCollectionChangedAction.Remove:
+                    if (e.OldStartingIndex >= 0 && list != null)
+                        for (int i = e.OldItems.Count - 1, index = e.OldStartingIndex + i; i >= 0; --i, --index)
+                        {
+                            var item = list[index];
+                            list.RemoveAt(index);
+                            onRemove?.Invoke(item);
+                        }
+                    else
+                        RemoveItems(collection, e.OldItems, comparer, @select, onRemove);
+
+                    break;
+
+                case NotifyCollectionChangedAction.Replace:
+                    if (e.NewStartingIndex != e.OldStartingIndex)
+                        throw new InvalidOperationException("Old and new indexes mismatch on replace.");
+                    if (e.NewStartingIndex >= 0 && list != null)
+                        for (int i = e.NewItems.Count - 1, index = e.NewStartingIndex + i; i >= 0; --i, --index)
+                        {
+                            var item = list[index];
+                            list[index] = @select(e.NewItems[i]);
+                            onRemove?.Invoke(item);
+                        }
+                    else
+                        ReplaceItems(collection, e.OldItems, e.NewItems, comparer, @select, onRemove);
+
+                    break;
+
+                case NotifyCollectionChangedAction.Reset:
+                    if (onRemove != null)
+                        foreach (var item in collection)
+                            onRemove(item);
+                    collection.Clear();
+                    foreach (var item in source)
+                        collection.Add(select(item));
+                    break;
+            }
+        }
+
+        private static void RemoveItems<T>(this ICollection<T> collection, IEnumerable oldItems,
             IEqualityComparer<T> comparer, Func<object, T> select, Action<T> onRemove)
         {
             if (comparer == null) throw new ArgumentNullException(nameof(comparer));
             select = select ?? (o => (T)o);
             var setToRemove = new HashSet<T>(oldItems.Cast<object>().Select(select), comparer);
-            for (int i = list.Count - 1; i >= 0; i--)
-            {
-                var item = list[i];
-                if (setToRemove.Contains(item))
+            if (collection is IList<T> list)
+                for (int i = list.Count - 1; i >= 0; i--)
                 {
-                    onRemove?.Invoke(item);
-                    list.RemoveAt(i);
+                    var item = list[i];
+                    if (setToRemove.Contains(item))
+                    {
+                        onRemove?.Invoke(item);
+                        list.RemoveAt(i);
+                    }
                 }
-            }
+            else
+                foreach (var item in setToRemove)
+                    if (collection.Remove(item))
+                        onRemove?.Invoke(item);
         }
 
-        private static void ReplaceItems<T>(this IList<T> list, IEnumerable oldItems, IEnumerable newItems,
+        private static void ReplaceItems<T>(this ICollection<T> collection, IEnumerable oldItems, IEnumerable newItems,
             IEqualityComparer<T> comparer, Func<object, T> select, Action<T> onRemove)
         {
             if (comparer == null) throw new ArgumentNullException(nameof(comparer));
@@ -155,17 +254,29 @@ namespace Neuronic.CollectionModel
 
             var newItemsEnumerator = newItems.GetEnumerator();
             var newItemsLeft = newItemsEnumerator.MoveNext();
-            for (int i = 0; i < list.Count && newItemsLeft; i++)
+            if (collection is IList<T> list)
             {
-                var oldItem = list[i];
-                if (setToRemove.Contains(oldItem))
+                for (int i = 0; i < list.Count && newItemsLeft; i++)
                 {
-                    var newItem = select(newItemsEnumerator.Current);
-                    newItemsLeft = newItemsEnumerator.MoveNext();
-                    list[i] = newItem;
-                    onRemove?.Invoke(oldItem);
-                }
+                    var oldItem = list[i];
+                    if (setToRemove.Contains(oldItem))
+                    {
+                        var newItem = select(newItemsEnumerator.Current);
+                        newItemsLeft = newItemsEnumerator.MoveNext();
+                        list[i] = newItem;
+                        onRemove?.Invoke(oldItem);
+                    }
+                } 
             }
+            else
+                foreach (var oldItem in setToRemove.TakeWhile(_ => newItemsLeft))
+                    if (collection.Remove(oldItem))
+                    {
+                        var newItem = select(newItemsEnumerator.Current);
+                        newItemsLeft = newItemsEnumerator.MoveNext();
+                        collection.Add(newItem);
+                        onRemove?.Invoke(oldItem);
+                    }
         }
 
         /// <summary>
