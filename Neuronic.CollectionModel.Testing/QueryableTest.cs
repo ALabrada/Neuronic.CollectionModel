@@ -51,6 +51,16 @@ namespace Neuronic.CollectionModel.Testing
         }
 
         [TestMethod]
+        public void JoinTest()
+        {
+            var outerSource = Enumerable.Range(0, 20).Select(x => new Notify { Prop = x });
+            var innerSource = Enumerable.Range(1, 10).Select(x => new Notify { Prop = 2 * x - 1 });
+            var result = outerSource.ListAsObservable().AsQueryableCollection().Join(innerSource, 
+                x => x.Prop, x => x.Prop, (x, y) => x.Prop + y.Prop, EqualityComparer<int>.Default);
+            Assert.IsTrue(result.CollectionAsObservable() is InnerJoinReadOnlyObservableCollection<Notify, Notify, int, int>);
+        }
+
+        [TestMethod]
         public void OrderByTest()
         {
             var source = Enumerable.Range(0, 20).Select(x => new Notify { Prop = x });

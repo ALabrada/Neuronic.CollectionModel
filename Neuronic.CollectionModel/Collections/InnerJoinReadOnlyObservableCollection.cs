@@ -7,6 +7,8 @@ using System.Linq;
 using Neuronic.CollectionModel.Collections.Containers;
 using Neuronic.CollectionModel.WeakEventPattern;
 using System.Windows;
+using Neuronic.CollectionModel.Observables;
+using System.Linq.Expressions;
 
 namespace Neuronic.CollectionModel.Collections
 {
@@ -96,6 +98,29 @@ namespace Neuronic.CollectionModel.Collections
                 CollectionChangedEventManager.AddListener(innerNotifier, this);
             if (_outerSource is INotifyCollectionChanged outerNotifier)
                 CollectionChangedEventManager.AddListener(outerNotifier, this);
+        }
+
+        private InnerJoinReadOnlyObservableCollection(
+            IEnumerable<TOuter> outerSource, IEnumerable<TInner> innerSource,
+            PropertyObservableFactory<TOuter, TKey> outerKeySelector, PropertyObservableFactory<TInner, TKey> innerKeySelector,
+            PropertyObservableFactory<TOuter, TInner, TResult> resultSelector, IEqualityComparer<TKey> keyComparer = null,
+            IEqualityComparer<TOuter> outerComparer = null, IEqualityComparer<TInner> innerComparer = null)
+            : this (outerSource, innerSource, outerKeySelector.Observe, innerKeySelector.Observe, resultSelector.Observe,
+                  keyComparer, outerComparer, innerComparer)
+        {
+        }
+
+        public InnerJoinReadOnlyObservableCollection(
+            IEnumerable<TOuter> outerSource, IEnumerable<TInner> innerSource,
+            Expression<Func<TOuter, TKey>> outerKeySelector, Expression<Func<TInner, TKey>> innerKeySelector,
+            Expression<Func<TOuter, TInner, TResult>> resultSelector, IEqualityComparer<TKey> keyComparer = null,
+            IEqualityComparer<TOuter> outerComparer = null, IEqualityComparer<TInner> innerComparer = null)
+            : this (outerSource, innerSource, 
+                  PropertyObservableFactory<TOuter, TKey>.FindIn(outerKeySelector), 
+                  PropertyObservableFactory<TInner, TKey>.FindIn(innerKeySelector),
+                  PropertyObservableFactory<TOuter, TInner, TResult>.FindIn(resultSelector),
+                  keyComparer, outerComparer, innerComparer)
+        {            
         }
 
         public IEnumerator<TResult> GetEnumerator()

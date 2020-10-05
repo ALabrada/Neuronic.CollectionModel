@@ -6,7 +6,7 @@ using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using Neuronic.CollectionModel.Observables;
 
-namespace Neuronic.CollectionModel.Collections
+namespace Neuronic.CollectionModel.Collections.Linq
 {
     internal interface IDefinition<TElement>
     {

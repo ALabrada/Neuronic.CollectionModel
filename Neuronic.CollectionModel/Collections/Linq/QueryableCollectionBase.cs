@@ -5,7 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Runtime.InteropServices;
 
-namespace Neuronic.CollectionModel.Collections
+namespace Neuronic.CollectionModel.Collections.Linq
 {
     abstract class QueryableCollectionBase<T>
     {
