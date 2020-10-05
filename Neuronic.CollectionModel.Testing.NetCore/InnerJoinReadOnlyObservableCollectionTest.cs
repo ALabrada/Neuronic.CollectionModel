@@ -6,7 +6,7 @@ using System.Reactive.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neuronic.CollectionModel.Collections;
 
-namespace Neuronic.CollectionModel.Testing
+namespace Neuronic.CollectionModel.Testing.NetCore
 {
     [TestClass]
     public class InnerJoinReadOnlyObservableCollectionTest

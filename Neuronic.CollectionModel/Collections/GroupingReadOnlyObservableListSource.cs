@@ -53,7 +53,7 @@ namespace Neuronic.CollectionModel.Collections
             Func<TSource, TKey> keySelector, IEqualityComparer<TKey> keyComparer,
             IEqualityComparer<TSource> sourceComparer, params string[] triggers)
             : this(
-                source, item => new FunctionObservable<TSource, TKey>(item, keySelector, triggers),
+                source, item => new PropertyObservableFactory<TSource, TKey>(keySelector, triggers).Observe(item),
                 keyComparer, sourceComparer, 
                 new ObservableCollection<ReadOnlyObservableGroup<TSource, TKey>>())
         {
@@ -81,7 +81,7 @@ namespace Neuronic.CollectionModel.Collections
             IEnumerable<ReadOnlyObservableGroup<TSource, TKey>> explicitGroups,
             Func<TSource, TKey> keySelector, IEqualityComparer<TKey> keyComparer, IEqualityComparer<TSource> sourceComparer, params string[] triggers)
             : this(
-                source, item => new FunctionObservable<TSource, TKey>(item, keySelector, triggers), 
+                source, item => new PropertyObservableFactory<TSource, TKey>(keySelector, triggers).Observe(item), 
                 keyComparer, sourceComparer, 
                 new ObservableCollection<ReadOnlyObservableGroup<TSource, TKey>>(explicitGroups))
         {
@@ -104,7 +104,7 @@ namespace Neuronic.CollectionModel.Collections
             Expression<Func<TSource, TKey>> keySelector, IEqualityComparer<TKey> keyComparer,
             IEqualityComparer<TSource> sourceComparer)
             : this(
-                source, item => new FunctionObservable<TSource, TKey>(item, keySelector),
+                source, item => PropertyObservableFactory<TSource, TKey>.FindIn(keySelector).Observe(item),
                 keyComparer, sourceComparer,
                 new ObservableCollection<ReadOnlyObservableGroup<TSource, TKey>>())
         {

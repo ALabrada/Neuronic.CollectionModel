@@ -70,7 +70,7 @@ namespace Neuronic.CollectionModel.Collections
         /// </param>
         protected FilteredReadOnlyObservableCollectionBase(ObservableCollection<TContainer> items,
             IReadOnlyObservableCollection<TItem> source, Predicate<TItem> filter, IEqualityComparer<TItem> itemComparer, params string[] triggers)
-            : this (items, source, x => new FunctionObservable<TItem,bool>(x, b => filter(b), triggers), itemComparer)
+            : this (items, source, x => new PropertyObservableFactory<TItem,bool>(b => filter(b), triggers).Observe(x), itemComparer)
         {
         }
 

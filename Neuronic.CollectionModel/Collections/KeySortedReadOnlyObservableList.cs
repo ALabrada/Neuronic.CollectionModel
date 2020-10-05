@@ -60,7 +60,7 @@ namespace Neuronic.CollectionModel.Collections
         /// <param name="comparer">The comparison used to establish the order of elements (and keys).</param>
         public KeySortedReadOnlyObservableList(IEnumerable<TSource> source, Expression<Func<TSource, TKey>> keySelector,
             IComparer<TKey> comparer) : this (source, 
-            item => new FunctionObservable<TSource, TKey>(item, keySelector), 
+            item => PropertyObservableFactory<TSource, TKey>.FindIn(keySelector).Observe(item), 
             comparer == null ? null as Comparison<TKey> : comparer.Compare,
             null)
         {

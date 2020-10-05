@@ -679,9 +679,8 @@ namespace Neuronic.CollectionModel
             Func<TSource, TKey> keySelector,
             Comparison<TKey> comparison, IEqualityComparer<TSource> eqComparer, params string[] triggers)
         {
-            return new KeySortedReadOnlyObservableList<TSource, TKey>(collection, 
-                item => new FunctionObservable<TSource,TKey>(item, keySelector, triggers), 
-                comparison, eqComparer);
+            var factory = new PropertyObservableFactory<TSource, TKey>(keySelector, triggers);
+            return new KeySortedReadOnlyObservableList<TSource, TKey>(collection, factory.Observe, comparison, eqComparer);
         }
 
         /// <summary>
@@ -2023,7 +2022,7 @@ namespace Neuronic.CollectionModel
                 Func<TSource, IEnumerable<TTarget>> selector,
                 CompositeReadOnlyObservableCollectionSource<TTarget> composite,
                 params string[] triggers) : base(source, 
-                item => new FunctionObservable<TSource, IEnumerable<TTarget>>(item, selector, triggers), composite)
+                item => new PropertyObservableFactory<TSource, IEnumerable<TTarget>>(selector, triggers).Observe(item), composite)
             {
                 _composite = composite;
                 CollectionChangedEventManager.AddListener(_composite.View, this);
@@ -2076,7 +2075,7 @@ namespace Neuronic.CollectionModel
                 Func<TSource, IEnumerable<TTarget>> selector,
                 CompositeReadOnlyObservableListSource<TTarget> composite,
                 params string[] triggers) : base(source, 
-                item => new FunctionObservable<TSource, IEnumerable<TTarget>>(item, selector, triggers),
+                item => new PropertyObservableFactory<TSource, IEnumerable<TTarget>>(selector, triggers).Observe(item),
                 composite)
             {
                 _composite = composite;

@@ -145,12 +145,11 @@ namespace Neuronic.CollectionModel.Collections
 
             if (indexedSelector != null)
             {
-                var triggers = PropertyObservableFactory<TSource, TElement>.FindTriggersIn(indexedSelector);
-                var func = indexedSelector.Compile();
+                var factory = indexedSelector.FindProperties();
                 var indexed = new IndexedTransformingReadOnlyObservableList<TSource, TSource>(source,
-                    x => new NotifyObservable<TSource>(x, triggers));
+                    x => new NotifyObservable<TSource>(x, factory.FirstTriggers));
                 return indexed.ListSelectObservable(
-                        item => item.ObserveAll().Select(x => func(x.Value, x.Index)))
+                        item => item.ObserveAll().Select(x => factory.Function(x.Value, x.Index)))
                     .AsQueryableCollection();
             }
 
@@ -170,12 +169,11 @@ namespace Neuronic.CollectionModel.Collections
 
             if (indexedSelector != null)
             {
-                var triggers = PropertyObservableFactory<TSource, IEnumerable<TElement>>.FindTriggersIn(indexedSelector);
-                var func = indexedSelector.Compile();
+                var factory = indexedSelector.FindProperties();
                 var indexed = new IndexedTransformingReadOnlyObservableList<TSource, TSource>(source,
-                    x => new NotifyObservable<TSource>(x, triggers));
+                    x => new NotifyObservable<TSource>(x, factory.FirstTriggers));
                 return indexed.ListSelectManyObservable(
-                        item => item.ObserveAll().Select(x => func(x.Value, x.Index)))
+                        item => item.ObserveAll().Select(x => factory.Function(x.Value, x.Index)))
                     .AsQueryableCollection();
             }
 
@@ -195,7 +193,7 @@ namespace Neuronic.CollectionModel.Collections
 
             if (indexedPredicate != null)
             {
-                var triggers = PropertyObservableFactory<TSource, bool>.FindTriggersIn(indexedPredicate);
+                var triggers = PropertyObservableFactory<TSource, int, bool>.FindFirstTriggersIn(indexedPredicate);
                 var func = indexedPredicate.Compile();
                 var indexed = new IndexedTransformingReadOnlyObservableList<TSource, TSource>(source, 
                     x => new NotifyObservable<TSource>(x, triggers));

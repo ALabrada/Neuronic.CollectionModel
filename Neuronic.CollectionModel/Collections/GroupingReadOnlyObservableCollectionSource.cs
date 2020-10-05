@@ -48,7 +48,7 @@ namespace Neuronic.CollectionModel.Collections
             Func<TSource, TKey> keySelector, IEqualityComparer<TKey> keyComparer,
             IEqualityComparer<TSource> sourceComparer, params string[] triggers)
             : this(
-                source, item => new FunctionObservable<TSource, TKey>(item, keySelector, triggers), 
+                source, item => new PropertyObservableFactory<TSource, TKey>(keySelector, triggers).Observe(item), 
                 keyComparer, sourceComparer, 
                 new ObservableDictionary<TKey, ReadOnlyObservableGroup<TSource, TKey>>(
                     new Dictionary<TKey, ReadOnlyObservableGroup<TSource, TKey>>(keyComparer)))
@@ -78,7 +78,7 @@ namespace Neuronic.CollectionModel.Collections
             Func<TSource, TKey> keySelector, IEqualityComparer<TKey> keyComparer,
             IEqualityComparer<TSource> sourceComparer, params string[] triggers)
             : this(
-                source, item => new FunctionObservable<TSource, TKey>(item, keySelector, triggers),
+                source, item => new PropertyObservableFactory<TSource, TKey>(keySelector, triggers).Observe(item),
                 keyComparer, sourceComparer,
                 new ObservableDictionary<TKey, ReadOnlyObservableGroup<TSource, TKey>>(
                     explicitGroups.ToDictionary(g => g.Key, g => g, keyComparer)))
@@ -125,7 +125,7 @@ namespace Neuronic.CollectionModel.Collections
             Expression<Func<TSource, TKey>> keySelector, IEqualityComparer<TKey> keyComparer,
             IEqualityComparer<TSource> sourceComparer)
             : this(
-                source, item  => new FunctionObservable<TSource, TKey>(item, keySelector), 
+                source, item  => PropertyObservableFactory<TSource, TKey>.FindIn(keySelector).Observe(item), 
                 keyComparer, sourceComparer,
                 new ObservableDictionary<TKey, ReadOnlyObservableGroup<TSource, TKey>>(
                     new Dictionary<TKey, ReadOnlyObservableGroup<TSource, TKey>>(keyComparer)))

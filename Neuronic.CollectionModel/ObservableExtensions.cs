@@ -33,10 +33,37 @@ namespace Neuronic.CollectionModel
             return new NotifyObservable<T>(item);
         }
 
+        /// <summary>
+        ///     Finds the properties that can affect the result of the specified function.
+        /// </summary>
+        /// <typeparam name="TItem">The type of the item.</typeparam>
+        /// <typeparam name="TResult">The type of the result.</typeparam>
+        /// <param name="function">The function.</param>
+        /// <returns>
+        ///     A <see cref="PropertyObservableFactory{TItem, TResult}"/> that can be used to
+        ///     create <see cref="IObservable{TResult}"/> efficiently. 
+        /// </returns>
         public static PropertyObservableFactory<TItem, TResult> FindProperties<TItem, TResult>(
             this Expression<Func<TItem, TResult>> function) where TItem : INotifyPropertyChanged
         {
             return PropertyObservableFactory<TItem, TResult>.FindIn(function);
+        }
+
+        /// <summary>
+        ///     Finds the properties that can affect the result of the specified function.
+        /// </summary>
+        /// <typeparam name="TFirst">The type of the first input.</typeparam>
+        /// <typeparam name="TSecond">The type of the second input.</typeparam>
+        /// <typeparam name="TResult">The type of the result.</typeparam>
+        /// <param name="function">The function.</param>
+        /// <returns>
+        ///     A <see cref="PropertyObservableFactory{TItem, TSecond, TResult}"/> that can be used to
+        ///     create <see cref="IObservable{TResult}"/> efficiently. 
+        /// </returns>
+        public static PropertyObservableFactory<TFirst, TSecond, TResult> FindProperties<TFirst, TSecond, TResult>(
+            this Expression<Func<TFirst, TSecond, TResult>> function)
+        {
+            return PropertyObservableFactory<TFirst, TSecond, TResult>.FindIn(function);
         }
 
         /// <summary>
@@ -73,7 +100,7 @@ namespace Neuronic.CollectionModel
         /// <returns>The observable</returns>
         public static IObservable<TResult> ObserveValue<TItem, TResult>(this TItem item, Func<TItem, TResult> function, params string[] properties) where TItem: INotifyPropertyChanged
         {
-            return new FunctionObservable<TItem, TResult>(item, function, properties);
+            return new PropertyObservableFactory<TItem, TResult>(function, properties).Observe(item);
         }
 
         /// <summary>
@@ -93,7 +120,7 @@ namespace Neuronic.CollectionModel
         public static IObservable<TResult> Observe<TItem, TResult>(this TItem item,
             System.Linq.Expressions.Expression<Func<TItem, TResult>> expression) where TItem : INotifyPropertyChanged
         {
-            return new FunctionObservable<TItem, TResult>(item, expression);
+            return PropertyObservableFactory<TItem, TResult>.FindIn(expression).Observe(item);
         }
 
         /// <summary>
@@ -110,7 +137,7 @@ namespace Neuronic.CollectionModel
         public static IObservable<TResult> ObserveAll<TItem, TResult>(this TItem item,
             Func<TItem, TResult> function) where TItem : INotifyPropertyChanged
         {
-            return new FunctionObservable<TItem, TResult>(item, function, string.Empty);
+            return new PropertyObservableFactory<TItem, TResult>(function, string.Empty).Observe(item);
         }
     }
 }
