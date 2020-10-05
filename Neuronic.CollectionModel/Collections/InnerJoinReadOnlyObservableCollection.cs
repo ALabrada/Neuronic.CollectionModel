@@ -56,9 +56,9 @@ namespace Neuronic.CollectionModel.Collections
             foreach (var pair in merge)
                 _mergedItems.Add(pair.Item1.Value, Merge(pair.Item1.Item, pair.Item2.Item));
 
-            _outerItems.Values.CollectionChanged += OuterItemsOnCollectionChanged;
-            _innerItems.Values.CollectionChanged += InnerItemsOnCollectionChanged;
-            _mergedItems.Values.CollectionChanged += (sender, args) => OnCollectionChanged(args);
+            _outerItems.CollectionChanged += OuterItemsOnCollectionChanged;
+            _innerItems.CollectionChanged += InnerItemsOnCollectionChanged;
+            _mergedItems.Values.CollectionChanged += MergedItemsOnCollectionChanged;
             _mergedItems.Values.PropertyChanged += (sender, args) => OnPropertyChanged(args);
 
             if (_innerSource is INotifyCollectionChanged innerNotifier)
@@ -92,7 +92,7 @@ namespace Neuronic.CollectionModel.Collections
                 _innerItems.UpdateCollection(_innerItems, (NotifyCollectionChangedEventArgs) e, 
                     o => CreateContainer((TInner) o, _innerKeySelector), DestroyContainer, _innerComparer);
             }
-            else if (ReferenceEquals(sender, _outerItems))
+            else if (ReferenceEquals(sender, _outerSource))
             {
                 _outerItems.UpdateCollection(_outerItems, (NotifyCollectionChangedEventArgs)e,
                     o => CreateContainer((TOuter)o, _outerKeySelector), DestroyContainer, _outerComparer);
@@ -133,41 +133,47 @@ namespace Neuronic.CollectionModel.Collections
             switch (e.Action)
             {
                 case NotifyCollectionChangedAction.Add:
-                    foreach (ObservableItemContainer<TInner, TKey> item in e.NewItems)
+                    foreach (KeyValuePair<TKey, ObservableItemContainer<TInner, TKey>> pair in e.NewItems)
+                    {
+                        var item = pair.Value;
                         if (_outerItems.TryGetValue(item.Value, out var otherItem))
                         {
                             var container = Merge(otherItem.Item, item.Item);
                             _mergedItems.Add(item.Value, container);
                         }
+                    }
 
                     break;
                 case NotifyCollectionChangedAction.Remove:
-                    foreach (ObservableItemContainer<TInner, TKey> item in e.OldItems)
-                        if (_mergedItems.TryGetValue(item.Value, out var container))
+                    foreach (KeyValuePair<TKey, ObservableItemContainer<TInner, TKey>> pair in e.OldItems)                    
+                        if (_mergedItems.TryGetValue(pair.Key, out var container))
                         {
                             DestroyContainer(container);
-                            _mergedItems.Remove(item.Value);
-                        }
+                            _mergedItems.Remove(pair.Key);
+                        }                    
 
                     break;
                 case NotifyCollectionChangedAction.Replace:
-                    foreach (ObservableItemContainer<TInner, TKey> item in e.OldItems)
-                        if (_mergedItems.TryGetValue(item.Value, out var container))
+                    foreach (KeyValuePair<TKey, ObservableItemContainer<TInner, TKey>> pair in e.OldItems)                    
+                        if (_mergedItems.TryGetValue(pair.Key, out var container))
                         {
                             DestroyContainer(container);
-                            _mergedItems.Remove(item.Value);
-                        }
+                            _mergedItems.Remove(pair.Key);
+                        }                    
 
-                    foreach (ObservableItemContainer<TInner, TKey> item in e.NewItems)
+                    foreach (KeyValuePair<TKey, ObservableItemContainer<TInner, TKey>> pair in e.NewItems)
+                    {
+                        var item = pair.Value;
                         if (_outerItems.TryGetValue(item.Value, out var otherItem))
                         {
                             var container = Merge(otherItem.Item, item.Item);
                             _mergedItems.Add(item.Value, container);
                         }
+                    }
 
                     break;
                 case NotifyCollectionChangedAction.Reset:
-                    foreach (var container in _mergedItems.Values)
+                    foreach (var container in _mergedItems.Select(x => x.Value))
                         DestroyContainer(container);
                     _mergedItems.Clear();
                     break;
@@ -182,41 +188,47 @@ namespace Neuronic.CollectionModel.Collections
             switch (e.Action)
             {
                 case NotifyCollectionChangedAction.Add:
-                    foreach (ObservableItemContainer<TOuter, TKey> item in e.NewItems)
+                    foreach (KeyValuePair<TKey, ObservableItemContainer<TOuter, TKey>> pair in e.NewItems)
+                    {
+                        var item = pair.Value;
                         if (_innerItems.TryGetValue(item.Value, out var otherItem))
                         {
                             var container = Merge(item.Item, otherItem.Item);
                             _mergedItems.Add(item.Value, container);
                         }
+                    }
 
                     break;
                 case NotifyCollectionChangedAction.Remove:
-                    foreach (ObservableItemContainer<TOuter, TKey> item in e.OldItems)
-                        if (_mergedItems.TryGetValue(item.Value, out var container))
+                    foreach (KeyValuePair<TKey, ObservableItemContainer<TOuter, TKey>> pair in e.OldItems)                    
+                        if (_mergedItems.TryGetValue(pair.Key, out var container))
                         {
                             DestroyContainer(container);
-                            _mergedItems.Remove(item.Value);
-                        }
+                            _mergedItems.Remove(pair.Key);
+                        }                    
 
                     break;
                 case NotifyCollectionChangedAction.Replace:
-                    foreach (ObservableItemContainer<TOuter, TKey> item in e.OldItems)
-                        if (_mergedItems.TryGetValue(item.Value, out var container))
+                    foreach (KeyValuePair<TKey, ObservableItemContainer<TOuter, TKey>> pair in e.OldItems)
+                        if (_mergedItems.TryGetValue(pair.Key, out var container))
                         {
                             DestroyContainer(container);
-                            _mergedItems.Remove(item.Value);
+                            _mergedItems.Remove(pair.Key);
                         }
 
-                    foreach (ObservableItemContainer<TOuter, TKey> item in e.NewItems)
+                    foreach (KeyValuePair<TKey, ObservableItemContainer<TOuter, TKey>> pair in e.NewItems)
+                    {
+                        var item = pair.Value;
                         if (_innerItems.TryGetValue(item.Value, out var otherItem))
                         {
                             var container = Merge(item.Item, otherItem.Item);
                             _mergedItems.Add(item.Value, container);
                         }
+                    }
 
                     break;
                 case NotifyCollectionChangedAction.Reset:
-                    foreach (var container in _mergedItems.Values)
+                    foreach (var container in _mergedItems.Select(x => x.Value))
                         DestroyContainer(container);
                     _mergedItems.Clear();
                     break;
@@ -246,6 +258,40 @@ namespace Neuronic.CollectionModel.Collections
         {
             OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, 
                 e.NewValue, e.OldValue));
+        }
+               
+        private void MergedItemsOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            var newItems = new List<TResult>(e.NewItems?.Count ?? 0);
+            if (e.NewItems != null && e.NewItems.Count > 0)
+                newItems.AddRange(e.NewItems.OfType<ObservableItemContainer<Tuple<TOuter, TInner>, TResult>>().Select(x => x.Value));
+
+            var oldItems = new List<TResult>(e.OldItems?.Count ?? 0);
+            if (e.OldItems != null && e.OldItems.Count > 0)
+                oldItems.AddRange(e.OldItems.OfType<ObservableItemContainer<Tuple<TOuter, TInner>, TResult>>().Select(x => x.Value));
+
+            switch (e.Action)
+            {
+                case NotifyCollectionChangedAction.Add:
+                    OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, newItems, e.NewStartingIndex));
+                    break;
+
+                case NotifyCollectionChangedAction.Remove:
+                    OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, oldItems, e.OldStartingIndex));
+                    break;
+
+                case NotifyCollectionChangedAction.Replace:
+                    OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, newItems, oldItems, e.NewStartingIndex));
+                    break;
+
+                case NotifyCollectionChangedAction.Reset when newItems.Count > 0 && e.NewStartingIndex >= 0:
+                    OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset, newItems, e.NewStartingIndex));
+                    break;
+
+                case NotifyCollectionChangedAction.Reset:
+                    OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+                    break;
+            }
         }
 
         protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e)

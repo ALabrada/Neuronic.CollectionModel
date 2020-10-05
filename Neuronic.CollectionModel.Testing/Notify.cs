@@ -1,8 +1,10 @@
 ﻿using System.ComponentModel;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace Neuronic.CollectionModel.Testing
 {
+    [DebuggerDisplay("{Prop}")]
     class Notify: INotifyPropertyChanged
     {
         private int _prop;

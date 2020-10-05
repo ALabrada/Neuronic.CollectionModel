@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Neuronic.CollectionModel.Collections.Containers
 {
@@ -11,6 +12,7 @@ namespace Neuronic.CollectionModel.Collections.Containers
     /// <typeparam name="TResult">The type of the result.</typeparam>
     /// <seealso cref="Neuronic.CollectionModel.Collections.Containers.ItemContainer{TItem}" />
     /// <seealso cref="System.IObserver{TResult}" />
+    [DebuggerDisplay("{Item}: {Value}")]
     public class ObservableItemContainer<TItem, TResult> : ItemContainer<TItem>, IObserver<TResult>, IDisposable
     {
         private readonly IDisposable _subscription;

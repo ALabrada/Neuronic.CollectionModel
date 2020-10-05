@@ -98,6 +98,7 @@
     <Compile Include="DynamicTransformingReadOnlyObservableListTest.cs" />
     <Compile Include="ReversedReadOnlyObservableListTest.cs" />
     <Compile Include="KeySortingQueryableCollectionTest.cs" />
+    <Compile Include="InnerJoinReadOnlyObservableCollectionTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Neuronic.CollectionModel\Neuronic.CollectionModel.csproj">

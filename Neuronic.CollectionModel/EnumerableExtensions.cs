@@ -110,6 +110,20 @@ namespace Neuronic.CollectionModel
         }
 
         /// <summary>
+        ///     Moves the specified item to a different index in the list.
+        /// </summary>
+        /// <typeparam name="T">The type of the list items.</typeparam>
+        /// <param name="list">The list.</param>
+        /// <param name="oldIndex">The current index of the item in <paramref name="list" />.</param>
+        /// <param name="newIndex">The target index of the item in <paramref name="list" />.</param>
+        public static void Move<T>(this IList<T> list, int oldIndex, int newIndex)
+        {
+            var temp = list[oldIndex];
+            list.RemoveAt(oldIndex);
+            list.Insert(newIndex, temp);
+        }
+
+        /// <summary>
         ///     Obtains the index of an item in a sequence.
         /// </summary>
         /// <typeparam name="T">The type of the sequence items.</typeparam>

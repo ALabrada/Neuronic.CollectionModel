@@ -211,6 +211,27 @@ namespace Neuronic.CollectionModel
 
                     break;
 
+                case NotifyCollectionChangedAction.Move when list != null:
+                    if (e.NewStartingIndex < 0)
+                        throw new InvalidOperationException("The index cannot be a negative value.");
+
+                    if (e.OldStartingIndex < e.NewStartingIndex)
+                        for (int i = e.OldItems.Count - 1,
+                            oldIndex = e.OldStartingIndex + i,
+                            newIndex = e.NewStartingIndex + i;
+                            i >= 0;
+                            --i, --oldIndex, --newIndex)
+                            list.Move(oldIndex, newIndex);
+                    else
+                        for (int i = 0,
+                            oldIndex = e.OldStartingIndex + i,
+                            newIndex = e.NewStartingIndex + i;
+                            i < e.OldItems.Count;
+                            ++i, ++oldIndex, ++newIndex)
+                            list.Move(oldIndex, newIndex);
+
+                    break;
+
                 case NotifyCollectionChangedAction.Reset:
                     if (onRemove != null)
                         foreach (var item in collection)

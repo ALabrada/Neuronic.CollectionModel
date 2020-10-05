@@ -1,7 +1,9 @@
-﻿using System.Reactive.Subjects;
+﻿using System.Diagnostics;
+using System.Reactive.Subjects;
 
 namespace Neuronic.CollectionModel.Testing
 {
+    [DebuggerDisplay("{Prop}")]
     public class Observable
     {
         public Observable() : this (0)
