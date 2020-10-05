@@ -10,6 +10,15 @@ using System.Windows;
 
 namespace Neuronic.CollectionModel.Collections
 {
+    /// <summary>
+    ///     Represents a read-only observable collection that is obtained by performing and inner join between two source collections.
+    /// </summary>
+    /// <typeparam name="TOuter">The type of the outer items.</typeparam>
+    /// <typeparam name="TInner">The type of the inner items.</typeparam>
+    /// <typeparam name="TKey">The type of the keys.</typeparam>
+    /// <typeparam name="TResult">The type of the resulting items.</typeparam>
+    /// <seealso cref="Neuronic.CollectionModel.IReadOnlyObservableCollection{TResult}" />
+    /// <seealso cref="Neuronic.CollectionModel.WeakEventPattern.IWeakEventListener" />
     public class InnerJoinReadOnlyObservableCollection<TOuter, TInner, TKey, TResult> : IReadOnlyObservableCollection<TResult>, IWeakEventListener
     {
         private readonly IEnumerable<TOuter> _outerSource;
@@ -25,6 +34,28 @@ namespace Neuronic.CollectionModel.Collections
         private readonly ObservableDictionary<TKey, ObservableItemContainer<TInner, TKey>> _innerItems;
         private readonly ObservableDictionary<TKey, ObservableItemContainer<Tuple<TOuter, TInner>, TResult>> _mergedItems;
 
+        /// <summary>
+        ///     Initializes a new instance of the <see cref="InnerJoinReadOnlyObservableCollection{TOuter, TInner, TKey, TResult}"/> class.
+        /// </summary>
+        /// <param name="outerSource">The outer source.</param>
+        /// <param name="innerSource">The inner source.</param>
+        /// <param name="outerKeySelector">The outer key selector.</param>
+        /// <param name="innerKeySelector">The inner key selector.</param>
+        /// <param name="resultSelector">The result selector.</param>
+        /// <param name="keyComparer">The key comparer.</param>
+        /// <param name="outerComparer">The comparer of outer items.</param>
+        /// <param name="innerComparer">The comparer of inner items.</param>
+        /// <exception cref="ArgumentNullException">
+        /// outerSource
+        /// or
+        /// innerSource
+        /// or
+        /// outerKeySelector
+        /// or
+        /// innerKeySelector
+        /// or
+        /// resultSelector
+        /// </exception>
         public InnerJoinReadOnlyObservableCollection(
             IEnumerable<TOuter> outerSource, IEnumerable<TInner> innerSource,
             Func<TOuter, IObservable<TKey>> outerKeySelector, Func<TInner, IObservable<TKey>> innerKeySelector,

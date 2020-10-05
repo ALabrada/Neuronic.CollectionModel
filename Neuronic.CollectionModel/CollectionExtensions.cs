@@ -802,6 +802,35 @@ namespace Neuronic.CollectionModel
         }
         #endregion
 
+        #region Join        
+        /// <summary>
+        ///     Creates a read-only observable collection by correlating the elements of two sequences based on matching keys. 
+        /// </summary>
+        /// <typeparam name="TOuter">The type of the outer items.</typeparam>
+        /// <typeparam name="TInner">The type of the inner items.</typeparam>
+        /// <typeparam name="TKey">The type of the keys.</typeparam>
+        /// <typeparam name="TResult">The type of the result items.</typeparam>
+        /// <param name="outerSource">The first source sequence.</param>
+        /// <param name="innerSource">The second source sequence.</param>
+        /// <param name="outerSelector">A function that assigns keys to the items of the first sequence.</param>
+        /// <param name="innerSelector">A function that assigns keys to the items of the second sequence.</param>
+        /// <param name="resultSelector">A function that combines items with matching keys.</param>
+        /// <param name="keyComparer">The key comparer.</param>
+        /// <param name="outerComparer">The comparer of items from the first sequence, used in change events.</param>
+        /// <param name="innerComparer">The comparer of items from the second sequence, used in change events..</param>
+        /// <returns>An observable collection that contains the items with matching keys.</returns>
+        public static IReadOnlyObservableCollection<TResult> CollectionJoinObservable<TOuter, TInner, TKey, TResult>(
+            this IEnumerable<TOuter> outerSource, IEnumerable<TInner> innerSource, 
+            Func<TOuter, IObservable<TKey>> outerSelector, Func<TInner, IObservable<TKey>> innerSelector, 
+            Func<TOuter, TInner, IObservable<TResult>> resultSelector, IEqualityComparer<TKey> keyComparer = null,
+            IEqualityComparer<TOuter> outerComparer = null, IEqualityComparer<TInner> innerComparer = null)
+        {
+            return new InnerJoinReadOnlyObservableCollection<TOuter, TInner, TKey, TResult>(
+                outerSource, innerSource, outerSelector, innerSelector, resultSelector,
+                keyComparer, outerComparer, innerComparer);
+        }
+        #endregion
+
         /// <summary>
         ///     Creates an observable list by concatenating two or more collections.
         /// </summary>
