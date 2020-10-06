@@ -109,7 +109,10 @@ namespace Neuronic.CollectionModel.Collections.Linq
                     return (IQueryable<TElement>) source.Value.ListConcat(
                         ConstantFinder<IEnumerable<TSource>>.FindIn(mc.Arguments[1]))
                         .AsQueryableCollection();
-                //case "Zip": // TODO
+                case "Zip":
+                    return Zip<TElement>(source.Value,
+                        ConstantFinder<object>.FindIn(mc.Arguments[1]),
+                        LambdaFinder.FindIn(mc.Arguments[2]));
                 case "Union":
                     return (IQueryable<TElement>)source.Value.CollectionUnion(
                         mc.Arguments.Count > 2 ? ConstantFinder<IEqualityComparer<TSource>>.FindIn(mc.Arguments[2]) : null,
@@ -271,6 +274,25 @@ namespace Neuronic.CollectionModel.Collections.Linq
             var resultType = typeof(IGrouping<,>).MakeGenericType(keyType, typeof(TSource));
             var queryType = typeof(QueryableCollection<>).MakeGenericType(resultType);
             return (IQueryable) Activator.CreateInstance(queryType, result);
+        }
+
+        private static IQueryable<TElement> Zip<TElement>(IEnumerable<TSource> outerSource, object innerSource,
+            LambdaExpression resultSelector)
+        {
+#if !NETSTD
+            var resultSelectorType = resultSelector.GetType().GetGenericArguments()[0];
+            var innerType = resultSelectorType.GetGenericArguments()[1];
+#else
+            var resultSelectorType = resultSelector.GetType().GetTypeInfo().GenericTypeArguments[0];
+            var innerType = resultSelectorType.GetTypeInfo().GenericTypeParameters[1];
+#endif
+
+            var collectionType = typeof(ZipReadOnlyObservableList<,,>)
+                .MakeGenericType(typeof(TSource), innerType, typeof(TElement));
+            var collection = (IReadOnlyObservableCollection<TElement>)Activator.CreateInstance(collectionType,
+                outerSource, innerSource, resultSelector, null, null);
+
+            return collection.AsQueryableCollection();
         }
 
         public object Execute(Expression expression)

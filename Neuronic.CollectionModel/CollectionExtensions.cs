@@ -829,6 +829,34 @@ namespace Neuronic.CollectionModel
                 outerSource, innerSource, outerSelector, innerSelector, resultSelector,
                 keyComparer, outerComparer, innerComparer);
         }
+
+        /// <summary>
+        ///     Creates a read-only observable collection by correlating the elements of two sequences based on matching keys. 
+        /// </summary>
+        /// <typeparam name="TOuter">The type of the outer items.</typeparam>
+        /// <typeparam name="TInner">The type of the inner items.</typeparam>
+        /// <typeparam name="TKey">The type of the keys.</typeparam>
+        /// <typeparam name="TResult">The type of the result items.</typeparam>
+        /// <param name="outerSource">The first source sequence.</param>
+        /// <param name="innerSource">The second source sequence.</param>
+        /// <param name="outerSelector">A function that assigns keys to the items of the first sequence.</param>
+        /// <param name="innerSelector">A function that assigns keys to the items of the second sequence.</param>
+        /// <param name="resultSelector">A function that combines items with matching keys.</param>
+        /// <param name="keyComparer">The key comparer.</param>
+        /// <param name="outerComparer">The comparer of items from the first sequence, used in change events.</param>
+        /// <param name="innerComparer">The comparer of items from the second sequence, used in change events..</param>
+        /// <returns>An observable collection that contains the items with matching keys.</returns>
+        /// <seealso cref="ObservableExtensions.Observe{T}"/>
+        public static IReadOnlyObservableCollection<TResult> CollectionJoinAuto<TOuter, TInner, TKey, TResult>(
+            this IEnumerable<TOuter> outerSource, IEnumerable<TInner> innerSource,
+            Expression<Func<TOuter, TKey>> outerSelector, Expression<Func<TInner, TKey>> innerSelector,
+            Expression<Func<TOuter, TInner, TResult>> resultSelector, IEqualityComparer<TKey> keyComparer = null,
+            IEqualityComparer<TOuter> outerComparer = null, IEqualityComparer<TInner> innerComparer = null)
+        {
+            return new InnerJoinReadOnlyObservableCollection<TOuter, TInner, TKey, TResult>(
+                outerSource, innerSource, outerSelector, innerSelector, resultSelector,
+                keyComparer, outerComparer, innerComparer);
+        }
         #endregion
 
         /// <summary>
@@ -1585,6 +1613,43 @@ namespace Neuronic.CollectionModel
         {
             return new GroupingReadOnlyObservableCollectionSource<TSource, TKey>(items, explicitGroups, selector, keyComparer, sourceComparer)
             { IncludeImplicitGroups = includeImplict };
+        }
+        #endregion
+
+        #region Zip        
+        /// <summary>
+        ///     Creates a read-only observable list by correlating the elements of two lists based on matching indexes. 
+        /// </summary>
+        /// <typeparam name="TOuter">The type of the outer items.</typeparam>
+        /// <typeparam name="TInner">The type of the inner items.</typeparam>
+        /// <typeparam name="TResult">The type of the result items.</typeparam>
+        /// <param name="outerSource">The first source sequence.</param>
+        /// <param name="innerSource">The second source sequence.</param>
+        /// <param name="resultSelector">A function that combines items with matching indexes.</param>
+        /// <returns>An observable lists that contains the items with matching indexes.</returns>
+        public static IReadOnlyObservableCollection<TResult> ListZipObservable<TOuter, TInner, TResult>(
+            this IReadOnlyList<TOuter> outerSource, IReadOnlyList<TInner> innerSource,
+            Func<TOuter, TInner, IObservable<TResult>> resultSelector)
+        {
+            return new ZipReadOnlyObservableList<TOuter,TInner,TResult>(outerSource, innerSource, resultSelector);
+        }
+
+        /// <summary>
+        ///     Creates a read-only observable list by correlating the elements of two lists based on matching indexes. 
+        /// </summary>
+        /// <typeparam name="TOuter">The type of the outer items.</typeparam>
+        /// <typeparam name="TInner">The type of the inner items.</typeparam>
+        /// <typeparam name="TResult">The type of the result items.</typeparam>
+        /// <param name="outerSource">The first source sequence.</param>
+        /// <param name="innerSource">The second source sequence.</param>
+        /// <param name="resultSelector">A function that combines items with matching indexes.</param>
+        /// <returns>An observable lists that contains the items with matching indexes.</returns> 
+        /// <seealso cref="ObservableExtensions.Observe{T}"/>
+        public static IReadOnlyObservableCollection<TResult> ListZipAuto<TOuter, TInner, TResult>(
+            this IReadOnlyList<TOuter> outerSource, IReadOnlyList<TInner> innerSource,
+            Expression<Func<TOuter, TInner, TResult>> resultSelector)
+        {
+            return new ZipReadOnlyObservableList<TOuter, TInner, TResult>(outerSource, innerSource, resultSelector);
         }
         #endregion
 

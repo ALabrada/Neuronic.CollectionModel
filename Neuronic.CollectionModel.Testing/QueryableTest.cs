@@ -149,6 +149,16 @@ namespace Neuronic.CollectionModel.Testing
         }
 
         [TestMethod]
+        public void ZipTest()
+        {
+            var outerSource = Enumerable.Range(0, 20).Select(x => new Notify { Prop = x }).ToList();
+            var innerSource = Enumerable.Range(1, 10).Select(x => new Notify { Prop = 2 * x - 1 }).ToList();
+            var result = outerSource.ListAsObservable().AsQueryableCollection().Zip(innerSource,
+                (x, y) => x.Prop + y.Prop);
+            Assert.IsTrue(result.CollectionAsObservable() is ZipReadOnlyObservableList<Notify, Notify, int>);
+        }
+
+        [TestMethod]
         public void CountTest()
         {
             var source = Enumerable.Range(0, 20).Select(x => new Notify { Prop = x });
