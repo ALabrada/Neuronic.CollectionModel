@@ -18,13 +18,13 @@ namespace Neuronic.CollectionModel.Collections.Linq
 
     internal class Definition<TElement, TKey> : IDefinition<TElement>
     {
-        public Definition(Func<TElement, IObservable<TKey>> keySelector, Comparer<TKey> comparer)
+        public Definition(Func<TElement, IObservable<TKey>> keySelector, IComparer<TKey> comparer = null)
         {
             KeySelector = keySelector ?? throw new ArgumentNullException(nameof(keySelector));
-            Comparer = comparer ?? Comparer<TKey>.Default;
+            Comparer = comparer as Comparer<TKey> ?? Comparer<TKey>.Default; // TODO: Wrap comparer
         }
 
-        public Definition(Expression<Func<TElement, TKey>> keySelector, Comparer<TKey> comparer)
+        public Definition(Expression<Func<TElement, TKey>> keySelector, IComparer<TKey> comparer = null)
             : this(item => PropertyObservableFactory<TElement, TKey>.FindIn(keySelector).Observe(item), comparer)
         {
         }

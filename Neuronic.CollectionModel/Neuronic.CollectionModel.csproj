@@ -30,6 +30,7 @@
   </PropertyGroup>
   <ItemGroup Condition="'$(TargetFramework)'=='netstandard1.1'">
     <PackageReference Include="System.Dynamic.Runtime" Version="4.3.0" />
+    <PackageReference Include="System.Linq.Queryable" Version="4.3.0" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="WindowsBase" Condition="'$(TargetFramework)'=='net46'">

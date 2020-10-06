@@ -16,7 +16,12 @@ namespace Neuronic.CollectionModel.Collections.Linq
         public virtual IQueryProvider Provider => new QueryProvider<T>();
     }
 
-    class QueryableCollection<T> : QueryableCollectionBase<T>, IQueryable<T>
+    internal interface IQueryableCollection<out T> : IQueryable<T>
+    {
+        IEnumerable<T> Source { get; }
+    }
+
+    class QueryableCollection<T> : QueryableCollectionBase<T>, IQueryableCollection<T>
     {
         public QueryableCollection(IEnumerable<T> source)
         {

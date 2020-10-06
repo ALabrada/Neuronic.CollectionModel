@@ -137,7 +137,7 @@ namespace Neuronic.CollectionModel
         ///     method in the <see cref="INotifyCollectionChanged.CollectionChanged" /> event handler.
         /// </remarks>
         /// <typeparam name="T">The type of the collection elements.</typeparam>
-        /// <param name="collection>The collection to update.</param>
+        /// <param name="collection">The collection to update.</param>
         /// <param name="source">
         ///     The source collection. This is usually the <strong>sender</strong>
         ///     parameter in the <see cref="INotifyCollectionChanged.CollectionChanged" /> event handler.
@@ -399,7 +399,7 @@ namespace Neuronic.CollectionModel
             {
                 case IReadOnlyObservableList<T> self:
                     return self;
-                case QueryableCollection<T> queryable:
+                case IQueryableCollection<T> queryable:
                     return queryable.Source.ListAsObservable();
                 case ObservableCollection<T> observableCollection:
                     return new ReadOnlyObservableList<T>(observableCollection);
@@ -422,7 +422,7 @@ namespace Neuronic.CollectionModel
             {
                 case IReadOnlyObservableCollection<T> self:
                     return self;
-                case QueryableCollection<T> queryable:
+                case IQueryableCollection<T> queryable:
                     return queryable.Source.CollectionAsObservable();
                 case ObservableCollection<T> observableCollection:
                     return new ReadOnlyObservableList<T>(observableCollection);
@@ -697,7 +697,7 @@ namespace Neuronic.CollectionModel
         /// and does not provide index information in its <see cref="NotifyCollectionChangedEventArgs"/> events.
         /// </param>
         /// <returns>Sorted observable list.</returns>
-        public static IReadOnlyObservableList<TSource> ListOrderBy<TSource, TKey>(this IReadOnlyObservableCollection<TSource> collection,
+        public static IReadOnlyObservableList<TSource> ListOrderByObservable<TSource, TKey>(this IReadOnlyObservableCollection<TSource> collection,
             Func<TSource, IObservable<TKey>> keySelector, Comparison<TKey> comparison = null, 
             IEqualityComparer<TSource> eqComparer = null)
         {
@@ -1494,7 +1494,7 @@ namespace Neuronic.CollectionModel
         ///     <see cref="GroupingReadOnlyObservableListSource{TSource,TKey}"/>. 
         /// </para>
         /// </remarks>
-        public static IReadOnlyObservableList<ReadOnlyObservableGroup<TSource, TKey>> ListGroupBy<TSource, TKey>(
+        public static IReadOnlyObservableList<ReadOnlyObservableGroup<TSource, TKey>> ListGroupByObservable<TSource, TKey>(
             this IEnumerable<TSource> items,
             Func<TSource, IObservable<TKey>> selector,
             IEqualityComparer<TKey> keyComparer = null, IEqualityComparer<TSource> sourceComparer = null)
@@ -1527,7 +1527,7 @@ namespace Neuronic.CollectionModel
         ///     <see cref="GroupingReadOnlyObservableListSource{TSource,TKey}"/>. 
         /// </para>
         /// </remarks>
-        public static IReadOnlyObservableCollection<ReadOnlyObservableGroup<TSource, TKey>> CollectionGroupBy<TSource, TKey>(
+        public static IReadOnlyObservableCollection<ReadOnlyObservableGroup<TSource, TKey>> CollectionGroupByObservable<TSource, TKey>(
             this IEnumerable<TSource> items,
             Func<TSource, IObservable<TKey>> selector,
             IEqualityComparer<TKey> keyComparer = null, IEqualityComparer<TSource> sourceComparer = null)
@@ -1565,7 +1565,7 @@ namespace Neuronic.CollectionModel
         ///     <see cref="GroupingReadOnlyObservableListSource{TSource,TKey}"/>. 
         /// </para>
         /// </remarks>
-        public static IReadOnlyObservableList<ReadOnlyObservableGroup<TSource, TKey>> ListGroupBy<TSource, TKey>(
+        public static IReadOnlyObservableList<ReadOnlyObservableGroup<TSource, TKey>> ListGroupByObservable<TSource, TKey>(
             this IEnumerable<TSource> items,
             IEnumerable<ReadOnlyObservableGroup<TSource, TKey>> explicitGroups, bool includeImplict,
             Func<TSource, IObservable<TKey>> selector, 
@@ -1605,7 +1605,7 @@ namespace Neuronic.CollectionModel
         ///     <see cref="GroupingReadOnlyObservableListSource{TSource,TKey}"/>. 
         /// </para>
         /// </remarks>
-        public static IReadOnlyObservableCollection<ReadOnlyObservableGroup<TSource, TKey>> CollectionGroupBy<TSource, TKey>(
+        public static IReadOnlyObservableCollection<ReadOnlyObservableGroup<TSource, TKey>> CollectionGroupByObservable<TSource, TKey>(
             this IEnumerable<TSource> items,
             IEnumerable<ReadOnlyObservableGroup<TSource, TKey>> explicitGroups, bool includeImplict,
             Func<TSource, IObservable<TKey>> selector, 
@@ -1705,7 +1705,7 @@ namespace Neuronic.CollectionModel
         ///     An observable list that contains the elements in <paramref name="items"/>
         ///     in reversed order. This operation is O(1), as it only changes the index mapping.
         /// </returns>
-        public static IReadOnlyObservableList<T> ListReverse<T>(this IReadOnlyObservableList<T> items)
+        public static IReadOnlyObservableList<T> ListReverse<T>(this IReadOnlyList<T> items)
         {
             return new ReversedReadOnlyObservableList<T>(items);
         }
