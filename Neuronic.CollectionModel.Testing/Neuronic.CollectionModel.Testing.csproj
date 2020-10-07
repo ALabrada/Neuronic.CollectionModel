@@ -99,6 +99,7 @@
     <Compile Include="ReversedReadOnlyObservableListTest.cs" />
     <Compile Include="KeySortingQueryableCollectionTest.cs" />
     <Compile Include="InnerJoinReadOnlyObservableCollectionTest.cs" />
+    <Compile Include="PrefixReadOnlyObservableListTest.cs" />
     <Compile Include="ZipReadOnlyObservableListTest.cs" />
   </ItemGroup>
   <ItemGroup>
