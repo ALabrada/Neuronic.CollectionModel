@@ -222,14 +222,26 @@ namespace Neuronic.CollectionModel
                             newIndex = e.NewStartingIndex + i;
                             i >= 0;
                             --i, --oldIndex, --newIndex)
-                            list.Move(oldIndex, newIndex);
+                        {
+                            var item = list[oldIndex];
+                            list.RemoveAt(oldIndex);
+                            onRemove?.Invoke(item);
+                            item = @select(e.NewItems[i]);
+                            list.Insert(newIndex, item);
+                        }
                     else
                         for (int i = 0,
                             oldIndex = e.OldStartingIndex + i,
                             newIndex = e.NewStartingIndex + i;
                             i < e.OldItems.Count;
                             ++i, ++oldIndex, ++newIndex)
-                            list.Move(oldIndex, newIndex);
+                        {
+                            var item = list[oldIndex];
+                            list.RemoveAt(oldIndex);
+                            onRemove?.Invoke(item);
+                            item = @select(e.NewItems[i]);
+                            list.Insert(newIndex, item);
+                        }
 
                     break;
 
