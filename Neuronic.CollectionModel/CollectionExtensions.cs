@@ -1677,6 +1677,71 @@ namespace Neuronic.CollectionModel
             return new RangedReadOnlyObservableList<T>(items, count);
         }
 
+        #region SkipWhile
+        /// <summary>
+        ///     Creates an observable list from another by taking the first consecutive elements that meed the specified condition.
+        /// </summary>
+        /// <typeparam name="T">The type of the list elements.</typeparam>
+        /// <param name="items">The source list.</param>
+        /// <param name="predicate">The condition.</param>
+        /// <param name="triggers">
+        ///     The name of the properties of <typeparamref name="T" /> that can
+        ///     influence in <paramref name="predicate" />.
+        /// </param> 
+        /// <returns>
+        ///     An observable list that contains the first consecutive elements from
+        ///     <paramref name="items"/> that meed <paramref name="predicate"/>.
+        /// </returns>
+        public static IReadOnlyObservableList<T> ListSkipWhile<T>(this IReadOnlyList<T> items,
+            Predicate<T> predicate, params string[] triggers)
+        {
+            var factory = new PropertyObservableFactory<T, bool>(x => predicate(x), triggers);
+            return items.ListReverse()
+                .ListTakeWhileObservable(x => factory.Observe(x).Select(v => !v))
+                .ListReverse();
+        }
+
+        /// <summary>
+        ///     Creates an observable list from another by taking the first consecutive elements that meed the specified condition.
+        /// </summary>
+        /// <typeparam name="T">The type of the list elements.</typeparam>
+        /// <param name="items">The source list.</param>
+        /// <param name="predicate">The condition.</param>
+        /// <param name="comparer">The comparer of source items.</param> 
+        /// <returns>
+        ///     An observable list that contains the first consecutive elements from
+        ///     <paramref name="items"/> that meed <paramref name="predicate"/>.
+        /// </returns>
+        public static IReadOnlyObservableList<T> ListSkipWhileObservable<T>(this IReadOnlyList<T> items,
+            Func<T, IObservable<bool>> predicate, IEqualityComparer<T> comparer = null)
+        {
+            return items.ListReverse()
+                .ListTakeWhileObservable(x => predicate(x).Select(v => !v), comparer)
+                .ListReverse();
+        }
+
+        /// <summary>
+        ///     Creates an observable list from another by taking the first consecutive elements that meed the specified condition.
+        /// </summary>
+        /// <typeparam name="T">The type of the list elements.</typeparam>
+        /// <param name="items">The source list.</param>
+        /// <param name="predicate">The condition.</param>
+        /// <param name="comparer">The comparer of source items.</param>
+        /// <returns>
+        ///     An observable list that contains the first consecutive elements from
+        ///     <paramref name="items"/> that meed <paramref name="predicate"/>.
+        /// </returns>
+        /// <seealso cref="ObservableExtensions.Observe{T}"/>
+        public static IReadOnlyObservableList<T> ListSkipWhileAuto<T>(this IReadOnlyList<T> items,
+            Expression<Func<T, bool>> predicate, IEqualityComparer<T> comparer = null)
+        {
+            var factory = PropertyObservableFactory<T, bool>.FindIn(predicate);
+            return items.ListReverse()
+                .ListTakeWhileObservable(x => factory.Observe(x).Select(v => !v), comparer)
+                .ListReverse();
+        }
+        #endregion
+
         /// <summary>
         ///     Creates an observable list from another by taking a specific number of elements and discarding the rest.
         /// </summary>
@@ -1690,6 +1755,64 @@ namespace Neuronic.CollectionModel
                 throw new ArgumentOutOfRangeException(nameof(count));
             return new RangedReadOnlyObservableList<T>(items, maxCount: count);
         }
+
+        #region TakeWhile
+        /// <summary>
+        ///     Creates an observable list from another by taking the first consecutive elements that meed the specified condition.
+        /// </summary>
+        /// <typeparam name="T">The type of the list elements.</typeparam>
+        /// <param name="items">The source list.</param>
+        /// <param name="predicate">The condition.</param>
+        /// <param name="triggers">
+        ///     The name of the properties of <typeparamref name="T" /> that can
+        ///     influence in <paramref name="predicate" />.
+        /// </param> 
+        /// <returns>
+        ///     An observable list that contains the first consecutive elements from
+        ///     <paramref name="items"/> that meed <paramref name="predicate"/>.
+        /// </returns>
+        public static IReadOnlyObservableList<T> ListTakeWhile<T>(this IReadOnlyList<T> items, 
+            Predicate<T> predicate, params string[] triggers)
+        {
+            var factory = new PropertyObservableFactory<T, bool>(x => predicate(x), triggers);
+            return new PrefixReadOnlyObservableList<T>(items, factory.Observe);
+        }
+
+        /// <summary>
+        ///     Creates an observable list from another by taking the first consecutive elements that meed the specified condition.
+        /// </summary>
+        /// <typeparam name="T">The type of the list elements.</typeparam>
+        /// <param name="items">The source list.</param>
+        /// <param name="predicate">The condition.</param>
+        /// <param name="comparer">The comparer of source items.</param> 
+        /// <returns>
+        ///     An observable list that contains the first consecutive elements from
+        ///     <paramref name="items"/> that meed <paramref name="predicate"/>.
+        /// </returns>
+        public static IReadOnlyObservableList<T> ListTakeWhileObservable<T>(this IReadOnlyList<T> items,
+            Func<T, IObservable<bool>> predicate, IEqualityComparer<T> comparer = null)
+        {
+            return new PrefixReadOnlyObservableList<T>(items, predicate, comparer);
+        }
+
+        /// <summary>
+        ///     Creates an observable list from another by taking the first consecutive elements that meed the specified condition.
+        /// </summary>
+        /// <typeparam name="T">The type of the list elements.</typeparam>
+        /// <param name="items">The source list.</param>
+        /// <param name="predicate">The condition.</param>
+        /// <param name="comparer">The comparer of source items.</param>
+        /// <returns>
+        ///     An observable list that contains the first consecutive elements from
+        ///     <paramref name="items"/> that meed <paramref name="predicate"/>.
+        /// </returns>
+        /// <seealso cref="ObservableExtensions.Observe{T}"/>
+        public static IReadOnlyObservableList<T> ListTakeWhileAuto<T>(this IReadOnlyList<T> items,
+            Expression<Func<T, bool>> predicate, IEqualityComparer<T> comparer = null)
+        {
+            return new PrefixReadOnlyObservableList<T>(items, predicate, comparer);
+        }
+        #endregion
 
         /// <summary>
         ///     Creates an observable list from another by taking a sub-sequence of it's items and discarding the rest.

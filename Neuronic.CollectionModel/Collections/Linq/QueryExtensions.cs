@@ -800,7 +800,10 @@ namespace Neuronic.CollectionModel.Collections.Linq
             this IQueryable<TSource> source,
             Expression<Func<TSource, bool>> predicate)
         {
-            throw new NotImplementedException();
+            var items = source.ExtractSource();
+            if (items is IReadOnlyList<TSource> list)
+                return list.ListSkipWhileAuto(predicate).AsQueryableCollection();
+            return items.SkipWhile(predicate.Compile()).AsQueryableCollection();
         }
 
         /// <summary>Bypasses elements in a sequence as long as a specified condition is true and then returns the remaining elements. The element's index is used in the logic of the predicate function.</summary>
@@ -813,7 +816,14 @@ namespace Neuronic.CollectionModel.Collections.Linq
             this IQueryable<TSource> source,
             Expression<Func<TSource, int, bool>> predicate)
         {
-            throw new NotImplementedException();
+            var items = source.ExtractSource();
+            var factory = predicate.FindProperties();
+            var indexed = new IndexedTransformingReadOnlyObservableList<TSource, TSource>(items,
+                x => new NotifyObservable<TSource>(x, factory.FirstTriggers));
+            return indexed.ListSkipWhileObservable(
+                    item => item.ObserveAll().Select(x => factory.Function(x.Value, x.Index)))
+                .ListSelect(x => x.Item)
+                .AsQueryableCollection();
         }
 
         /// <summary>Returns a specified number of contiguous elements from the start of a sequence.</summary>
@@ -840,7 +850,10 @@ namespace Neuronic.CollectionModel.Collections.Linq
             this IQueryable<TSource> source,
             Expression<Func<TSource, bool>> predicate)
         {
-            throw new NotImplementedException();
+            var items = source.ExtractSource();
+            if (items is IReadOnlyList<TSource> list)
+                return list.ListTakeWhileAuto(predicate).AsQueryableCollection();
+            return items.TakeWhile(predicate.Compile()).AsQueryableCollection();
         }
 
         /// <summary>Returns elements from a sequence as long as a specified condition is true. The element's index is used in the logic of the predicate function.</summary>
@@ -853,7 +866,14 @@ namespace Neuronic.CollectionModel.Collections.Linq
             this IQueryable<TSource> source,
             Expression<Func<TSource, int, bool>> predicate)
         {
-            throw new NotImplementedException();
+            var items = source.ExtractSource();
+            var factory = predicate.FindProperties();
+            var indexed = new IndexedTransformingReadOnlyObservableList<TSource, TSource>(items,
+                x => new NotifyObservable<TSource>(x, factory.FirstTriggers));
+            return indexed.ListTakeWhileObservable(
+                    item => item.ObserveAll().Select(x => factory.Function(x.Value, x.Index)))
+                .ListSelect(x => x.Item)
+                .AsQueryableCollection();
         }
 
         /// <summary>Performs a subsequent ordering of the elements in a sequence in ascending order according to a key.</summary>

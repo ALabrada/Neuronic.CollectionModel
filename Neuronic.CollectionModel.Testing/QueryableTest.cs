@@ -149,6 +149,15 @@ namespace Neuronic.CollectionModel.Testing
         }
 
         [TestMethod]
+        public void TakeWhileTest()
+        {
+            var source = Enumerable.Range(0, 20).Select(x => new Notify { Prop = x });
+            var result = source.ListAsObservable().AsQueryableCollection()
+                .TakeWhile(x => x.Prop < 10);
+            Assert.IsTrue(result.CollectionAsObservable() is PrefixReadOnlyObservableList<Notify>);
+        }
+
+        [TestMethod]
         public void ZipTest()
         {
             var outerSource = Enumerable.Range(0, 20).Select(x => new Notify { Prop = x }).ToList();

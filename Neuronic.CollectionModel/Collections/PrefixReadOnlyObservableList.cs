@@ -23,19 +23,22 @@ namespace Neuronic.CollectionModel.Collections
     {
         private readonly IReadOnlyList<T> _source;
         private readonly PrefixList _items;
+        private readonly IEqualityComparer<IndexedItemContainer<T, bool>> _comparer;
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="PrefixReadOnlyObservableList{T}"/> class.
         /// </summary>
         /// <param name="source">The source list.</param>
         /// <param name="selector">The condition.</param>
+        /// <param name="comparer">The comparer of source items.</param>
         /// <param name="onRemove">The function that is called when removing an item.</param>
         /// <param name="onChange">The function that is called when the result assigned to a pair changes.</param>
-        public PrefixReadOnlyObservableList(IReadOnlyList<T> source, Func<T, IObservable<bool>> selector, 
-            Action<bool> onRemove = null, Action<bool, bool> onChange = null) 
+        public PrefixReadOnlyObservableList(IReadOnlyList<T> source, Func<T, IObservable<bool>> selector,
+            IEqualityComparer<T> comparer = null, Action<bool> onRemove = null, Action<bool, bool> onChange = null)
             : base(null, selector, onRemove, onChange)
         {
             _source = source;
+            _comparer = new ContainerEqualityComparer<T, IndexedItemContainer<T, bool>>(comparer);
 
             _items = new PrefixList(this);
             if (_source is INotifyCollectionChanged notifier)
@@ -43,8 +46,8 @@ namespace Neuronic.CollectionModel.Collections
         }
 
         private PrefixReadOnlyObservableList(IReadOnlyList<T> source, PropertyObservableFactory<T, bool> selector,
-            Action<bool> onRemove = null, Action<bool, bool> onChange = null)
-            : this(source, selector.Observe, onRemove, onChange)
+            IEqualityComparer<T> comparer = null, Action<bool> onRemove = null, Action<bool, bool> onChange = null)
+            : this(source, selector.Observe, comparer, onRemove, onChange)
         {
         }
 
@@ -53,11 +56,12 @@ namespace Neuronic.CollectionModel.Collections
         /// </summary>
         /// <param name="source">The source list.</param>
         /// <param name="selector">The condition.</param>
+        /// <param name="comparer">The comparer of source items.</param>
         /// <param name="onRemove">The function that is called when removing an item.</param>
         /// <param name="onChange">The function that is called when the result assigned to a pair changes.</param>
         public PrefixReadOnlyObservableList(IReadOnlyList<T> source, Expression<Func<T, bool>> selector,
-            Action<bool> onRemove = null, Action<bool, bool> onChange = null)
-            : this(source, PropertyObservableFactory<T,bool>.FindIn(selector), onRemove, onChange)
+            IEqualityComparer<T> comparer = null, Action<bool> onRemove = null, Action<bool, bool> onChange = null)
+            : this(source, PropertyObservableFactory<T, bool>.FindIn(selector), comparer, onRemove, onChange)
         {
         }
 
@@ -145,7 +149,7 @@ namespace Neuronic.CollectionModel.Collections
             if (ReferenceEquals(_source, sender))
             {
                 _items.UpdateCollection(_source, (NotifyCollectionChangedEventArgs) e, 
-                    o => CreateContainer((T) o), RemoveContainer);
+                    o => CreateContainer((T) o), RemoveContainer, _comparer);
                 _items.Grow();
             }
             return true;
