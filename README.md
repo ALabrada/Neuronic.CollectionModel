@@ -38,6 +38,40 @@ IReadOnlyList<Person> youngChildren =
     parents.ListSelectMany(parent => parent.Children).ListWhere(child => child.Age < 5, nameof(Person.Age));
 ```
 
+## New in v2.0
+
+The library was integrated with the [Observer Design Pattern](https://msdn.microsoft.com/EN-US/library/ee850490(v=VS.110,d=hv.2).aspx), allowing the usage of [Reactive extension (Rx)](https://www.nuget.org/packages/System.Reactive/). New extension methods were created, changing the return type of the Func<> delegates to [IObservable\<T\>](https://msdn.microsoft.com/EN-US/library/dd990377(v=VS.110,d=hv.2).aspx). Additionally, ObservableExtensions contains extension methods that allow the creation of IObservables from [INotifyPropertyChanged](https://msdn.microsoft.com/en-us/library/system.componentmodel.inotifypropertychanged(v=vs.110).aspx) instances. 
+
+```
+IReadOnlyList<Person> youngChildren = 
+    parents.ListSelectManyObservable(parent => parent.Observe(x => x.Children)).ListWhereObservable(child => child.Observe(x => x.Age < 5));
+```
+
+The Observe extension methods creates an observable that automatically finds the properties that can affect the result, and updates it every time any of the properties changes. The previous example can be simplified as:
+
+```
+IReadOnlyList<Person> youngChildren = 
+    parents.ListSelectManyAuto(parent => parent.Children).ListWhereAuto(child => child.Age < 5);
+```
+
+Additionally, now the results of the aggregation queries, such as ObservableCount or ObservableLastOrDefault, also implement IObservable. This allows applying Rx operators to them:
+
+```
+using System.Reactive;
+...
+IObservable<bool> toManyParents = parents.ObservableCount().Select(x => x > 10);
+```
+
+Finally, now the library includes an IQueryProvider implementation, accessible through the AsQueryableCollection extension method. This allows wrapping a collection as IQueryable\<T\> and, thus, applying Queryable extensions to it or using the LINQ domain specific language. The result is equivalent to using the same extension methods from CollectionExtensions.
+
+```
+var query = from item in parents.AsQueryableCollection()
+            where item.Age > 30
+            orderby item.Sex
+            select item.Age;
+var ages = query.CollectionAsObservable()
+```
+
 ## License
 
 This project is licensed under the GNU Lesser General Public License (LGPL). As stated in [its Wikipedia article](https://en.wikipedia.org/wiki/GNU_Lesser_General_Public_License):
