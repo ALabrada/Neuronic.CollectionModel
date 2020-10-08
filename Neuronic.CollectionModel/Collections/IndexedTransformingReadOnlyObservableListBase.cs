@@ -15,7 +15,6 @@ namespace Neuronic.CollectionModel.Collections
     /// </summary>
     /// <typeparam name="TSource">The type of the source items.</typeparam>
     /// <typeparam name="TTarget">The type of the transformed items.</typeparam>
-    /// <seealso cref="Neuronic.CollectionModel.WeakEventPattern.IWeakEventListener" />
     public abstract class IndexedTransformingReadOnlyObservableListBase<TSource, TTarget> : IndexedReadOnlyObservableListBase<TSource, TTarget>, IWeakEventListener
     {
         private readonly IEqualityComparer<IndexedItemContainer<TSource, TTarget>> _sourceComparer;

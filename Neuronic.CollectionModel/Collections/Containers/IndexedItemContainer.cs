@@ -55,6 +55,7 @@ namespace Neuronic.CollectionModel.Collections.Containers
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
+        /// <inheritdoc />
         protected override void OnValueChanged(ValueChangedEventArgs<TTarget> eventArgs)
         {
             base.OnValueChanged(eventArgs);

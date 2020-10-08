@@ -46,7 +46,7 @@ namespace Neuronic.CollectionModel
         public static PropertyObservableFactory<TItem, TResult> FindProperties<TItem, TResult>(
             this Expression<Func<TItem, TResult>> function) where TItem : INotifyPropertyChanged
         {
-            return PropertyObservableFactory<TItem, TResult>.FindIn(function);
+            return PropertyObservableFactory<TItem, TResult>.CreateFrom(function);
         }
 
         /// <summary>
@@ -63,7 +63,7 @@ namespace Neuronic.CollectionModel
         public static PropertyObservableFactory<TFirst, TSecond, TResult> FindProperties<TFirst, TSecond, TResult>(
             this Expression<Func<TFirst, TSecond, TResult>> function)
         {
-            return PropertyObservableFactory<TFirst, TSecond, TResult>.FindIn(function);
+            return PropertyObservableFactory<TFirst, TSecond, TResult>.CreateFrom(function);
         }
 
         /// <summary>
@@ -120,7 +120,7 @@ namespace Neuronic.CollectionModel
         public static IObservable<TResult> Observe<TItem, TResult>(this TItem item,
             System.Linq.Expressions.Expression<Func<TItem, TResult>> expression) where TItem : INotifyPropertyChanged
         {
-            return PropertyObservableFactory<TItem, TResult>.FindIn(expression).Observe(item);
+            return PropertyObservableFactory<TItem, TResult>.CreateFrom(expression).Observe(item);
         }
 
         /// <summary>

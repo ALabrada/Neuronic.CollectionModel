@@ -125,7 +125,7 @@ namespace Neuronic.CollectionModel.Collections.Linq
         /// <summary>Returns the elements of the specified sequence or the type parameter's default value in a singleton collection if the sequence is empty.</summary>
         /// <param name="source">The <see cref="T:System.Linq.IQueryable`1"></see> to return a default value for if empty.</param>
         /// <typeparam name="TSource">The type of the elements of source.</typeparam>
-        /// <returns>An <see cref="T:System.Linq.IQueryable`1"></see> that contains default(<paramref name="TSource">TSource</paramref>) if <paramref name="source">source</paramref> is empty; otherwise, <paramref name="source">source</paramref>.</returns>
+        /// <returns>An <see cref="T:System.Linq.IQueryable`1"></see> that contains default(<typeparamref name="TSource">TSource</typeparamref>) if <paramref name="source">source</paramref> is empty; otherwise, <paramref name="source">source</paramref>.</returns>
         /// <exception cref="T:System.ArgumentNullException"><paramref name="source">source</paramref> is null.</exception>
         public static IQueryable<TSource> DefaultIfEmpty<TSource>(this IQueryable<TSource> source)
         {
@@ -200,7 +200,7 @@ namespace Neuronic.CollectionModel.Collections.Linq
         /// <param name="source">An <see cref="T:System.Linq.IQueryable`1"></see> to return an element from.</param>
         /// <param name="index">The zero-based index of the element to retrieve.</param>
         /// <typeparam name="TSource">The type of the elements of source.</typeparam>
-        /// <returns>default(<paramref name="TSource">TSource</paramref>) if <paramref name="index">index</paramref> is outside the bounds of <paramref name="source">source</paramref>; otherwise, the element at the specified position in <paramref name="source">source</paramref>.</returns>
+        /// <returns>default(<typeparamref name="TSource">TSource</typeparamref>) if <paramref name="index">index</paramref> is outside the bounds of <paramref name="source">source</paramref>; otherwise, the element at the specified position in <paramref name="source">source</paramref>.</returns>
         /// <exception cref="T:System.ArgumentNullException"><paramref name="source">source</paramref> is null.</exception>
         public static TSource ElementAtOrDefault<TSource>(this IQueryable<TSource> source, int index)
         {
@@ -257,7 +257,7 @@ namespace Neuronic.CollectionModel.Collections.Linq
             Expression<Func<TSource, TKey>> keySelector)
         {
             var items = source.ExtractSource();
-            var factory = PropertyObservableFactory<TSource, TKey>.FindIn(keySelector);
+            var factory = PropertyObservableFactory<TSource, TKey>.CreateFrom(keySelector);
             return items.CollectionGroupByObservable(factory.Observe).AsQueryableCollection();
         }
 
@@ -276,7 +276,7 @@ namespace Neuronic.CollectionModel.Collections.Linq
             IEqualityComparer<TKey> comparer)
         {
             var items = source.ExtractSource();
-            var factory = PropertyObservableFactory<TSource, TKey>.FindIn(keySelector);
+            var factory = PropertyObservableFactory<TSource, TKey>.CreateFrom(keySelector);
             return items.CollectionGroupByObservable(factory.Observe, comparer).AsQueryableCollection();
         }
 
@@ -296,8 +296,8 @@ namespace Neuronic.CollectionModel.Collections.Linq
             Expression<Func<TSource, TElement>> elementSelector)
         {
             var items = source.ExtractSource();
-            var keyFactory = PropertyObservableFactory<TSource, TKey>.FindIn(keySelector);
-            var selectorFactory = PropertyObservableFactory<TSource, TElement>.FindIn(elementSelector);
+            var keyFactory = PropertyObservableFactory<TSource, TKey>.CreateFrom(keySelector);
+            var selectorFactory = PropertyObservableFactory<TSource, TElement>.CreateFrom(elementSelector);
             var groupComparer = new GroupingComparer<TKey, TElement>();
             return items.CollectionGroupByObservable(keyFactory.Observe)
                 .ListSelect(g => 
@@ -324,8 +324,8 @@ namespace Neuronic.CollectionModel.Collections.Linq
             IEqualityComparer<TKey> comparer)
         {
             var items = source.ExtractSource();
-            var keyFactory = PropertyObservableFactory<TSource, TKey>.FindIn(keySelector);
-            var selectorFactory = PropertyObservableFactory<TSource, TElement>.FindIn(elementSelector);
+            var keyFactory = PropertyObservableFactory<TSource, TKey>.CreateFrom(keySelector);
+            var selectorFactory = PropertyObservableFactory<TSource, TElement>.CreateFrom(elementSelector);
             var groupComparer = new GroupingComparer<TKey, TElement>(comparer);
             return items.CollectionGroupByObservable(keyFactory.Observe, comparer)
                 .ListSelect(g =>
@@ -341,7 +341,7 @@ namespace Neuronic.CollectionModel.Collections.Linq
         /// <typeparam name="TSource">The type of the elements of source.</typeparam>
         /// <typeparam name="TKey">The type of the key returned by the function represented in keySelector.</typeparam>
         /// <typeparam name="TResult">The type of the result value returned by resultSelector.</typeparam>
-        /// <returns>An T:System.Linq.IQueryable`1 that has a type argument of <paramref name="TResult">TResult</paramref> and where each element represents a projection over a group and its key.</returns>
+        /// <returns>An T:System.Linq.IQueryable`1 that has a type argument of <typeparamref name="TResult">TResult</typeparamref> and where each element represents a projection over a group and its key.</returns>
         /// <exception cref="T:System.ArgumentNullException"><paramref name="source">source</paramref> or <paramref name="keySelector">keySelector</paramref> or <paramref name="resultSelector">resultSelector</paramref> is null.</exception>
         public static IQueryable<TResult> GroupBy<TSource, TKey, TResult>(
             this IQueryable<TSource> source,
@@ -349,7 +349,7 @@ namespace Neuronic.CollectionModel.Collections.Linq
             Expression<Func<TKey, IEnumerable<TSource>, TResult>> resultSelector)
         {
             var items = source.ExtractSource();
-            var keyFactory = PropertyObservableFactory<TSource, TKey>.FindIn(keySelector);
+            var keyFactory = PropertyObservableFactory<TSource, TKey>.CreateFrom(keySelector);
             var selectorFactory = resultSelector.FindProperties();
             return items.CollectionGroupByObservable(keyFactory.Observe)
                 .ListSelectObservable(g => selectorFactory.Observe(g.Key, g))
@@ -364,7 +364,7 @@ namespace Neuronic.CollectionModel.Collections.Linq
         /// <typeparam name="TSource">The type of the elements of source.</typeparam>
         /// <typeparam name="TKey">The type of the key returned by the function represented in keySelector.</typeparam>
         /// <typeparam name="TResult">The type of the result value returned by resultSelector.</typeparam>
-        /// <returns>An T:System.Linq.IQueryable`1 that has a type argument of <paramref name="TResult">TResult</paramref> and where each element represents a projection over a group and its key.</returns>
+        /// <returns>An T:System.Linq.IQueryable`1 that has a type argument of <typeparamref name="TResult">TResult</typeparamref> and where each element represents a projection over a group and its key.</returns>
         /// <exception cref="T:System.ArgumentNullException"><paramref name="source">source</paramref> or <paramref name="keySelector">keySelector</paramref> or <paramref name="resultSelector">resultSelector</paramref> or <paramref name="comparer">comparer</paramref> is null.</exception>
         public static IQueryable<TResult> GroupBy<TSource, TKey, TResult>(
             this IQueryable<TSource> source,
@@ -373,7 +373,7 @@ namespace Neuronic.CollectionModel.Collections.Linq
             IEqualityComparer<TKey> comparer)
         {
             var items = source.ExtractSource();
-            var keyFactory = PropertyObservableFactory<TSource, TKey>.FindIn(keySelector);
+            var keyFactory = PropertyObservableFactory<TSource, TKey>.CreateFrom(keySelector);
             var selectorFactory = resultSelector.FindProperties();
             return items.CollectionGroupByObservable(keyFactory.Observe, comparer)
                 .ListSelectObservable(g => selectorFactory.Observe(g.Key, g))
@@ -389,7 +389,7 @@ namespace Neuronic.CollectionModel.Collections.Linq
         /// <typeparam name="TKey">The type of the key returned by the function represented in keySelector.</typeparam>
         /// <typeparam name="TElement">The type of the elements in each <see cref="T:System.Linq.IGrouping`2"></see>.</typeparam>
         /// <typeparam name="TResult">The type of the result value returned by resultSelector.</typeparam>
-        /// <returns>An T:System.Linq.IQueryable`1 that has a type argument of <paramref name="TResult">TResult</paramref> and where each element represents a projection over a group and its key.</returns>
+        /// <returns>An T:System.Linq.IQueryable`1 that has a type argument of <typeparamref name="TResult">TResult</typeparamref> and where each element represents a projection over a group and its key.</returns>
         /// <exception cref="T:System.ArgumentNullException"><paramref name="source">source</paramref> or <paramref name="keySelector">keySelector</paramref> or <paramref name="elementSelector">elementSelector</paramref> or <paramref name="resultSelector">resultSelector</paramref> is null.</exception>
         public static IQueryable<TResult> GroupBy<TSource, TKey, TElement, TResult>(
             this IQueryable<TSource> source,
@@ -398,8 +398,8 @@ namespace Neuronic.CollectionModel.Collections.Linq
             Expression<Func<TKey, IEnumerable<TElement>, TResult>> resultSelector)
         {
             var items = source.ExtractSource();
-            var keyFactory = PropertyObservableFactory<TSource, TKey>.FindIn(keySelector);
-            var elementFactory = PropertyObservableFactory<TSource, TElement>.FindIn(elementSelector);
+            var keyFactory = PropertyObservableFactory<TSource, TKey>.CreateFrom(keySelector);
+            var elementFactory = PropertyObservableFactory<TSource, TElement>.CreateFrom(elementSelector);
             var resultFactory = resultSelector.FindProperties();
             var groupComparer = new GroupingComparer<TKey, TElement>();
             return items.CollectionGroupByObservable(keyFactory.Observe)
@@ -420,7 +420,7 @@ namespace Neuronic.CollectionModel.Collections.Linq
         /// <typeparam name="TKey">The type of the key returned by the function represented in keySelector.</typeparam>
         /// <typeparam name="TElement">The type of the elements in each <see cref="T:System.Linq.IGrouping`2"></see>.</typeparam>
         /// <typeparam name="TResult">The type of the result value returned by resultSelector.</typeparam>
-        /// <returns>An T:System.Linq.IQueryable`1 that has a type argument of <paramref name="TResult">TResult</paramref> and where each element represents a projection over a group and its key.</returns>
+        /// <returns>An T:System.Linq.IQueryable`1 that has a type argument of <typeparamref name="TResult">TResult</typeparamref> and where each element represents a projection over a group and its key.</returns>
         /// <exception cref="T:System.ArgumentNullException"><paramref name="source">source</paramref> or <paramref name="keySelector">keySelector</paramref> or <paramref name="elementSelector">elementSelector</paramref> or <paramref name="resultSelector">resultSelector</paramref> or <paramref name="comparer">comparer</paramref> is null.</exception>
         public static IQueryable<TResult> GroupBy<TSource, TKey, TElement, TResult>(
             this IQueryable<TSource> source,
@@ -430,8 +430,8 @@ namespace Neuronic.CollectionModel.Collections.Linq
             IEqualityComparer<TKey> comparer)
         {
             var items = source.ExtractSource();
-            var keyFactory = PropertyObservableFactory<TSource, TKey>.FindIn(keySelector);
-            var elementFactory = PropertyObservableFactory<TSource, TElement>.FindIn(elementSelector);
+            var keyFactory = PropertyObservableFactory<TSource, TKey>.CreateFrom(keySelector);
+            var elementFactory = PropertyObservableFactory<TSource, TElement>.CreateFrom(elementSelector);
             var resultFactory = resultSelector.FindProperties();
             var groupComparer = new GroupingComparer<TKey, TElement>(comparer);
             return items.CollectionGroupByObservable(keyFactory.Observe, comparer)
@@ -452,7 +452,7 @@ namespace Neuronic.CollectionModel.Collections.Linq
         /// <typeparam name="TInner">The type of the elements of the second sequence.</typeparam>
         /// <typeparam name="TKey">The type of the keys returned by the key selector functions.</typeparam>
         /// <typeparam name="TResult">The type of the result elements.</typeparam>
-        /// <returns>An <see cref="T:System.Linq.IQueryable`1"></see> that contains elements of type <paramref name="TResult">TResult</paramref> obtained by performing a grouped join on two sequences.</returns>
+        /// <returns>An <see cref="T:System.Linq.IQueryable`1"></see> that contains elements of type <typeparamref name="TResult">TResult</typeparamref> obtained by performing a grouped join on two sequences.</returns>
         /// <exception cref="T:System.ArgumentNullException"><paramref name="outer">outer</paramref> or <paramref name="inner">inner</paramref> or <paramref name="outerKeySelector">outerKeySelector</paramref> or <paramref name="innerKeySelector">innerKeySelector</paramref> or <paramref name="resultSelector">resultSelector</paramref> is null.</exception>
         public static IQueryable<TResult> GroupJoin<TOuter, TInner, TKey, TResult>(
             this IQueryable<TOuter> outer,
@@ -475,7 +475,7 @@ namespace Neuronic.CollectionModel.Collections.Linq
         /// <typeparam name="TInner">The type of the elements of the second sequence.</typeparam>
         /// <typeparam name="TKey">The type of the keys returned by the key selector functions.</typeparam>
         /// <typeparam name="TResult">The type of the result elements.</typeparam>
-        /// <returns>An <see cref="T:System.Linq.IQueryable`1"></see> that contains elements of type <paramref name="TResult">TResult</paramref> obtained by performing a grouped join on two sequences.</returns>
+        /// <returns>An <see cref="T:System.Linq.IQueryable`1"></see> that contains elements of type <typeparamref name="TResult">TResult</typeparamref> obtained by performing a grouped join on two sequences.</returns>
         /// <exception cref="T:System.ArgumentNullException"><paramref name="outer">outer</paramref> or <paramref name="inner">inner</paramref> or <paramref name="outerKeySelector">outerKeySelector</paramref> or <paramref name="innerKeySelector">innerKeySelector</paramref> or <paramref name="resultSelector">resultSelector</paramref> is null.</exception>
         public static IQueryable<TResult> GroupJoin<TOuter, TInner, TKey, TResult>(
             this IQueryable<TOuter> outer,
@@ -532,7 +532,7 @@ namespace Neuronic.CollectionModel.Collections.Linq
         /// <typeparam name="TInner">The type of the elements of the second sequence.</typeparam>
         /// <typeparam name="TKey">The type of the keys returned by the key selector functions.</typeparam>
         /// <typeparam name="TResult">The type of the result elements.</typeparam>
-        /// <returns>An <see cref="T:System.Linq.IQueryable`1"></see> that has elements of type <paramref name="TResult">TResult</paramref> obtained by performing an inner join on two sequences.</returns>
+        /// <returns>An <see cref="T:System.Linq.IQueryable`1"></see> that has elements of type <typeparamref name="TResult">TResult</typeparamref> obtained by performing an inner join on two sequences.</returns>
         /// <exception cref="T:System.ArgumentNullException"><paramref name="outer">outer</paramref> or <paramref name="inner">inner</paramref> or <paramref name="outerKeySelector">outerKeySelector</paramref> or <paramref name="innerKeySelector">innerKeySelector</paramref> or <paramref name="resultSelector">resultSelector</paramref> is null.</exception>
         public static IQueryable<TResult> Join<TOuter, TInner, TKey, TResult>(
             this IQueryable<TOuter> outer,
@@ -542,9 +542,9 @@ namespace Neuronic.CollectionModel.Collections.Linq
             Expression<Func<TOuter, TInner, TResult>> resultSelector)
         {
             var items = outer.ExtractSource();
-            var outerKeyFactory = PropertyObservableFactory<TOuter, TKey>.FindIn(outerKeySelector);
-            var innerKeyFactory = PropertyObservableFactory<TInner, TKey>.FindIn(innerKeySelector);
-            var resultFactory = PropertyObservableFactory<TOuter, TInner, TResult>.FindIn(resultSelector);
+            var outerKeyFactory = PropertyObservableFactory<TOuter, TKey>.CreateFrom(outerKeySelector);
+            var innerKeyFactory = PropertyObservableFactory<TInner, TKey>.CreateFrom(innerKeySelector);
+            var resultFactory = PropertyObservableFactory<TOuter, TInner, TResult>.CreateFrom(resultSelector);
             return items.CollectionJoinObservable(inner,
                     outerKeyFactory.Observe, innerKeyFactory.Observe, resultFactory.Observe)
                 .AsQueryableCollection();
@@ -561,7 +561,7 @@ namespace Neuronic.CollectionModel.Collections.Linq
         /// <typeparam name="TInner">The type of the elements of the second sequence.</typeparam>
         /// <typeparam name="TKey">The type of the keys returned by the key selector functions.</typeparam>
         /// <typeparam name="TResult">The type of the result elements.</typeparam>
-        /// <returns>An <see cref="T:System.Linq.IQueryable`1"></see> that has elements of type <paramref name="TResult">TResult</paramref> obtained by performing an inner join on two sequences.</returns>
+        /// <returns>An <see cref="T:System.Linq.IQueryable`1"></see> that has elements of type <typeparamref name="TResult">TResult</typeparamref> obtained by performing an inner join on two sequences.</returns>
         /// <exception cref="T:System.ArgumentNullException"><paramref name="outer">outer</paramref> or <paramref name="inner">inner</paramref> or <paramref name="outerKeySelector">outerKeySelector</paramref> or <paramref name="innerKeySelector">innerKeySelector</paramref> or <paramref name="resultSelector">resultSelector</paramref> is null.</exception>
         public static IQueryable<TResult> Join<TOuter, TInner, TKey, TResult>(
             this IQueryable<TOuter> outer,
@@ -572,9 +572,9 @@ namespace Neuronic.CollectionModel.Collections.Linq
             IEqualityComparer<TKey> comparer)
         {
             var items = outer.ExtractSource();
-            var outerKeyFactory = PropertyObservableFactory<TOuter, TKey>.FindIn(outerKeySelector);
-            var innerKeyFactory = PropertyObservableFactory<TInner, TKey>.FindIn(innerKeySelector);
-            var resultFactory = PropertyObservableFactory<TOuter, TInner, TResult>.FindIn(resultSelector);
+            var outerKeyFactory = PropertyObservableFactory<TOuter, TKey>.CreateFrom(outerKeySelector);
+            var innerKeyFactory = PropertyObservableFactory<TInner, TKey>.CreateFrom(innerKeySelector);
+            var resultFactory = PropertyObservableFactory<TOuter, TInner, TResult>.CreateFrom(resultSelector);
             return items.CollectionJoinObservable(inner,
                     outerKeyFactory.Observe, innerKeyFactory.Observe, resultFactory.Observe, comparer)
                 .AsQueryableCollection();
@@ -597,7 +597,7 @@ namespace Neuronic.CollectionModel.Collections.Linq
         /// <summary>Returns the last element in a sequence, or a default value if the sequence contains no elements.</summary>
         /// <param name="source">An <see cref="T:System.Linq.IQueryable`1"></see> to return the last element of.</param>
         /// <typeparam name="TSource">The type of the elements of source.</typeparam>
-        /// <returns>default(<paramref name="TSource">TSource</paramref>) if <paramref name="source">source</paramref> is empty; otherwise, the last element in <paramref name="source">source</paramref>.</returns>
+        /// <returns>default(<typeparamref name="TSource">TSource</typeparamref>) if <paramref name="source">source</paramref> is empty; otherwise, the last element in <paramref name="source">source</paramref>.</returns>
         /// <exception cref="T:System.ArgumentNullException"><paramref name="source">source</paramref> is null.</exception>
         public static TSource LastOrDefault<TSource>(this IQueryable<TSource> source)
         {
@@ -728,7 +728,7 @@ namespace Neuronic.CollectionModel.Collections.Linq
             Expression<Func<TSource, TResult>> selector)
         {
             var items = source.ExtractSource();
-            var factory = PropertyObservableFactory<TSource, TResult>.FindIn(selector);
+            var factory = PropertyObservableFactory<TSource, TResult>.CreateFrom(selector);
             return items.ListSelectObservable(factory.Observe).AsQueryableCollection();
         }
 
@@ -764,7 +764,7 @@ namespace Neuronic.CollectionModel.Collections.Linq
             Expression<Func<TSource, IEnumerable<TResult>>> selector)
         {
             var items = source.ExtractSource();
-            var factory = PropertyObservableFactory<TSource, IEnumerable<TResult>>.FindIn(selector);
+            var factory = PropertyObservableFactory<TSource, IEnumerable<TResult>>.CreateFrom(selector);
             return items.ListSelectManyObservable(factory.Observe).AsQueryableCollection();
         }
 
@@ -803,7 +803,7 @@ namespace Neuronic.CollectionModel.Collections.Linq
             Expression<Func<TSource, TCollection, TResult>> resultSelector)
         {
             var items = source.ExtractSource();
-            var collectionFactory = PropertyObservableFactory<TSource, IEnumerable<TCollection>>.FindIn(collectionSelector);
+            var collectionFactory = PropertyObservableFactory<TSource, IEnumerable<TCollection>>.CreateFrom(collectionSelector);
             var resultFactory = resultSelector.FindProperties();
             return items.ListSelectManyObservable(item => collectionFactory.Observe(item).Select(l => l.Select(x => Tuple.Create(item, x))))
                 .ListSelectObservable(t => resultFactory.Observe(t.Item1, t.Item2))
@@ -1054,7 +1054,7 @@ namespace Neuronic.CollectionModel.Collections.Linq
             Expression<Func<TSource, bool>> predicate)
         {
             var items = source.ExtractSource();
-            var factory = PropertyObservableFactory<TSource, bool>.FindIn(predicate);
+            var factory = PropertyObservableFactory<TSource, bool>.CreateFrom(predicate);
             return items.ListWhereObservable(factory.Observe).AsQueryableCollection();
         }
 

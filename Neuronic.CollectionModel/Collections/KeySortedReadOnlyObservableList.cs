@@ -60,7 +60,7 @@ namespace Neuronic.CollectionModel.Collections
         /// <param name="comparer">The comparison used to establish the order of elements (and keys).</param>
         public KeySortedReadOnlyObservableList(IEnumerable<TSource> source, Expression<Func<TSource, TKey>> keySelector,
             IComparer<TKey> comparer) : this (source, 
-            item => PropertyObservableFactory<TSource, TKey>.FindIn(keySelector).Observe(item), 
+            item => PropertyObservableFactory<TSource, TKey>.CreateFrom(keySelector).Observe(item), 
             comparer == null ? null as Comparison<TKey> : comparer.Compare,
             null)
         {
@@ -99,14 +99,7 @@ namespace Neuronic.CollectionModel.Collections
         /// </summary>
         public event PropertyChangedEventHandler PropertyChanged;
 
-        /// <summary>
-        /// Gets the <see cref="TSource"/> at the specified index.
-        /// </summary>
-        /// <value>
-        /// The <see cref="TSource"/>.
-        /// </value>
-        /// <param name="index">The index.</param>
-        /// <returns></returns>
+        /// <inheritdoc />
         public TSource this[int index] => _items.GetSortedItem(index);
 
         private void SourceOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)

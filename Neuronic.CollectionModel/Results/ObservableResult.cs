@@ -48,12 +48,14 @@ namespace Neuronic.CollectionModel.Results
         public event PropertyChangedEventHandler PropertyChanged;
 
         /// <summary>
-        ///     Occurs when a property value is changing.
+        /// Occurs when an error occurs while evaluating the query.
         /// </summary>
-        //public event PropertyChangingEventHandler PropertyChanging;
-
         public event EventHandler<ErrorEventArgs> Error;
 
+        /// <summary>
+        /// Raises the <see cref="E:Error" /> event.
+        /// </summary>
+        /// <param name="e">The <see cref="ErrorEventArgs"/> instance containing the event data.</param>
         protected virtual void OnError(ErrorEventArgs e)
         {
             Error?.Invoke(this, e);
@@ -171,7 +173,14 @@ namespace Neuronic.CollectionModel.Results
         {
             return new CompositeObservableResult<T, T, bool>(first, second, (f, s) => !Equals(f, s));
         }
-        
+
+        /// <summary>
+        /// Indicates whether the current object is equal to another object of the same type.
+        /// </summary>
+        /// <param name="other">An object to compare with this object.</param>
+        /// <returns>
+        /// true if the current object is equal to the <paramref name="other">other</paramref> parameter; otherwise, false.
+        /// </returns>
         public bool Equals(IObservableResult<T> other)
         {
             if (ReferenceEquals(null, other)) return false;
@@ -179,11 +188,24 @@ namespace Neuronic.CollectionModel.Results
             return EqualityComparer<T>.Default.Equals(CurrentValue, other.CurrentValue);
         }
 
+        /// <summary>
+        /// Determines whether the specified <see cref="System.Object" />, is equal to this instance.
+        /// </summary>
+        /// <param name="obj">The <see cref="System.Object" /> to compare with this instance.</param>
+        /// <returns>
+        ///   <c>true</c> if the specified <see cref="System.Object" /> is equal to this instance; otherwise, <c>false</c>.
+        /// </returns>
         public override bool Equals(object obj)
         {
             return ReferenceEquals(this, obj) || obj is IObservableResult<T> other && Equals(other);
         }
 
+        /// <summary>
+        /// Returns a hash code for this instance.
+        /// </summary>
+        /// <returns>
+        /// A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table. 
+        /// </returns>
         public override int GetHashCode()
         {
             return EqualityComparer<T>.Default.GetHashCode(CurrentValue);

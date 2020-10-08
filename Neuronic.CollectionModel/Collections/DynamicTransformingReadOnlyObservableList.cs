@@ -20,7 +20,6 @@ namespace Neuronic.CollectionModel.Collections
     ///     if the transforming function can produce different results for the same item at different times.
     /// </remarks>
     /// <seealso cref="Neuronic.CollectionModel.IReadOnlyObservableList{TTarget}" />
-    /// <seealso cref="Neuronic.CollectionModel.WeakEventPattern.IWeakEventListener" />
     public class DynamicTransformingReadOnlyObservableList<TSource, TTarget> 
         : IndexedTransformingReadOnlyObservableListBase<TSource, TTarget>, IReadOnlyObservableList<TTarget>
     {
@@ -66,8 +65,10 @@ namespace Neuronic.CollectionModel.Collections
             return GetEnumerator();
         }
 
+        /// <inheritdoc />
         public event NotifyCollectionChangedEventHandler CollectionChanged;
 
+        /// <inheritdoc />
         public event PropertyChangedEventHandler PropertyChanged;
 
         /// <summary>

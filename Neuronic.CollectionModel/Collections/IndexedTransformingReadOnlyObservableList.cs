@@ -17,7 +17,6 @@ namespace Neuronic.CollectionModel.Collections
     ///     if the transforming function can produce different results for the same item at different times.
     /// </remarks>
     /// <seealso cref="Neuronic.CollectionModel.IReadOnlyObservableList{TTarget}" />
-    /// <seealso cref="Neuronic.CollectionModel.WeakEventPattern.IWeakEventListener" />
     public class IndexedTransformingReadOnlyObservableList<TSource, TTarget> :
         IndexedTransformingReadOnlyObservableListBase<TSource, TTarget>,
         IReadOnlyObservableList<IndexedItemContainer<TSource, TTarget>>
@@ -67,9 +66,12 @@ namespace Neuronic.CollectionModel.Collections
         /// <returns>The container</returns>
         public IndexedItemContainer<TSource, TTarget> this[int index] => Items[index];
 
+        /// <inheritdoc />
         public event NotifyCollectionChangedEventHandler CollectionChanged;
+        /// <inheritdoc />
         public event PropertyChangedEventHandler PropertyChanged;
 
+        /// <inheritdoc />
         public IEnumerator<IndexedItemContainer<TSource, TTarget>> GetEnumerator() => Items.GetEnumerator();
 
         IEnumerator IEnumerable.GetEnumerator()

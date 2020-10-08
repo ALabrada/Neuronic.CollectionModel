@@ -66,12 +66,20 @@ namespace Neuronic.CollectionModel.WeakEventPattern
             }
         }
 
+        /// <summary>
+        /// Listen to the given source for the event.
+        /// </summary>
+        /// <param name="source">The source.</param>
         protected override void StartListening(object source)
         {
             var nSource = (INotifyPropertyChanged)source;
             nSource.PropertyChanged += OnPropertyChanged;
         }
 
+        /// <summary>
+        /// Stop listening to the given source for the event.
+        /// </summary>
+        /// <param name="source">The source.</param>
         protected override void StopListening(object source)
         {
             var nSource = (INotifyPropertyChanged)source;
@@ -83,6 +91,14 @@ namespace Neuronic.CollectionModel.WeakEventPattern
             DeliverEvent(sender, e);
         }
 
+        /// <summary>
+        /// Checks if the specified listener is compatible with the event.
+        /// </summary>
+        /// <param name="listener">The listener.</param>
+        /// <param name="eventArgs">The <see cref="T:System.EventArgs" /> instance containing the event data.</param>
+        /// <returns>
+        ///   <c>true</c> if the event is compatible with <paramref name="listener" />; otherwise, <c>false</c>.
+        /// </returns>
         protected override bool OnChooseListener(ListenerInfo listener, EventArgs eventArgs)
         {
             var sourcePropName = (eventArgs as PropertyChangedEventArgs)?.PropertyName;
@@ -91,7 +107,7 @@ namespace Neuronic.CollectionModel.WeakEventPattern
                        StringComparison.Ordinal);
         }
 
-        protected class PropertyListenerInfo : ListenerInfo
+        class PropertyListenerInfo : ListenerInfo
         {
             public PropertyListenerInfo(IWeakEventListener listener, string propertyName) : base(listener)
             {

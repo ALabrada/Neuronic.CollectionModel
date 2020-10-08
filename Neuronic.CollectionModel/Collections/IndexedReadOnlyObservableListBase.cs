@@ -47,14 +47,14 @@ namespace Neuronic.CollectionModel.Collections
         protected ObservableCollection<IndexedItemContainer<TSource, TTarget>> Items { get; }
 
         /// <summary>
-        /// Called when a property of <see cref="IndexedTransformingReadOnlyObservableListBase{TSource,TTarget}.Items"/> changes.
+        /// Called when a property of <see cref="Items"/> changes.
         /// </summary>
         /// <param name="sender">The sender.</param>
         /// <param name="e">The <see cref="PropertyChangedEventArgs"/> instance containing the event data.</param>
         protected abstract void ItemsOnPropertyChanged(object sender, PropertyChangedEventArgs e);
 
         /// <summary>
-        /// Called when the content of <see cref="IndexedTransformingReadOnlyObservableListBase{TSource,TTarget}.Items"/> changes.
+        /// Called when the content of <see cref="Items"/> changes.
         /// </summary>
         /// <param name="sender">The sender.</param>
         /// <param name="e">The <see cref="NotifyCollectionChangedEventArgs"/> instance containing the event data.</param>
@@ -104,7 +104,7 @@ namespace Neuronic.CollectionModel.Collections
             _onChange?.Invoke(e.OldValue, e.NewValue);
         }
 
-        protected class ContainerCollection : ObservableCollection<IndexedItemContainer<TSource, TTarget>>
+        class ContainerCollection : ObservableCollection<IndexedItemContainer<TSource, TTarget>>
         {
             public ContainerCollection()
             {
@@ -116,6 +116,7 @@ namespace Neuronic.CollectionModel.Collections
                     Items[i].Index = i;
             }
 
+            /// <inheritdoc />
             protected override void InsertItem(int index, IndexedItemContainer<TSource, TTarget> item)
             {
                 base.InsertItem(index, item);
@@ -124,6 +125,7 @@ namespace Neuronic.CollectionModel.Collections
                     Items[i].Index = i;
             }
 
+            /// <inheritdoc />
             protected override void MoveItem(int oldIndex, int newIndex)
             {
                 base.MoveItem(oldIndex, newIndex);
@@ -131,6 +133,7 @@ namespace Neuronic.CollectionModel.Collections
                     Items[i].Index = i;
             }
 
+            /// <inheritdoc />
             protected override void RemoveItem(int index)
             {
                 base.RemoveItem(index);
@@ -138,6 +141,7 @@ namespace Neuronic.CollectionModel.Collections
                     Items[i].Index = i;
             }
 
+            /// <inheritdoc />
             protected override void SetItem(int index, IndexedItemContainer<TSource, TTarget> item)
             {
                 base.SetItem(index, item);

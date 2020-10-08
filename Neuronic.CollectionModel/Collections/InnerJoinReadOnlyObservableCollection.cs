@@ -20,7 +20,6 @@ namespace Neuronic.CollectionModel.Collections
     /// <typeparam name="TKey">The type of the keys.</typeparam>
     /// <typeparam name="TResult">The type of the resulting items.</typeparam>
     /// <seealso cref="Neuronic.CollectionModel.IReadOnlyObservableCollection{TResult}" />
-    /// <seealso cref="Neuronic.CollectionModel.WeakEventPattern.IWeakEventListener" />
     public class InnerJoinReadOnlyObservableCollection<TOuter, TInner, TKey, TResult> : IReadOnlyObservableCollection<TResult>, IWeakEventListener
     {
         private readonly IEnumerable<TOuter> _outerSource;
@@ -110,19 +109,42 @@ namespace Neuronic.CollectionModel.Collections
         {
         }
 
+        /// <summary>
+        ///     Initializes a new instance of the <see cref="InnerJoinReadOnlyObservableCollection{TOuter, TInner, TKey, TResult}"/> class.
+        /// </summary>
+        /// <param name="outerSource">The outer source.</param>
+        /// <param name="innerSource">The inner source.</param>
+        /// <param name="outerKeySelector">The outer key selector.</param>
+        /// <param name="innerKeySelector">The inner key selector.</param>
+        /// <param name="resultSelector">The result selector.</param>
+        /// <param name="keyComparer">The key comparer.</param>
+        /// <param name="outerComparer">The comparer of outer items.</param>
+        /// <param name="innerComparer">The comparer of inner items.</param>
+        /// <exception cref="ArgumentNullException">
+        /// outerSource
+        /// or
+        /// innerSource
+        /// or
+        /// outerKeySelector
+        /// or
+        /// innerKeySelector
+        /// or
+        /// resultSelector
+        /// </exception>
         public InnerJoinReadOnlyObservableCollection(
             IEnumerable<TOuter> outerSource, IEnumerable<TInner> innerSource,
             Expression<Func<TOuter, TKey>> outerKeySelector, Expression<Func<TInner, TKey>> innerKeySelector,
             Expression<Func<TOuter, TInner, TResult>> resultSelector, IEqualityComparer<TKey> keyComparer = null,
             IEqualityComparer<TOuter> outerComparer = null, IEqualityComparer<TInner> innerComparer = null)
             : this (outerSource, innerSource, 
-                  PropertyObservableFactory<TOuter, TKey>.FindIn(outerKeySelector), 
-                  PropertyObservableFactory<TInner, TKey>.FindIn(innerKeySelector),
-                  PropertyObservableFactory<TOuter, TInner, TResult>.FindIn(resultSelector),
+                  PropertyObservableFactory<TOuter, TKey>.CreateFrom(outerKeySelector), 
+                  PropertyObservableFactory<TInner, TKey>.CreateFrom(innerKeySelector),
+                  PropertyObservableFactory<TOuter, TInner, TResult>.CreateFrom(resultSelector),
                   keyComparer, outerComparer, innerComparer)
         {            
         }
 
+        /// <inheritdoc />
         public IEnumerator<TResult> GetEnumerator()
         {
             return _mergedItems.Values.Select(x => x.Value).GetEnumerator();
@@ -133,10 +155,13 @@ namespace Neuronic.CollectionModel.Collections
             return GetEnumerator();
         }
 
+        /// <inheritdoc />
         public int Count => _mergedItems.Count;
 
+        /// <inheritdoc />
         public event NotifyCollectionChangedEventHandler CollectionChanged;
 
+        /// <inheritdoc />
         public event PropertyChangedEventHandler PropertyChanged;
 
         bool IWeakEventListener.ReceiveWeakEvent(Type managerType, object sender, EventArgs e)
@@ -350,11 +375,19 @@ namespace Neuronic.CollectionModel.Collections
             }
         }
 
+        /// <summary>
+        /// Raises the <see cref="E:CollectionChanged" /> event.
+        /// </summary>
+        /// <param name="e">The <see cref="NotifyCollectionChangedEventArgs"/> instance containing the event data.</param>
         protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
         {
             CollectionChanged?.Invoke(this, e);
         }
 
+        /// <summary>
+        /// Raises the <see cref="E:PropertyChanged" /> event.
+        /// </summary>
+        /// <param name="e">The <see cref="PropertyChangedEventArgs"/> instance containing the event data.</param>
         protected virtual void OnPropertyChanged(PropertyChangedEventArgs e)
         {
             PropertyChanged?.Invoke(this, e);

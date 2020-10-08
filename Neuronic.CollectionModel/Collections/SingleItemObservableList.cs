@@ -69,15 +69,7 @@ namespace Neuronic.CollectionModel.Collections
         /// </value>
         protected int Count => CurrentItem != null ? 1 : 0;
 
-        /// <summary>
-        /// Gets the <see cref="T"/> at the specified index.
-        /// </summary>
-        /// <value>
-        /// The <see cref="T"/>.
-        /// </value>
-        /// <param name="index">The index.</param>
-        /// <returns></returns>
-        /// <exception cref="IndexOutOfRangeException"></exception>
+        /// <inheritdoc />
         T IReadOnlyList<T>.this[int index]
         {
             get

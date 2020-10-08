@@ -61,17 +61,22 @@ namespace Neuronic.CollectionModel.Collections
         /// <param name="onChange">The function that is called when the result assigned to a pair changes.</param>
         public PrefixReadOnlyObservableList(IReadOnlyList<T> source, Expression<Func<T, bool>> selector,
             IEqualityComparer<T> comparer = null, Action<bool> onRemove = null, Action<bool, bool> onChange = null)
-            : this(source, PropertyObservableFactory<T, bool>.FindIn(selector), comparer, onRemove, onChange)
+            : this(source, PropertyObservableFactory<T, bool>.CreateFrom(selector), comparer, onRemove, onChange)
         {
         }
 
+        /// <inheritdoc />
         public int Count => Items.Count;
 
+        /// <inheritdoc />
         public event NotifyCollectionChangedEventHandler CollectionChanged;
+        /// <inheritdoc />
         public event PropertyChangedEventHandler PropertyChanged;
 
+        /// <inheritdoc />
         public T this[int index] => Items[index].Item;
 
+        /// <inheritdoc />
         public IEnumerator<T> GetEnumerator()
         {
             return Items.Select(x => x.Item).GetEnumerator();
@@ -82,17 +87,20 @@ namespace Neuronic.CollectionModel.Collections
             return GetEnumerator();
         }
 
+        /// <inheritdoc />
         protected override void RemoveContainer(IndexedItemContainer<T, bool> container)
         {
             if (container != null)
                 base.RemoveContainer(container);
         }
 
+        /// <inheritdoc />
         protected override void ItemsOnPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             OnPropertyChanged(e);
         }
 
+        /// <inheritdoc />
         protected override void ItemsOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             var newItems = new List<T>(e.NewItems?.Count ?? 0);
@@ -131,6 +139,7 @@ namespace Neuronic.CollectionModel.Collections
             }
         }
 
+        /// <inheritdoc />
         protected override void ContainerOnValueChanged(object sender, ValueChangedEventArgs<bool> e)
         {
             base.ContainerOnValueChanged(sender, e);
@@ -155,11 +164,19 @@ namespace Neuronic.CollectionModel.Collections
             return true;
         }
 
+        /// <summary>
+        /// Raises the <see cref="E:CollectionChanged" /> event.
+        /// </summary>
+        /// <param name="e">The <see cref="NotifyCollectionChangedEventArgs"/> instance containing the event data.</param>
         protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
         {
             CollectionChanged?.Invoke(this, e);
         }
 
+        /// <summary>
+        /// Raises the <see cref="E:PropertyChanged" /> event.
+        /// </summary>
+        /// <param name="e">The <see cref="PropertyChangedEventArgs"/> instance containing the event data.</param>
         protected virtual void OnPropertyChanged(PropertyChangedEventArgs e)
         {
             PropertyChanged?.Invoke(this, e);

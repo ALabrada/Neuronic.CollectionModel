@@ -13,6 +13,10 @@ namespace Neuronic.CollectionModel.Collections
     /// <seealso cref="Neuronic.CollectionModel.IReadOnlyObservableList{T}" />
     public class ReversedReadOnlyObservableList<T>: EventSource, IReadOnlyObservableList<T>
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ReversedReadOnlyObservableList{T}"/> class.
+        /// </summary>
+        /// <param name="source">The source.</param>
         public ReversedReadOnlyObservableList(IReadOnlyList<T> source) : base(source, "Item[]", nameof(Count))
         {
             Source = source;

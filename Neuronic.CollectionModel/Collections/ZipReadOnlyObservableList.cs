@@ -19,9 +19,7 @@ namespace Neuronic.CollectionModel.Collections
     /// <typeparam name="TOuter">The type of the outer list.</typeparam>
     /// <typeparam name="TInner">The type of the inner list.</typeparam>
     /// <typeparam name="TResult">The type of the result.</typeparam>
-    /// <seealso cref="Neuronic.CollectionModel.Collections.IndexedReadOnlyObservableListBase{System.Tuple{TOuter, TInner}, TResult}" />
-    /// <seealso cref="Neuronic.CollectionModel.IReadOnlyObservableList{TResult}" />
-    /// <seealso cref="Neuronic.CollectionModel.WeakEventPattern.IWeakEventListener" />
+    /// <seealso cref="IndexedReadOnlyObservableListBase{TSource,TTarget}" />
     public class ZipReadOnlyObservableList<TOuter, TInner, TResult> : IndexedReadOnlyObservableListBase<Tuple<TOuter, TInner>, TResult>, 
         IReadOnlyObservableList<TResult>, IWeakEventListener
     {
@@ -75,14 +73,19 @@ namespace Neuronic.CollectionModel.Collections
         {
         }
 
+        /// <inheritdoc />
         public int Count => Math.Min(_outerSource.Count, _innerSource.Count);
 
+        /// <inheritdoc />
         public event NotifyCollectionChangedEventHandler CollectionChanged;
 
+        /// <inheritdoc />
         public event PropertyChangedEventHandler PropertyChanged;
 
+        /// <inheritdoc />
         public TResult this[int index] => Items[index].Value;
 
+        /// <inheritdoc />
         public IEnumerator<TResult> GetEnumerator()
         {
             return Items.Select(x => x.Value).GetEnumerator();
@@ -93,11 +96,13 @@ namespace Neuronic.CollectionModel.Collections
             return GetEnumerator();
         }
 
+        /// <inheritdoc />
         protected override void ItemsOnPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             OnPropertyChanged(e);
         }
 
+        /// <inheritdoc />
         protected override void ItemsOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             var newItems = new List<TResult>(e.NewItems?.Count ?? 0);
@@ -136,6 +141,7 @@ namespace Neuronic.CollectionModel.Collections
             }
         }
 
+        /// <inheritdoc />
         protected override void ContainerOnValueChanged(object sender, ValueChangedEventArgs<TResult> e)
         {
             var container = (IndexedItemContainer<Tuple<TOuter, TInner>, TResult>) sender;
@@ -216,11 +222,19 @@ namespace Neuronic.CollectionModel.Collections
             return CreateContainer(Tuple.Create(_outerSource[index], _innerSource[index]));
         }
 
+        /// <summary>
+        /// Raises the <see cref="E:CollectionChanged" /> event.
+        /// </summary>
+        /// <param name="e">The <see cref="NotifyCollectionChangedEventArgs"/> instance containing the event data.</param>
         protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
         {
             CollectionChanged?.Invoke(this, e);
         }
 
+        /// <summary>
+        /// Raises the <see cref="E:PropertyChanged" /> event.
+        /// </summary>
+        /// <param name="e">The <see cref="PropertyChangedEventArgs"/> instance containing the event data.</param>
         protected virtual void OnPropertyChanged(PropertyChangedEventArgs e)
         {
             PropertyChanged?.Invoke(this, e);

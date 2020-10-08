@@ -6,7 +6,7 @@ using System.Diagnostics;
 namespace Neuronic.CollectionModel.Collections.Containers
 {
     /// <summary>
-    /// Abstraction of an item container that monitors an observable associated to the item.
+    ///     An item container that monitors an observable associated to the item.
     /// </summary>
     /// <typeparam name="TItem">The type of the item.</typeparam>
     /// <typeparam name="TResult">The type of the result.</typeparam>
@@ -18,7 +18,7 @@ namespace Neuronic.CollectionModel.Collections.Containers
         private readonly IDisposable _subscription;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ObservableItemContainer{TItem, TResult}"/> class.
+        ///     Initializes a new instance of the <see cref="ObservableItemContainer{TItem, TResult}"/> class.
         /// </summary>
         /// <param name="item">The item.</param>
         /// <param name="observable">The observable.</param>
@@ -39,8 +39,20 @@ namespace Neuronic.CollectionModel.Collections.Containers
         /// </value>
         public IObservable<TResult> Observable { get; }
 
+        /// <summary>
+        /// Gets the value comparer.
+        /// </summary>
+        /// <value>
+        /// The value comparer.
+        /// </value>
         public IEqualityComparer<TResult> ValueComparer { get; }
 
+        /// <summary>
+        /// Gets the current observed value.
+        /// </summary>
+        /// <value>
+        /// The value.
+        /// </value>
         public TResult Value { get; private set; }
 
         /// <summary>
@@ -54,6 +66,9 @@ namespace Neuronic.CollectionModel.Collections.Containers
             OnValueChanged(new ValueChangedEventArgs<TResult>(oldValue, value));
         }
 
+        /// <summary>
+        /// Occurs when the observed value changes.
+        /// </summary>
         public event EventHandler<ValueChangedEventArgs<TResult>> ValueChanged;
 
         void IObserver<TResult>.OnNext(TResult value)
@@ -69,27 +84,51 @@ namespace Neuronic.CollectionModel.Collections.Containers
         {
         }
 
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
         public void Dispose()
         {
             _subscription?.Dispose();
         }
 
+        /// <summary>
+        /// Raises the <see cref="E:ValueChanged" /> event.
+        /// </summary>
+        /// <param name="eventArgs">The <see cref="ValueChangedEventArgs{TResult}"/> instance containing the event data.</param>
         protected virtual void OnValueChanged(ValueChangedEventArgs<TResult> eventArgs)
         {
             ValueChanged?.Invoke(this, eventArgs);
         }
     }
 
+    /// <summary>
+    ///     Contains parameters for value change events. 
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <seealso cref="System.EventArgs" />
     public class ValueChangedEventArgs<T> : EventArgs
     {
-        public ValueChangedEventArgs(T oldValue, T newValue)
+        internal ValueChangedEventArgs(T oldValue, T newValue)
         {
             OldValue = oldValue;
             NewValue = newValue;
         }
 
+        /// <summary>
+        /// Gets the old value.
+        /// </summary>
+        /// <value>
+        /// The old value.
+        /// </value>
         public T OldValue { get; }
 
+        /// <summary>
+        /// Creates new value.
+        /// </summary>
+        /// <value>
+        /// The new value.
+        /// </value>
         public T NewValue { get; }
     }
 }

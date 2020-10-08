@@ -4,17 +4,21 @@
     <ProjectGuid>{388C0806-1701-4486-B3E5-D1F3D9934918}</ProjectGuid>
     <TargetFrameworks>netstandard2.0;netstandard1.1;net46;net45;net40</TargetFrameworks>
     <SignAssembly>False</SignAssembly>
+    <DocumentationFile>bin\$(Configuration)\$(Platform)\Neuronic.CollectionModel.xml</DocumentationFile>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Authors>Alexei Labrada</Authors>
     <Company>Neuronic S.A.</Company>
     <Copyright>Copyright © 2016</Copyright>
-    <PackageTags>collection notify utility LINQ</PackageTags>
+    <PackageTags>collection notify utility LINQ observable reactive</PackageTags>
     <Description>Utility .Net library for declarative collection handling. It provides a set of query methods, resembling the ones in LINQ, which operate on read-only observable lists and collections, instead of IEnumerable.</Description>
     <PackageLicenseUrl>https://www.gnu.org/copyleft/lesser.html</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/ALabrada/Neuronic.CollectionModel</PackageProjectUrl>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
     <Version>2.0.0</Version>
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
+    <PackageReleaseNotes>Added reactive integration.
+Implemented LINQ IQueryProvider, allowing the use of the LINQ DSL.
+Implemented automatic trigger detection.</PackageReleaseNotes>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)'=='net40'">
     <DefineConstants>NET40</DefineConstants>

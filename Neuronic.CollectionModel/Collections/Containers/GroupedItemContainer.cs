@@ -12,10 +12,22 @@ namespace Neuronic.CollectionModel.Collections.Containers
     /// <seealso cref="ItemContainer{TItem}" />
     public class GroupedItemContainer<TSource, TKey> : ObservableItemContainer<TSource, TKey>
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="GroupedItemContainer{TSource, TKey}"/> class.
+        /// </summary>
+        /// <param name="item">The item.</param>
+        /// <param name="selector">The selector.</param>
+        /// <param name="keyComparer">The key comparer.</param>
         public GroupedItemContainer(TSource item, Func<TSource, IObservable<TKey>> selector, IEqualityComparer<TKey> keyComparer) : this (item, selector(item), keyComparer)
         {
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="GroupedItemContainer{TSource, TKey}"/> class.
+        /// </summary>
+        /// <param name="item">The item.</param>
+        /// <param name="observable">The observable.</param>
+        /// <param name="keyComparer">The key comparer.</param>
         public GroupedItemContainer(TSource item, IObservable<TKey> observable, IEqualityComparer<TKey> keyComparer) : base(item, observable, keyComparer)
         {
         }

@@ -33,15 +33,15 @@ namespace Neuronic.CollectionModel.Extras
             _subscription = condition.Subscribe(this);
         }
 
-        public void OnCompleted()
+        void IObserver<bool>.OnCompleted()
         {
         }
 
-        public void OnError(Exception error)
+        void IObserver<bool>.OnError(Exception error)
         {
         }
 
-        public void OnNext(bool value)
+        void IObserver<bool>.OnNext(bool value)
         {
             Source = value ? _positiveSource : _negativeSource;
         }

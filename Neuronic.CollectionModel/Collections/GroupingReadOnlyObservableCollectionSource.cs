@@ -16,7 +16,6 @@ namespace Neuronic.CollectionModel.Collections
     /// </summary>
     /// <typeparam name="TSource">The type of the source.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <seealso cref="Neuronic.CollectionModel.IReadOnlyObservableCollection{Neuronic.CollectionModel.ReadOnlyObservableGroup{TSource, TKey}}" />
     public class
         GroupingReadOnlyObservableCollectionSource<TSource, TKey> : CustomReadOnlyObservableCollection<
             ReadOnlyObservableGroup<TSource, TKey>>
@@ -125,7 +124,7 @@ namespace Neuronic.CollectionModel.Collections
             Expression<Func<TSource, TKey>> keySelector, IEqualityComparer<TKey> keyComparer,
             IEqualityComparer<TSource> sourceComparer)
             : this(
-                source, item  => PropertyObservableFactory<TSource, TKey>.FindIn(keySelector).Observe(item), 
+                source, item  => PropertyObservableFactory<TSource, TKey>.CreateFrom(keySelector).Observe(item), 
                 keyComparer, sourceComparer,
                 new ObservableDictionary<TKey, ReadOnlyObservableGroup<TSource, TKey>>(
                     new Dictionary<TKey, ReadOnlyObservableGroup<TSource, TKey>>(keyComparer)))
@@ -225,7 +224,6 @@ namespace Neuronic.CollectionModel.Collections
             /// <param name="owner">The owning grouping source.</param>
             /// <param name="collection">The initial containers.</param>
             /// <param name="keyComparer">The key equality comparer</param>
-            /// <param name="triggers">The triggers.</param>
             /// <param name="groups">The initial groups.</param>
             public ContainerList(GroupingReadOnlyObservableCollectionSource<TSource, TKey> owner,
                 IEnumerable<GroupedItemContainer<TSource, TKey>> collection, IEqualityComparer<TKey> keyComparer,

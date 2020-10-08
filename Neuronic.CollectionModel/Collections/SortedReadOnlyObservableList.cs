@@ -87,14 +87,7 @@ namespace Neuronic.CollectionModel.Collections
         /// </summary>
         public event PropertyChangedEventHandler PropertyChanged;
 
-        /// <summary>
-        /// Gets the <see cref="T"/> at the specified index.
-        /// </summary>
-        /// <value>
-        /// The <see cref="T"/>.
-        /// </value>
-        /// <param name="index">The index.</param>
-        /// <returns></returns>
+        /// <inheritdoc />
         public T this[int index] => _items.GetSortedItem(index);
 
         private void SourceOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)

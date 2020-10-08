@@ -23,14 +23,7 @@ namespace Neuronic.CollectionModel.Collections
             _source = source;
         }
 
-        /// <summary>
-        /// Gets the <see cref="T"/> at the specified index.
-        /// </summary>
-        /// <value>
-        /// The <see cref="T"/>.
-        /// </value>
-        /// <param name="index">The index.</param>
-        /// <returns></returns>
+        /// <inheritdoc />
         public T this[int index] => _source[index];
 
         /// <summary>

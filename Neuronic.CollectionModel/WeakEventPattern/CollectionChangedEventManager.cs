@@ -63,12 +63,20 @@ namespace Neuronic.CollectionModel.WeakEventPattern
             }
         }
 
+        /// <summary>
+        /// Listen to the given source for the event.
+        /// </summary>
+        /// <param name="source">The source.</param>
         protected override void StartListening(object source)
         {
             var nSource = (INotifyCollectionChanged)source;
             nSource.CollectionChanged += OnCollectionChanged;
         }
 
+        /// <summary>
+        /// Stop listening to the given source for the event.
+        /// </summary>
+        /// <param name="source">The source.</param>
         protected override void StopListening(object source)
         {
             var nSource = (INotifyCollectionChanged)source;

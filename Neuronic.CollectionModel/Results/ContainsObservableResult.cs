@@ -9,7 +9,6 @@ namespace Neuronic.CollectionModel.Results
     /// An observable result that determines if an element is present in a collection.
     /// </summary>
     /// <typeparam name="T">The type of the collection elements.</typeparam>
-    /// <seealso cref="Neuronic.CollectionModel.Results.QueryObservableResult{T, System.Boolean}" />
     public class ContainsObservableResult<T> : QueryObservableResult<T, bool>
     {
         private readonly IEqualityComparer<T> _comparer;

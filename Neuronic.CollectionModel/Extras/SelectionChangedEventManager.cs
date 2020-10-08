@@ -7,7 +7,6 @@ namespace Neuronic.CollectionModel.Extras
     /// <summary>
     /// Manager used to implement the Weak Event Pattern for the <see cref="ISelectableItem.SelectionChanged"/> event.
     /// </summary>
-    /// <seealso cref="System.Windows.WeakEventManager" />
     internal class SelectionChangedEventManager : WeakEventManager
     {
         private SelectionChangedEventManager()

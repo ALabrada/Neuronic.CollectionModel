@@ -86,14 +86,7 @@ namespace Neuronic.CollectionModel.Extras
             }
         }
 
-        /// <summary>
-        /// Gets the <see cref="T"/> at the specified index.
-        /// </summary>
-        /// <value>
-        /// The <see cref="T"/>.
-        /// </value>
-        /// <param name="index">The index.</param>
-        /// <returns>The item at <paramref name="index"/>.</returns>
+        /// <inheritdoc />
         public T this[int index]
         {
             get

@@ -27,14 +27,7 @@ namespace Neuronic.CollectionModel.Collections
         /// </value>
         public new IReadOnlyObservableList<T> Source => (IReadOnlyObservableList<T>) base.Source;
 
-        /// <summary>
-        ///     Gets the <see cref="T" /> at the specified index.
-        /// </summary>
-        /// <value>
-        ///     The <see cref="T" />.
-        /// </value>
-        /// <param name="index">The index.</param>
-        /// <returns></returns>
+        /// <inheritdoc />
         public T this[int index] => Source[index];
 
         /// <summary>

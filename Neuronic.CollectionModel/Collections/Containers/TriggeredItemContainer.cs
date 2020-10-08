@@ -11,7 +11,6 @@ namespace Neuronic.CollectionModel.Collections.Containers
     /// </summary>
     /// <typeparam name="TItem">The type of the item.</typeparam>
     /// <seealso cref="ItemContainer{TItem}" />
-    /// <seealso cref="System.Windows.IWeakEventListener" />
     public abstract class TriggeredItemContainer<TItem> : ItemContainer<TItem>, IWeakEventListener
     {
         /// <summary>

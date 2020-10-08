@@ -9,7 +9,6 @@ namespace Neuronic.CollectionModel.Collections
     /// <summary>
     /// Base class for the collections that use another collection as the source of it's change notifications.
     /// </summary>
-    /// <seealso cref="System.Windows.IWeakEventListener" />
     /// <seealso cref="System.ComponentModel.INotifyPropertyChanged" />
     /// <seealso cref="System.Collections.Specialized.INotifyCollectionChanged" />
     public class EventSource : IWeakEventListener, INotifyPropertyChanged, INotifyCollectionChanged

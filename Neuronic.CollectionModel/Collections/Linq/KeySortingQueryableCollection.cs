@@ -25,7 +25,7 @@ namespace Neuronic.CollectionModel.Collections.Linq
         }
 
         public Definition(Expression<Func<TElement, TKey>> keySelector, IComparer<TKey> comparer = null)
-            : this(item => PropertyObservableFactory<TElement, TKey>.FindIn(keySelector).Observe(item), comparer)
+            : this(item => PropertyObservableFactory<TElement, TKey>.CreateFrom(keySelector).Observe(item), comparer)
         {
         }
 

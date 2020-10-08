@@ -11,7 +11,6 @@ namespace Neuronic.CollectionModel.Collections
     /// </summary>
     /// <typeparam name="TSource">The type of the source items.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <seealso cref="System.Collections.ObjectModel.ObservableCollection{Neuronic.CollectionModel.Collections.Containers.GroupedItemContainer{TSource, TKey}}" />
     internal abstract class
         GroupingContainerList<TSource, TKey> : ObservableCollection<GroupedItemContainer<TSource, TKey>>
     {

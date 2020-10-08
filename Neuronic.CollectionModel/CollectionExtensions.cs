@@ -147,7 +147,7 @@ namespace Neuronic.CollectionModel
         ///     obtained from the <see cref="INotifyCollectionChanged.CollectionChanged" /> event handler.
         /// </param>
         /// <param name="select">
-        ///     A function that can be used to create new items for <paramref name="list" />
+        ///     A function that can be used to create new items for <paramref name="collection" />
         ///     based on the items in <paramref name="source" />. By default, the same items are used.
         /// </param>
         /// <param name="onRemove">
@@ -718,7 +718,7 @@ namespace Neuronic.CollectionModel
 
         /// <summary>
         ///     Creates an ordered view of an observable collection using key-based ordering. 
-        ///     The method automatically obtains the properties of <typeparam name="TSource" /> that can affect the predicate's outcome.
+        ///     The method automatically obtains the properties of <typeparamref name="TSource" /> that can affect the predicate's outcome.
         /// </summary>
         /// <typeparam name="TSource">The type of the collection items.</typeparam>
         /// <typeparam name="TKey">The type of the sorting keys.</typeparam>
@@ -1189,7 +1189,7 @@ namespace Neuronic.CollectionModel
 
         /// <summary>
         ///     Creates an observable view by filtering a sequence of values based on a predicate.
-        ///     The method automatically obtains the properties of <typeparam name="T" /> that can affect the predicate's outcome.
+        ///     The method automatically obtains the properties of <typeparamref name="T" /> that can affect the predicate's outcome.
         /// </summary>
         /// <typeparam name="T">The type of the sequence items.</typeparam>
         /// <param name="items">The source collection.</param>
@@ -1735,7 +1735,7 @@ namespace Neuronic.CollectionModel
         public static IReadOnlyObservableList<T> ListSkipWhileAuto<T>(this IReadOnlyList<T> items,
             Expression<Func<T, bool>> predicate, IEqualityComparer<T> comparer = null)
         {
-            var factory = PropertyObservableFactory<T, bool>.FindIn(predicate);
+            var factory = PropertyObservableFactory<T, bool>.CreateFrom(predicate);
             return items.ListReverse()
                 .ListTakeWhileObservable(x => factory.Observe(x).Select(v => !v), comparer)
                 .ListReverse();

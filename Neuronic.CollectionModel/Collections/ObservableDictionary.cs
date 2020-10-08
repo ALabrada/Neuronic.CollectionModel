@@ -16,7 +16,6 @@ namespace Neuronic.CollectionModel.Collections
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <typeparam name="TValue">The type of the value.</typeparam>
     /// <seealso cref="System.Collections.Generic.IDictionary{TKey, TValue}" />
-    /// <seealso cref="Neuronic.CollectionModel.IReadOnlyObservableCollection{System.Collections.Generic.KeyValuePair{TKey, TValue}}" />
     public class ObservableDictionary<TKey, TValue> : IDictionary<TKey, TValue>,
         IReadOnlyObservableCollection<KeyValuePair<TKey, TValue>>
     {
@@ -161,14 +160,7 @@ namespace Neuronic.CollectionModel.Collections
         /// </returns>
         public bool TryGetValue(TKey key, out TValue value) => Items.TryGetValue(key, out value);
 
-        /// <summary>
-        /// Gets or sets the <see cref="TValue"/> with the specified key.
-        /// </summary>
-        /// <value>
-        /// The <see cref="TValue"/>.
-        /// </value>
-        /// <param name="key">The key.</param>
-        /// <returns></returns>
+        /// <inheritdoc />
         public virtual TValue this[TKey key]
         {
             get { return Items[key]; }
@@ -297,11 +289,10 @@ namespace Neuronic.CollectionModel.Collections
         }
 
         /// <summary>
-        /// Base class for the observable keys & values dictionary collections.
+        /// Base class for the observable keys &amp; values dictionary collections.
         /// </summary>
         /// <typeparam name="T">The type of the elements.</typeparam>
         /// <seealso cref="System.Collections.Generic.IDictionary{TKey, TValue}" />
-        /// <seealso cref="Neuronic.CollectionModel.IReadOnlyObservableCollection{System.Collections.Generic.KeyValuePair{TKey, TValue}}" />
         protected abstract class DictionaryCollectionBase<T> : INotifyPropertyChanged, INotifyCollectionChanged, ICollection<T>, IWeakEventListener
         {
             private readonly ICollection<T> _items;
@@ -489,7 +480,6 @@ namespace Neuronic.CollectionModel.Collections
         /// An observable collection of dictionary keys.
         /// </summary>
         /// <seealso cref="System.Collections.Generic.IDictionary{TKey, TValue}" />
-        /// <seealso cref="Neuronic.CollectionModel.IReadOnlyObservableCollection{System.Collections.Generic.KeyValuePair{TKey, TValue}}" />
         protected class DictionaryKeyCollection : DictionaryCollectionBase<TKey>, IReadOnlyObservableCollection<TKey>
         {
             /// <summary>
@@ -517,7 +507,6 @@ namespace Neuronic.CollectionModel.Collections
         /// An observable collection of dictionary values.
         /// </summary>
         /// <seealso cref="System.Collections.Generic.IDictionary{TKey, TValue}" />
-        /// <seealso cref="Neuronic.CollectionModel.IReadOnlyObservableCollection{System.Collections.Generic.KeyValuePair{TKey, TValue}}" />
         protected class DictionaryValueCollection : DictionaryCollectionBase<TValue>, IReadOnlyObservableCollection<TValue>
         {
             /// <summary>

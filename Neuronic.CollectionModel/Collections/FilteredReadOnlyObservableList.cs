@@ -133,14 +133,7 @@ namespace Neuronic.CollectionModel.Collections
         /// </summary>
         public override int Count => FilteredItems.Count;
 
-        /// <summary>
-        ///     Gets the <see cref="T" /> at the specified index.
-        /// </summary>
-        /// <value>
-        ///     The <see cref="T" />.
-        /// </value>
-        /// <param name="index">The index.</param>
-        /// <returns></returns>
+        /// <inheritdoc />
         public T this[int index] => FilteredItems[index];
 
         /// <summary>
