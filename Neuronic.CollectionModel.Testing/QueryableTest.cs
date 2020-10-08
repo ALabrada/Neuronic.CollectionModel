@@ -174,5 +174,16 @@ namespace Neuronic.CollectionModel.Testing
             var result = source.ListAsObservable().AsQueryableCollection().Count();
             Assert.AreEqual(20, result);
         }
+
+        [TestMethod]
+        public void CombinedTest()
+        {
+            var source = Enumerable.Range(0, 20).Select(x => new Person(x, x % 2 == 0 ? "F" : "M"));
+            var result = from item in source.AsQueryableCollection()
+                where item.Age < 18
+                orderby item.Sex
+                select item.Age;
+            Assert.IsTrue(result.CollectionAsObservable() is DynamicTransformingReadOnlyObservableList<Person, int>);
+        }
     }
 }
