@@ -21,7 +21,7 @@ namespace Neuronic.CollectionModel.Collections.Linq
         public Definition(Func<TElement, IObservable<TKey>> keySelector, IComparer<TKey> comparer = null)
         {
             KeySelector = keySelector ?? throw new ArgumentNullException(nameof(keySelector));
-            Comparer = comparer as Comparer<TKey> ?? new WrapComparer<TKey>(comparer); // TODO: Wrap comparer
+            Comparer = comparer as Comparer<TKey> ?? new WrapComparer<TKey>(comparer);
         }
 
         public Definition(Expression<Func<TElement, TKey>> keySelector, IComparer<TKey> comparer = null)

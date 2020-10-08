@@ -295,7 +295,15 @@ namespace Neuronic.CollectionModel.Collections.Linq
             Expression<Func<TSource, TKey>> keySelector,
             Expression<Func<TSource, TElement>> elementSelector)
         {
-            throw new NotImplementedException();
+            var items = source.ExtractSource();
+            var keyFactory = PropertyObservableFactory<TSource, TKey>.FindIn(keySelector);
+            var selectorFactory = PropertyObservableFactory<TSource, TElement>.FindIn(elementSelector);
+            var groupComparer = new GroupingComparer<TKey, TElement>();
+            return items.CollectionGroupByObservable(keyFactory.Observe)
+                .ListSelect(g => 
+                    new TransformedReadOnlyObservableGroup<TSource, TKey, TElement>(g.Key, g, selectorFactory.Observe),
+                    targetComparer: groupComparer)
+                .AsQueryableCollection();
         }
 
         /// <summary>Groups the elements of a sequence and projects the elements for each group by using a specified function. Key values are compared by using a specified comparer.</summary>
@@ -315,7 +323,15 @@ namespace Neuronic.CollectionModel.Collections.Linq
             Expression<Func<TSource, TElement>> elementSelector,
             IEqualityComparer<TKey> comparer)
         {
-            throw new NotImplementedException();
+            var items = source.ExtractSource();
+            var keyFactory = PropertyObservableFactory<TSource, TKey>.FindIn(keySelector);
+            var selectorFactory = PropertyObservableFactory<TSource, TElement>.FindIn(elementSelector);
+            var groupComparer = new GroupingComparer<TKey, TElement>(comparer);
+            return items.CollectionGroupByObservable(keyFactory.Observe, comparer)
+                .ListSelect(g =>
+                    new TransformedReadOnlyObservableGroup<TSource, TKey, TElement>(g.Key, g, selectorFactory.Observe),
+                    targetComparer: groupComparer)
+                .AsQueryableCollection();
         }
 
         /// <summary>Groups the elements of a sequence according to a specified key selector function and creates a result value from each group and its key.</summary>
@@ -332,7 +348,12 @@ namespace Neuronic.CollectionModel.Collections.Linq
             Expression<Func<TSource, TKey>> keySelector,
             Expression<Func<TKey, IEnumerable<TSource>, TResult>> resultSelector)
         {
-            throw new NotImplementedException();
+            var items = source.ExtractSource();
+            var keyFactory = PropertyObservableFactory<TSource, TKey>.FindIn(keySelector);
+            var selectorFactory = resultSelector.FindProperties();
+            return items.CollectionGroupByObservable(keyFactory.Observe)
+                .ListSelectObservable(g => selectorFactory.Observe(g.Key, g))
+                .AsQueryableCollection();
         }
 
         /// <summary>Groups the elements of a sequence according to a specified key selector function and creates a result value from each group and its key. Keys are compared by using a specified comparer.</summary>
@@ -351,7 +372,12 @@ namespace Neuronic.CollectionModel.Collections.Linq
             Expression<Func<TKey, IEnumerable<TSource>, TResult>> resultSelector,
             IEqualityComparer<TKey> comparer)
         {
-            throw new NotImplementedException();
+            var items = source.ExtractSource();
+            var keyFactory = PropertyObservableFactory<TSource, TKey>.FindIn(keySelector);
+            var selectorFactory = resultSelector.FindProperties();
+            return items.CollectionGroupByObservable(keyFactory.Observe, comparer)
+                .ListSelectObservable(g => selectorFactory.Observe(g.Key, g))
+                .AsQueryableCollection();
         }
 
         /// <summary>Groups the elements of a sequence according to a specified key selector function and creates a result value from each group and its key. The elements of each group are projected by using a specified function.</summary>
@@ -371,7 +397,17 @@ namespace Neuronic.CollectionModel.Collections.Linq
             Expression<Func<TSource, TElement>> elementSelector,
             Expression<Func<TKey, IEnumerable<TElement>, TResult>> resultSelector)
         {
-            throw new NotImplementedException();
+            var items = source.ExtractSource();
+            var keyFactory = PropertyObservableFactory<TSource, TKey>.FindIn(keySelector);
+            var elementFactory = PropertyObservableFactory<TSource, TElement>.FindIn(elementSelector);
+            var resultFactory = resultSelector.FindProperties();
+            var groupComparer = new GroupingComparer<TKey, TElement>();
+            return items.CollectionGroupByObservable(keyFactory.Observe)
+                .ListSelect(g =>
+                        new TransformedReadOnlyObservableGroup<TSource, TKey, TElement>(g.Key, g, elementFactory.Observe),
+                    targetComparer: groupComparer)
+                .ListSelectObservable(g => resultFactory.Observe(g.Key, g))
+                .AsQueryableCollection();
         }
 
         /// <summary>Groups the elements of a sequence according to a specified key selector function and creates a result value from each group and its key. Keys are compared by using a specified comparer and the elements of each group are projected by using a specified function.</summary>
@@ -393,7 +429,17 @@ namespace Neuronic.CollectionModel.Collections.Linq
             Expression<Func<TKey, IEnumerable<TElement>, TResult>> resultSelector,
             IEqualityComparer<TKey> comparer)
         {
-            throw new NotImplementedException();
+            var items = source.ExtractSource();
+            var keyFactory = PropertyObservableFactory<TSource, TKey>.FindIn(keySelector);
+            var elementFactory = PropertyObservableFactory<TSource, TElement>.FindIn(elementSelector);
+            var resultFactory = resultSelector.FindProperties();
+            var groupComparer = new GroupingComparer<TKey, TElement>(comparer);
+            return items.CollectionGroupByObservable(keyFactory.Observe, comparer)
+                .ListSelect(g =>
+                        new TransformedReadOnlyObservableGroup<TSource, TKey, TElement>(g.Key, g, elementFactory.Observe),
+                    targetComparer: groupComparer)
+                .ListSelectObservable(g => resultFactory.Observe(g.Key, g))
+                .AsQueryableCollection();
         }
 
         /// <summary>Correlates the elements of two sequences based on key equality and groups the results. The default equality comparer is used to compare keys.</summary>
@@ -756,7 +802,12 @@ namespace Neuronic.CollectionModel.Collections.Linq
             Expression<Func<TSource, IEnumerable<TCollection>>> collectionSelector,
             Expression<Func<TSource, TCollection, TResult>> resultSelector)
         {
-            throw new NotImplementedException();
+            var items = source.ExtractSource();
+            var collectionFactory = PropertyObservableFactory<TSource, IEnumerable<TCollection>>.FindIn(collectionSelector);
+            var resultFactory = resultSelector.FindProperties();
+            return items.ListSelectManyObservable(item => collectionFactory.Observe(item).Select(l => l.Select(x => Tuple.Create(item, x))))
+                .ListSelectObservable(t => resultFactory.Observe(t.Item1, t.Item2))
+                .AsQueryableCollection();
         }
 
         /// <summary>Projects each element of a sequence to an <see cref="T:System.Collections.Generic.IEnumerable`1"></see> that incorporates the index of the source element that produced it. A result selector function is invoked on each element of each intermediate sequence, and the resulting values are combined into a single, one-dimensional sequence and returned.</summary>
@@ -773,7 +824,15 @@ namespace Neuronic.CollectionModel.Collections.Linq
             Expression<Func<TSource, int, IEnumerable<TCollection>>> collectionSelector,
             Expression<Func<TSource, TCollection, TResult>> resultSelector)
         {
-            throw new NotImplementedException();
+            var items = source.ExtractSource();
+            var collectionFactory = collectionSelector.FindProperties();
+            var resultFactory = resultSelector.FindProperties();
+            var indexed = new IndexedTransformingReadOnlyObservableList<TSource, TSource>(items,
+                x => new NotifyObservable<TSource>(x, collectionFactory.FirstTriggers));
+            return indexed.ListSelectManyObservable(
+                    item => item.ObserveAll().Select(x => collectionFactory.Function(x.Value, x.Index)).Select(l => l.Select(x => Tuple.Create(item.Item, x))))
+                .ListSelectObservable(t => resultFactory.Observe(t.Item1, t.Item2))
+                .AsQueryableCollection();
         }
 
         /// <summary>Bypasses a specified number of elements in a sequence and then returns the remaining elements.</summary>
